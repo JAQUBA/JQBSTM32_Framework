@@ -1,0 +1,27 @@
+#ifndef PORTMAP_H_
+#define POSTMAP_H_
+
+#define D0 GPIOA, GPIO_PIN_10
+#define D1 GPIOA, GPIO_PIN_9
+#define D2 GPIOA, GPIO_PIN_12
+#define D3 GPIOB, GPIO_PIN_0
+#define D4 GPIOB, GPIO_PIN_7
+#define D5 GPIOB, GPIO_PIN_6
+#define D6 GPIOB, GPIO_PIN_1
+
+#define D9 GPIOA, GPIO_PIN_8
+#define D10 GPIOA, GPIO_PIN_11
+#define D11 GPIOB, GPIO_PIN_5
+#define D12 GPIOB, GPIO_PIN_4
+#define D13 GPIOB, GPIO_PIN_3
+
+#define A0 GPIOA, GPIO_PIN_0
+#define A1 GPIOA, GPIO_PIN_1
+#define A2 GPIOA, GPIO_PIN_3
+#define A3 GPIOA, GPIO_PIN_4
+#define A4 GPIOA, GPIO_PIN_5
+#define A5 GPIOA, GPIO_PIN_6
+#define A6 GPIOA, GPIO_PIN_7
+#define A7 GPIOA, GPIO_PIN_2
+
+#endif
