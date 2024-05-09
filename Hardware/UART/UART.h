@@ -1,5 +1,7 @@
-#ifndef __UART_H
-#define __UART_H
+#ifndef __UART_H_
+#define __UART_H_
+
+#include <usart.h>
 
 #include "../../Core.h"
 

@@ -1,5 +1,5 @@
-#ifndef SimpleMenu_h
-#define SimpleMenu_h
+#ifndef __SIMPLEMENU_H_
+#define __SIMPLEMENU_H_
 
 #include "../../Core.h"
 

@@ -1,5 +1,5 @@
-#ifndef GPIO_H_
-#define GPIO_H_
+#ifndef __GPIO_H_
+#define __GPIO_H_
 
 #include "../../Core.h"
 

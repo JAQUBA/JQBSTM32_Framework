@@ -1,8 +1,9 @@
-#ifndef ENCODER_H_
-#define ENCODER_H_
+#ifndef __ENCODER_H_
+#define __ENCODER_H_
+
+#include <tim.h>
 
 #include "../../Core.h"
-#include "tim.h"
 
 #include <functional>
 using callback_function_t = std::function<void(void)>;

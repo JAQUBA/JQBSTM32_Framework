@@ -1,5 +1,4 @@
 #include "Analog.h"
-#include "../GPIO/GPIO.h"
 
 uint16_t Analog::rawADC[8];
 

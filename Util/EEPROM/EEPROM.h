@@ -1,5 +1,5 @@
-#ifndef __EEPROM_H
-#define __EEPROM_H
+#ifndef __EEPROM_H_
+#define __EEPROM_H_
 #include "../../Core.h"
 class EEPROM {
     public:

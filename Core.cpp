@@ -1,8 +1,6 @@
 #include "Core.h"
 
-#include "i2c.h"
 #include "tim.h"
-#include "gpio.h"
 
 struct taskStruct *tasksMain;
 struct taskStruct *tasksInterrupt;

@@ -1,3 +1,5 @@
+#ifdef __USB_CDC_H_
+
 #include "USB_CDC.h"
 #include "USB_DEVICE/App/usb_device.h"
 #include "USB_DEVICE/App/usbd_cdc_if.h"
@@ -22,3 +24,4 @@ bool USB_CDC::send(String buf) {
 void USB_CDC::onData(void (*_CallBack)(String data)) {
 	UART0_CONFIG.recv_function = _CallBack;
 }
+#endif

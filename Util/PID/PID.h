@@ -1,5 +1,5 @@
-#ifndef PID_H_
-#define PID_H_
+#ifndef __PID_H_
+#define __PID_H_
 
 #include "../../Core.h"
 

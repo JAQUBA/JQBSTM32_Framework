@@ -1,5 +1,4 @@
 #include "UART.h"
-#include "../GPIO/GPIO.h"
 
 UART *_UART_instances[UART_MAX_INSTANCES];
 uint8_t _UART_instancesNum;

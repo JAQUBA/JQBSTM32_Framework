@@ -1,5 +1,5 @@
-#ifndef __REGISTERS_H
-#define __REGISTERS_H
+#ifndef __REGISTERS_H_
+#define __REGISTERS_H_
 #include "../../Core.h"
 
 class RegisterBank {

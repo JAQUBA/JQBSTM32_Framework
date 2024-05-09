@@ -1,5 +1,5 @@
-#ifndef PWM_H_
-#define PWM_H_
+#ifndef __PWM_H_
+#define __PWM_H_
 
 #include "../../Core.h"
 

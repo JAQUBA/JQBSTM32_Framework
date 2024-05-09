@@ -1,8 +1,10 @@
-#ifndef __ANALOG_H
-#define __ANALOG_H
+#ifndef __ANALOG_H_
+#define __ANALOG_H_
+
+#include <adc.h>
 
 #include "../../Core.h"
-#include "main.h"
+
 
 class Analog {
     public:

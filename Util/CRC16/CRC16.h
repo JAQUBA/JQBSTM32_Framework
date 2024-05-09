@@ -1,6 +1,6 @@
-#ifndef CRC16_H_
-#define CRC16_H_
-
+#ifndef __CRC16_H_
+#define __CRC16_H_
+#include <stdint.h>
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -1,5 +1,6 @@
-#ifndef USB_CDC_H_
-#define USB_CDC_H_
+#ifndef __USB_CDC_H_
+#define __USB_CDC_H_
+
 #include "../../Core.h"
 
 class USB_CDC {
