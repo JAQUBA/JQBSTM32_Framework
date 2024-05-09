@@ -1,8 +1,6 @@
 #ifndef __UART_H_
 #define __UART_H_
 
-#include <usart.h>
-
 #include "../../Core.h"
 
 #define UART_MAX_INSTANCES 2

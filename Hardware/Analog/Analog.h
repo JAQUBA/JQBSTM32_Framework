@@ -1,8 +1,6 @@
 #ifndef __ANALOG_H_
 #define __ANALOG_H_
 
-#include <adc.h>
-
 #include "../../Core.h"
 
 

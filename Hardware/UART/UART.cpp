@@ -1,4 +1,6 @@
+#ifdef __UART_H_
 #include "UART.h"
+#include <usart.h>
 
 UART *_UART_instances[UART_MAX_INSTANCES];
 uint8_t _UART_instancesNum;
@@ -48,3 +50,4 @@ void UART::send(const char *data, uint16_t length) {send((uint8_t *)data, length
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {UART::getInstance(huart)->rxInterrupt();}
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {UART::getInstance(huart)->txInterrupt();}
+#endif
