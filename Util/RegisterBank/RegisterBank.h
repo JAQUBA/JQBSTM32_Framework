@@ -1,10 +1,12 @@
 #ifndef __REGISTERS_H_
 #define __REGISTERS_H_
 #include "../../Core.h"
+#include "../EEPROM/EEPROM.h"
 
 class RegisterBank {
     public:
-        RegisterBank(uint16_t regAddress, uint16_t size, bool preserve = false);
+        RegisterBank(uint16_t regAddress, uint16_t size);
+        RegisterBank(uint16_t regAddress, uint16_t size, EEPROM *eeprom);
 
         static void init();
 
@@ -21,9 +23,11 @@ class RegisterBank {
         static RegisterBank *find(uint16_t fullAddress);
         uint16_t readRegisters(uint16_t *buffer, uint16_t address, uint16_t size);
     private:
+        void _initialize();
+        EEPROM *_eeprom;
         static uint16_t _eepromOffset;
-
         uint16_t _eepromLocation;
+
         bool _preserve;
         uint16_t _size;
         uint16_t _start;

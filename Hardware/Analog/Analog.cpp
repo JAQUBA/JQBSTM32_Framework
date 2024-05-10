@@ -13,12 +13,13 @@ void Analog::configureChannel(uint16_t *offset, uint16_t *divider) {
     _divider = divider;
 }
 uint16_t Analog::getValue() {
-    return (uint16_t)(((rawADC[_channelNumber] * ((*_divider)*10) ) >> 20) - (*_offset) );
+    // return (uint16_t)(((rawADC[_channelNumber] * ((*_divider)*10) ) >> 20) - (*_offset) );
+    return rawADC[_channelNumber];
 }
 uint16_t Analog::getRaw() {
-    uint32_t vdda_voltage = __HAL_ADC_CALC_VREFANALOG_VOLTAGE(rawADC[7], ADC_RESOLUTION_12B);
-    uint32_t measurement_voltage = __HAL_ADC_CALC_DATA_TO_VOLTAGE(vdda_voltage, rawADC[_channelNumber], ADC_RESOLUTION_12B);
-    return measurement_voltage;
+    // uint32_t vdda_voltage = __HAL_ADC_CALC_VREFANALOG_VOLTAGE(rawADC[7], ADC_RESOLUTION_12B);
+    // uint32_t measurement_voltage = __HAL_ADC_CALC_DATA_TO_VOLTAGE(vdda_voltage, rawADC[_channelNumber], ADC_RESOLUTION_12B);
+    // return measurement_voltage;
 
-    // return rawADC[_channelNumber];
+    return rawADC[_channelNumber];
 }

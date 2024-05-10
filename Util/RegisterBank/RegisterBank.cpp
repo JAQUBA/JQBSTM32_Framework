@@ -1,10 +1,5 @@
 #include "RegisterBank.h"
 
-#include "Core/Inc/i2c.h"
-
-// #include "Util/EEPROM/EEPROM.h"
-// EEPROM eeprom(&hi2c2, 0xA0, 1, 256, 0x10);
-
 struct Register {
     RegisterBank *bank;
     struct Register *next = NULL;
@@ -12,9 +7,25 @@ struct Register {
 
 uint16_t RegisterBank::_eepromOffset = 0;
 
-RegisterBank::RegisterBank(uint16_t start, uint16_t size, bool preserve) {
-    if(size > 0) {
-        _registers = (uint16_t*)malloc(sizeof(uint16_t) * size);
+RegisterBank::RegisterBank(uint16_t start, uint16_t size) {
+    _preserve = false;
+    _size = size;
+    _start = start;
+    _stop = _start + size;
+    _initialize();
+}
+RegisterBank::RegisterBank(uint16_t start, uint16_t size, EEPROM *_instance) {
+    _eeprom = _instance;
+    _preserve = true;
+    _size = size;
+    _start = start;
+    _stop = _start + size;
+    _initialize();
+}
+
+void RegisterBank::_initialize() {
+    if(_size > 0) {
+        _registers = (uint16_t*)malloc(sizeof(uint16_t) * _size);
         if(_registers == NULL) {
             free(_registers);
             return;
@@ -22,12 +33,7 @@ RegisterBank::RegisterBank(uint16_t start, uint16_t size, bool preserve) {
     } else {
         _registers = NULL;
     }
-    (void)memset(_registers, 0, sizeof(uint16_t) * size);
-
-    _preserve = preserve;
-    _size = size;
-    _start = start;
-    _stop = _start + size;
+    (void)memset(_registers, 0, sizeof(uint16_t) * _size);
 
     if(_preserve) {
         _eepromLocation = _eepromOffset;
@@ -48,11 +54,12 @@ RegisterBank::RegisterBank(uint16_t start, uint16_t size, bool preserve) {
         temp->next = r;
     }
 }
+
 void RegisterBank::load() {
-    // if(_preserve) eeprom.read16(_eepromLocation, _registers, _size);
+    if(_preserve) _eeprom->read16(_eepromLocation, _registers, _size);
 }
 void RegisterBank::save() {
-    // if(_preserve) eeprom.write16(_eepromLocation, _registers, _size);
+    if(_preserve) _eeprom->write16(_eepromLocation, _registers, _size);
 }
 void RegisterBank::init() {
     struct Register *temp = registers;
