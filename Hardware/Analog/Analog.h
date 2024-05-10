@@ -3,7 +3,6 @@
 
 #include "../../Core.h"
 
-
 class Analog {
     public:
         static void init(ADC_HandleTypeDef *analog);

@@ -1,10 +1,7 @@
 #ifndef __ENCODER_H_
 #define __ENCODER_H_
 
-#include <tim.h>
-
 #include "../../Core.h"
-
 #include <functional>
 using callback_function_t = std::function<void(void)>;
 

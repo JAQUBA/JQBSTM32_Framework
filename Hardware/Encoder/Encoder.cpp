@@ -3,11 +3,6 @@
 Encoder *_Encoder_instances[ENCODER_MAX_INSTANCES];
 uint8_t _Encoder_instancesNum = 0;
 
-extern "C" void TIM2_IRQHandler(void) {
-	HAL_TIM_IRQHandler(&htim2);
-	Encoder::getInstance(&htim2)->timInterrupt();
-}
-
 Encoder *Encoder::getInstance(TIM_HandleTypeDef *_instance) {
     for (size_t i = 0; i < _Encoder_instancesNum; i++) {
         if(_Encoder_instances[i]->_pInstance->Instance == _instance->Instance) return _Encoder_instances[i];

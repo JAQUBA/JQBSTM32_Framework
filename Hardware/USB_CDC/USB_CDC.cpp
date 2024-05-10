@@ -1,8 +1,6 @@
 #ifdef __USB_CDC_H_
 
 #include "USB_CDC.h"
-#include "USB_DEVICE/App/usb_device.h"
-#include "USB_DEVICE/App/usbd_cdc_if.h"
 
 struct {
 	void (*recv_function)(String data);

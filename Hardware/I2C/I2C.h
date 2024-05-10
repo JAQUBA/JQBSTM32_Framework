@@ -1,10 +1,7 @@
 #ifndef __I2C_H_
 #define __I2C_H_
 
-#include <i2c.h>
-
 #include "../../Core.h"
-
 
 #define I2C_MAX_INSTANCES 2
 

@@ -3,6 +3,9 @@
 
 #include "../../Core.h"
 
+#include "USB_DEVICE/App/usb_device.h"
+#include "USB_DEVICE/App/usbd_cdc_if.h"
+
 class USB_CDC {
     public:
         void init();
