@@ -1,13 +1,10 @@
-#ifdef __USB_CDC_H_
-
 #include "USB_CDC.h"
+
+#include "USB_DEVICE/App/usbd_cdc_if.h"
 
 struct {
 	void (*recv_function)(String data);
 } UART0_CONFIG;
-void USB_CDC::init() {
-	MX_USB_Device_Init();
-}
 bool USB_CDC::send(uint8_t* Buf, uint16_t Len) {
 	return CDC_Transmit_FS(Buf, Len) == USBD_OK;
 }
@@ -22,4 +19,3 @@ bool USB_CDC::send(String buf) {
 void USB_CDC::onData(void (*_CallBack)(String data)) {
 	UART0_CONFIG.recv_function = _CallBack;
 }
-#endif

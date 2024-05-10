@@ -3,12 +3,8 @@
 
 #include "../../Core.h"
 
-#include "USB_DEVICE/App/usb_device.h"
-#include "USB_DEVICE/App/usbd_cdc_if.h"
-
 class USB_CDC {
     public:
-        void init();
         bool send(uint8_t* Buf, uint16_t Len);
         bool send(String buf);
 
