@@ -29,8 +29,11 @@ FDCAN *FDCAN::getInstance(FDCAN_HandleTypeDef *_instance) {
     return nullptr;
 }
 void FDCAN::handleMessage() {
-	HAL_FDCAN_GetRxMessage(_pInstance, FDCAN_RX_FIFO0, &pRxHeader, recv_buff);
-    hasPacket = true;
+	FDCAN_RxHeaderTypeDef RxHeader;
+    uint8_t RxData[8];
+    if(HAL_FDCAN_GetRxMessage(_pInstance, FDCAN_RX_FIFO0, &RxHeader, RxData) == HAL_OK) {
+        hasPacket = true;
+    }
 }
 void FDCAN::onPacket(uint16_t commNumber, void(*handler)(uint8_t *data, uint16_t dataLen)) {
     struct handlerStruct *temp = handlers, *r;
@@ -61,4 +64,9 @@ void FDCAN::poll() {
         temp = temp->next;
     }
     hasPacket = false;
+}
+extern "C" void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *hfdcan, uint32_t RxFifo0ITs) {
+    if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) {
+        FDCAN::getInstance(hfdcan)->handleMessage();
+    }
 }
