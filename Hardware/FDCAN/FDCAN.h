@@ -18,7 +18,7 @@ class FDCAN {
 		void handleMessage();
 	private:
 		FDCAN_HandleTypeDef *_pInstance;
-
+		FDCAN_FilterTypeDef sFilterConfig;
 		FDCAN_RxHeaderTypeDef pRxHeader;
 		uint8_t recv_buff[8] = {0,0,0,0,0,0,0,0};
 		bool hasPacket = false;
