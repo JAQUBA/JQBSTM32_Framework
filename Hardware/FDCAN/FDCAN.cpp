@@ -17,6 +17,23 @@ void FDCAN::init() {
 	HAL_FDCAN_ConfigRxFifoOverwrite(_pInstance, FDCAN_RX_FIFO1, FDCAN_RX_FIFO_OVERWRITE);
 	HAL_FDCAN_Start(_pInstance);
 	HAL_FDCAN_ActivateNotification(_pInstance, FDCAN_IT_RX_FIFO0_NEW_MESSAGE, 0);
+
+
+    pTxHeader.IdType = FDCAN_EXTENDED_ID;
+	pTxHeader.DataLength = FDCAN_DLC_BYTES_8;
+	pTxHeader.TxFrameType = FDCAN_DATA_FRAME;
+	pTxHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
+	pTxHeader.BitRateSwitch = FDCAN_BRS_OFF;
+	pTxHeader.FDFormat = FDCAN_FD_CAN;
+	pTxHeader.TxEventFifoControl = FDCAN_NO_TX_EVENTS;
+	pTxHeader.MessageMarker = 0;
+
+}
+
+void FDCAN::send(uint32_t identifier, uint8_t *data, uint16_t dataLen, uint32_t DataLength) {
+    pTxHeader.Identifier = identifier;
+    pTxHeader.DataLength = DataLength;
+    HAL_FDCAN_AddMessageToTxFifoQ(_pInstance, &pTxHeader, data);
 }
 
 FDCAN *FDCAN::getInstance(FDCAN_HandleTypeDef *_instance) {

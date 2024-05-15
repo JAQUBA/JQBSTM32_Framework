@@ -8,8 +8,8 @@ class USB_CDC {
         bool send(uint8_t* Buf, uint16_t Len);
         bool send(String buf);
 
-        void onData(void (*_CallBack)(String data));
-        void onData(void (*_CallBack)(uint8_t* Buf, uint16_t Len));
+        void onReceiveHandler(void(*onReceive)(uint8_t* data, uint32_t length));
+        void onTransmitHandler(void(*onTransmit)());
 
     private:
 

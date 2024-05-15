@@ -14,12 +14,16 @@ class FDCAN {
 
 		void onPacket(uint16_t commNumber, void(*handler)(uint8_t *data, uint16_t dataLen));
 		void poll();
+		void send(uint32_t identifier, uint8_t *data, uint16_t dataLen, uint32_t DataLength = FDCAN_DLC_BYTES_8);
 
 		void handleMessage();
 	private:
 		FDCAN_HandleTypeDef *_pInstance;
 		FDCAN_FilterTypeDef sFilterConfig;
+		
 		FDCAN_RxHeaderTypeDef pRxHeader;
+		FDCAN_TxHeaderTypeDef pTxHeader;
+
 		uint8_t recv_buff[8] = {0,0,0,0,0,0,0,0};
 		bool hasPacket = false;
 
