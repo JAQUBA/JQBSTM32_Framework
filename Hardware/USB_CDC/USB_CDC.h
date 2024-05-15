@@ -1,6 +1,8 @@
 #ifndef __USB_CDC_H_
 #define __USB_CDC_H_
 
+#ifdef __USB_DEVICE__H__
+
 #include "../../Core.h"
 
 class USB_CDC {
@@ -15,4 +17,5 @@ class USB_CDC {
 
 };
 
+#endif
 #endif
