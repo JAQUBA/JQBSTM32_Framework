@@ -1,7 +1,7 @@
 #ifndef __FDCAN_H_
 #define __FDCAN_H_
 
-#ifdef __FDCAN_H__
+// #ifdef __FDCAN_H__
 #include "Core.h"
 
 #define FDCAN_MAX_INSTANCES 1
@@ -38,5 +38,5 @@ class FDCAN {
 };
 
 
-#endif
+// #endif
 #endif

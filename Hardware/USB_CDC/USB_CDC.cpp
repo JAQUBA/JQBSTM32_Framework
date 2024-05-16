@@ -1,4 +1,4 @@
-#ifdef __USB_DEVICE__H__
+// #ifdef __USB_DEVICE__H__
 
 #include "USB_CDC.h"
 #include "USB_DEVICE/App/usbd_cdc_if.h"
@@ -32,4 +32,4 @@ bool USB_CDC::send(String buf) {
 	return CDC_Transmit_FS(converted, length) == USBD_OK;
 }
 
-#endif
+// #endif
