@@ -5,8 +5,39 @@
 struct taskStruct *tasksMain;
 struct taskStruct *tasksInterrupt;
 
-void delay(uint32_t delay_ms) {
-	HAL_Delay(delay_ms);
+uint8_t DWT_COUNTER_ENABLE(void)
+{
+  uint32_t c;
+  //Wlacz TRC,
+  //Ustawienie bitu TRCENA
+  //Wlacza takie bloki jak DWT, ITM, ETM, TPIU
+  CoreDebug->DEMCR &= ~0x01000000;
+  CoreDebug->DEMCR |=  0x01000000;
+   
+  //Wlacz DWT w rejestrze kontrolnym
+  DWT->CTRL &= ~0x00000001; //Czyszczenie
+  DWT->CTRL |=  0x00000001; //Ustawienie
+   
+  //Ustawienie licznika na wartosc 0
+  DWT->CYCCNT = 0;
+   
+  //Wartosci z CYCCNT do zmiennej c
+  c = DWT->CYCCNT;
+  //Czekanie   
+  __ASM volatile ("NOP"); __ASM volatile ("NOP"); __ASM volatile ("NOP");
+   
+  //Zwraca roznice pomiedzy DWT->CYCCNT a ta wartoscia kilka cykli wczesniej
+  //Jesli wynosi ona 0 to licznik nie dziala
+  if((DWT->CYCCNT - c) == 0)
+  { return 0; }
+  return (DWT->CYCCNT - c);
+}
+
+void delay(volatile uint32_t delay_ms) {HAL_Delay(delay_ms);}
+void delay_us(volatile uint32_t delay_us) {
+  uint32_t clk_cycle_start = DWT->CYCCNT;
+  delay_us *= (HAL_RCC_GetHCLKFreq() / 1000000);
+  while ((DWT->CYCCNT - clk_cycle_start) < delay_us);
 }
 unsigned long ulMillis;
 unsigned long millis() {return ulMillis;}
@@ -19,6 +50,8 @@ int main() {
 
 	MX_TIM7_Init();
 	HAL_TIM_Base_Start_IT(&htim7);
+
+	DWT_COUNTER_ENABLE();
 
 	setup();
 

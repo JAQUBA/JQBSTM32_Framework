@@ -36,7 +36,8 @@ void init();
 void setup();
 void loop();
 
-void delay(uint32_t delay_ms);
+void delay(volatile uint32_t delay_ms);
+void delay_us(volatile uint32_t delay_us);
 extern unsigned long ulMillis;
 unsigned long millis();
 
