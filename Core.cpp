@@ -53,9 +53,10 @@ int main() {
 
 	MX_TIM7_Init();
 	HAL_TIM_Base_Start_IT(&htim7);
-
+	
+#ifdef DWT
 	DWT_COUNTER_ENABLE();
-
+#endif
 	setup();
 
 	while (1) {
