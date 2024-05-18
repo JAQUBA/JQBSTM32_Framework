@@ -5,6 +5,7 @@
 struct taskStruct *tasksMain;
 struct taskStruct *tasksInterrupt;
 
+#ifdef DWT
 uint8_t DWT_COUNTER_ENABLE(void)
 {
   uint32_t c;
@@ -32,13 +33,15 @@ uint8_t DWT_COUNTER_ENABLE(void)
   { return 0; }
   return (DWT->CYCCNT - c);
 }
-
-void delay(volatile uint32_t delay_ms) {HAL_Delay(delay_ms);}
 void delay_us(volatile uint32_t delay_us) {
   uint32_t clk_cycle_start = DWT->CYCCNT;
   delay_us *= (HAL_RCC_GetHCLKFreq() / 1000000);
   while ((DWT->CYCCNT - clk_cycle_start) < delay_us);
 }
+#endif
+
+void delay(volatile uint32_t delay_ms) {HAL_Delay(delay_ms);}
+
 unsigned long ulMillis;
 unsigned long millis() {return ulMillis;}
 
