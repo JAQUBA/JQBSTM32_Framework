@@ -119,7 +119,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	}
 }
 
-void addTaskMain(void (*functionPointer)(struct taskStruct *task), uint16_t delay, bool single) {
+task *addTaskMain(void (*functionPointer)(struct taskStruct *task), uint32_t delay, bool single) {
 	struct taskStruct *temp = tasksMain, *r;
 	if(tasksMain==NULL) {
 		temp = (struct taskStruct *)malloc(sizeof(struct taskStruct));
@@ -129,6 +129,7 @@ void addTaskMain(void (*functionPointer)(struct taskStruct *task), uint16_t dela
 		temp->_single=single;
 		temp->next=NULL;
 		tasksMain=temp;
+		return (task*)temp;
 	} else {
 		while(temp->next != NULL) temp = temp->next;
 		r = (struct taskStruct*)malloc(sizeof(struct taskStruct));
@@ -138,9 +139,10 @@ void addTaskMain(void (*functionPointer)(struct taskStruct *task), uint16_t dela
 		r->_delay=delay;
 		r->_single=single;
 		temp->next=r;
+		return (task*)r;
 	}
 }
-void addTaskInterrupt(void (*functionPointer)(struct taskStruct *task), uint16_t delay, bool single) {
+task *addTaskInterrupt(void (*functionPointer)(struct taskStruct *task), uint32_t delay, bool single) {
 	struct taskStruct *temp = tasksInterrupt, *r;
 	if(tasksInterrupt==NULL) {
 		temp = (struct taskStruct *)malloc(sizeof(struct taskStruct));
@@ -150,6 +152,7 @@ void addTaskInterrupt(void (*functionPointer)(struct taskStruct *task), uint16_t
 		temp->_delay=delay;
 		temp->_single=single;
 		tasksInterrupt=temp;
+		return (task*)temp;
 	} else {
 		while(temp->next != NULL) temp = temp->next;
 		r = (struct taskStruct*)malloc(sizeof(struct taskStruct));
@@ -159,6 +162,7 @@ void addTaskInterrupt(void (*functionPointer)(struct taskStruct *task), uint16_t
 		r->_delay=delay;
 		r->_single=single;
 		temp->next=r;
+		return (task*)r;
 	}
 }
 

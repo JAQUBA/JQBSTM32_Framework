@@ -23,14 +23,18 @@ long map(long x, long in_min, long in_max, long out_min, long out_max);
 struct taskStruct {
 	void (*functionPointer)(struct taskStruct *task);
 	struct taskStruct *next = NULL;
-	volatile uint16_t _delay = 0;
-	volatile uint16_t delay = 0;
+	volatile uint32_t _delay = 0;
+	volatile uint32_t delay = 0;
 	bool _single = false;
 };
 
+typedef uint32_t task;
 
-void addTaskMain(void (*functionPointer)(struct taskStruct *task), uint16_t delay, bool single = false);
-void addTaskInterrupt(void (*functionPointer)(struct taskStruct *task), uint16_t delay, bool single = false);
+
+task *addTaskMain(void (*functionPointer)(struct taskStruct *task), uint32_t delay, bool single = false);
+task *addTaskInterrupt(void (*functionPointer)(struct taskStruct *task), uint32_t delay, bool single = false);
+
+void removeTaskMain(task *task);
 
 void init();
 void setup();
