@@ -119,7 +119,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	}
 }
 
-task *addTaskMain(void (*functionPointer)(struct taskStruct *task), uint32_t delay, bool single) {
+task *addTaskMain2(std::function<void(taskStruct *task)> functionPointer, uint32_t delay, bool single) {
+	return nullptr;
+}
+
+// task *addTaskMain(void (*functionPointer)(struct taskStruct *task), uint32_t delay, bool single) {
+task *addTaskMain(std::function<void(taskStruct *task)> functionPointer, uint32_t delay, bool single) {
 	struct taskStruct *temp = tasksMain, *r;
 	if(tasksMain==NULL) {
 		temp = (struct taskStruct *)malloc(sizeof(struct taskStruct));
@@ -142,7 +147,8 @@ task *addTaskMain(void (*functionPointer)(struct taskStruct *task), uint32_t del
 		return (task*)r;
 	}
 }
-task *addTaskInterrupt(void (*functionPointer)(struct taskStruct *task), uint32_t delay, bool single) {
+// task *addTaskInterrupt(void (*functionPointer)(struct taskStruct *task), uint32_t delay, bool single) {
+task *addTaskInterrupt(std::function<void(taskStruct *task)> functionPointer, uint32_t delay, bool single) {
 	struct taskStruct *temp = tasksInterrupt, *r;
 	if(tasksInterrupt==NULL) {
 		temp = (struct taskStruct *)malloc(sizeof(struct taskStruct));
