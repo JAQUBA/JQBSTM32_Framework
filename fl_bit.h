@@ -8,6 +8,9 @@
 #ifndef FL_BIT_H_
 #define FL_BIT_H_
 
+#define ABS(X) ((X) > 0 ? (X) : -(X))
+#define XOR(A,B) (!A != !B)
+
 #define FALSE     		  	0
 #define TRUE      	  		1
 
