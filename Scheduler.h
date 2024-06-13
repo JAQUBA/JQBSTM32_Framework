@@ -13,7 +13,7 @@ struct taskStruct {
 
     uint16_t _id = 0;
 
-    bool operator==(taskStruct &other) const {
+    bool operator==(const taskStruct &other) const {
         return _id == other._id;
     }
 };
