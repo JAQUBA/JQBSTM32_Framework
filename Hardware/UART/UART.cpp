@@ -39,6 +39,7 @@ void UART::poll() {
 }
 void UART::onReceiveHandler(void(*onReceive)(uint8_t* data, uint16_t length)) {fpOnReceive = onReceive;}
 void UART::onTransmitHandler(void(*onTransmit)()) {fpOnTransmit = onTransmit;}
+
 void UART::send(uint8_t *data, uint16_t length) {
     if(fpOnTransmit) fpOnTransmit();
     // HAL_UART_Transmit_DMA(_pInstance, data, length);

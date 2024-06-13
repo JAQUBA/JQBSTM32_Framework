@@ -1,12 +1,12 @@
 #ifndef __REGISTERS_H_
 #define __REGISTERS_H_
 #include "../../Core.h"
-#include "../EEPROM/EEPROM.h"
+#include "../NV_RAM/NV_RAM.h"
 
 class RegisterBank {
     public:
         RegisterBank(uint16_t regAddress, uint16_t size);
-        RegisterBank(uint16_t regAddress, uint16_t size, EEPROM *eeprom);
+        RegisterBank(uint16_t regAddress, uint16_t size, NV_RAM *nv_ram);
 
         static void init();
 
@@ -24,9 +24,9 @@ class RegisterBank {
         uint16_t readRegisters(uint16_t *buffer, uint16_t address, uint16_t size);
     private:
         void _initialize();
-        EEPROM *_eeprom;
-        static uint16_t _eepromOffset;
-        uint16_t _eepromLocation;
+        NV_RAM *_nv_ram;
+        static uint16_t _nv_ramOffset;
+        uint16_t _nv_ramLocation;
 
         bool _preserve;
         uint16_t _size;

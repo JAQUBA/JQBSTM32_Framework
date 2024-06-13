@@ -1,9 +1,27 @@
 #include "Core.h"
-
 #include "tim.h"
-
+#include "../JQBSTM32_Framework/Util/TASK_M/task_m.h"
 struct taskStruct *tasksMain;
 struct taskStruct *tasksInterrupt;
+
+#ifdef JanB
+TASK_PROCEDURE(task_main);
+
+TASK_PROC init_main(void)
+{
+	return task_main;
+}
+
+TASK_PROCEDURE(task_main)//1mS
+{
+	if (self->flag)
+	{	self->flag = false;
+
+
+	}
+
+}
+#endif
 
 #ifdef DWT
 uint8_t DWT_COUNTER_ENABLE(void)
@@ -53,10 +71,18 @@ int main() {
 
 	MX_TIM7_Init();
 	HAL_TIM_Base_Start_IT(&htim7);
+
+	MX_TIM15_Init();
+	HAL_TIM_Base_Start_IT(&htim15);
 	
 #ifdef DWT
 	DWT_COUNTER_ENABLE();
 #endif
+
+#ifdef JanB
+    init_task_m(init_main(), 1);
+#endif
+
 	setup();
 
 	while (1) {
@@ -80,9 +106,15 @@ int main() {
 			}
 		}
         loop();
+
+		exec_next();
+		trigger_task();
     }
 }
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+	if (htim == &htim15) {
+		Task_m_timer();
+	}
 	if (htim == &htim7 ) {
 		struct taskStruct *tempMain = tasksMain;
 		while (tempMain != NULL) {

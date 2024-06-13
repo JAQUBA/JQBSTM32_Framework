@@ -13,6 +13,8 @@
 extern "C" {
 #endif
 
+#define JanB
+
 typedef const char *String;
 
 extern void SystemClock_Config();

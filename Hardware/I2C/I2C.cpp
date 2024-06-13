@@ -15,9 +15,6 @@ I2C *I2C::getInstance(I2C_HandleTypeDef *_instance) {
 }
 void I2C::send(uint16_t DevAddress, uint8_t *pData, uint16_t Size) {
 	HAL_I2C_Master_Transmit(_pInstance, DevAddress,  pData,  Size, 1000);
-	// HAL_I2C_Master_Transmit_DMA(_pInstance, DevAddress,  pData,  Size);
-	// while (HAL_I2C_GetState(_pInstance) == HAL_I2C_STATE_MEM_BUSY_TX) { }
-	
 }
 void I2C::recv(uint16_t DevAddress, uint8_t *pData, uint16_t Size) {
     HAL_I2C_Master_Receive(_pInstance, DevAddress, pData, Size, 1000);
