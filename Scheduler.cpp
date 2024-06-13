@@ -1,8 +1,5 @@
 #include "Scheduler.h"
 
-#include "Hardware/GPIO/GPIO.h"
-#include "portMap.h"
-
 void Scheduler::addTask(std::function<void(taskStruct *task)> functionPointer, uint32_t delay, bool single) {
     taskStruct node;
 
