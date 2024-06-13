@@ -10,6 +10,12 @@ struct taskStruct {
     volatile uint16_t _delay = 0;
 	volatile uint16_t delay = 0;
 	bool _single = false;
+
+    uint16_t _id = 0;
+
+    bool operator==(taskStruct &other) const {
+        return _id == other._id;
+    }
 };
 
 class Scheduler {
@@ -18,6 +24,7 @@ class Scheduler {
         void execute();
         void poll1ms();
     private:
+        uint16_t _taskNum = 0;
         std::list<taskStruct> functions;
 
 };

@@ -7,6 +7,7 @@ void Scheduler::addTask(std::function<void(taskStruct *task)> functionPointer, u
     node.delay = delay;
     node._delay = delay;
     node._single = single;
+    node._id = _taskNum++;
 
     functions.push_back(node);
 }
@@ -15,7 +16,11 @@ void Scheduler::execute() {
     for(taskStruct &node : functions) {
         if(node._delay == 0) {
             node.functionPointer(&node);
-            node._delay = node.delay;
+            if(node._single) {
+                functions.remove(node);
+            } else {
+                node._delay = node.delay;
+            }
         }
     }
 }
