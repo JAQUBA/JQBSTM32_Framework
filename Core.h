@@ -6,9 +6,13 @@
 #include <string.h>
 #include "main.h"
 #include "fl_bit.h"
+#include <functional>
 #include "Scheduler.h"
 
 typedef const char *String;
+
+void addTaskMain(std::function<void(struct taskStruct *task)> functionPointer, uint32_t delay, bool single = false);
+void addTaskInterrupt(std::function<void(struct taskStruct *task)> functionPointer, uint32_t delay, bool single = false);
 
 #ifdef __cplusplus
 extern "C" {

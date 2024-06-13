@@ -4,6 +4,9 @@
 Scheduler mainTasks;
 Scheduler interruptTasks;
 
+void addTaskInterrupt(std::function<void(taskStruct *task)> functionPointer, uint32_t delay, bool single) {interruptTasks.addTask(functionPointer, delay, single);}
+void addTaskMain(std::function<void(taskStruct *task)> functionPointer, uint32_t delay, bool single) {mainTasks.addTask(functionPointer, delay, single);}
+
 #ifdef DWT
 uint8_t DWT_COUNTER_ENABLE(void) {
   CoreDebug->DEMCR &= ~0x01000000;
