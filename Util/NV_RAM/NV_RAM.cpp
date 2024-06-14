@@ -14,10 +14,18 @@ NV_RAM::NV_RAM(I2C_HandleTypeDef *instance, uint8_t address, uint16_t pages, uin
 	_status = I2C_OK;
 	
 	addTaskMain([&](taskStruct *task) {
-		switch (_state) {
+		// task->_single=true; //wykona sie tylko raz
+		// task->delay = 200; //co 200ms
+
+		HAL_GPIO_TogglePin(D0_GPIO_Port, D0_Pin);
+
+
+	   	switch (_state) {
 			case START_READ16:{ 
 				_i2c_state = HAL_I2C_Mem_Read_DMA(_instance, _address, ((_address*2) + _offset),
 					I2C_MEMADD_SIZE_8BIT, (uint8_t*)_data, (_size * 2));
+
+				_JMP(NIL);
 
 				if (_i2c_state==HAL_OK){
 					_timeout=4;
@@ -44,8 +52,10 @@ NV_RAM::NV_RAM(I2C_HandleTypeDef *instance, uint8_t address, uint16_t pages, uin
 			}
 
 			case START_WRITE16:{ 
-				_i2c_state=HAL_I2C_Mem_Write_DMA(_instance, _address, ((_address*2) + _offset),
-					I2C_MEMADD_SIZE_8BIT, (uint8_t*)_data, (_size * 2));
+				//_i2c_state=HAL_I2C_Mem_Write_DMA(_instance, _address, ((_address*2) + _offset),
+					//I2C_MEMADD_SIZE_8BIT, (uint8_t*)_data, (_size * 2));
+				_JMP(NIL);
+
 				if (_i2c_state==HAL_OK){
 					_timeout=4;
 					_JMP(WAIT_COMPL_WRITE16);
@@ -74,7 +84,7 @@ NV_RAM::NV_RAM(I2C_HandleTypeDef *instance, uint8_t address, uint16_t pages, uin
 
 			}
 		}
-	}, 1);
+	}, 0);
 
 }
 void NV_RAM::read16(uint16_t address, uint16_t *data, uint16_t size) {
@@ -92,5 +102,5 @@ void NV_RAM::write16(uint16_t address, uint16_t *data, uint16_t size) {
 	_timeout = 3;
 	_status = I2C_OK;
 	_i2c_state = HAL_OK;
-	_state=START_WRITE16;
+	//_state=START_WRITE16;
 }

@@ -45,6 +45,7 @@ int main() {
 
 	while (1) {
         mainTasks.execute();
+        HAL_GPIO_TogglePin(D2_GPIO_Port, D2_Pin);
         loop();
     }
 }
