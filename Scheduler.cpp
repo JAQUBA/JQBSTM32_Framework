@@ -16,10 +16,9 @@ void Scheduler::execute() {
     for(taskStruct &node : functions) {
         if(node._delay == 0) {
             node.functionPointer(&node);
+            node._delay = node.delay;
             if(node._single) {
                 functions.remove(node);
-            } else {
-                node._delay = node.delay;
             }
         }
     }

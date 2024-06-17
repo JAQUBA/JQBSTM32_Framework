@@ -1,12 +1,12 @@
 #ifndef __REGISTERS_H_
 #define __REGISTERS_H_
 #include "../../Core.h"
-#include "../NV_RAM/NV_RAM.h"
+#include "../../Interface/IExternalMemory.h"
 
 class RegisterBank {
     public:
         RegisterBank(uint16_t regAddress, uint16_t size);
-        RegisterBank(uint16_t regAddress, uint16_t size, NV_RAM *nv_ram);
+        RegisterBank(uint16_t regAddress, uint16_t size, IExternalMemory *extMem);
 
         static void init();
 
@@ -24,9 +24,9 @@ class RegisterBank {
         uint16_t readRegisters(uint16_t *buffer, uint16_t address, uint16_t size);
     private:
         void _initialize();
-        NV_RAM *_nv_ram;
-        static uint16_t _nv_ramOffset;
-        uint16_t _nv_ramLocation;
+        IExternalMemory *_extMemInstance;
+        static uint16_t _extMemOffset;
+        uint16_t _extMemLocation;
 
         bool _preserve;
         uint16_t _size;

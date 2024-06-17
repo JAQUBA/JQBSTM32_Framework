@@ -1,5 +1,5 @@
 #include "Modbus.h"
-#include "../CRC16/CRC16.h"
+#include "../Math/CRC16.h"
 
 void (*functionHandlers[4])(ModbusFrame *request) = { };
 

@@ -15,6 +15,24 @@ class I2C {
         void send(uint16_t DevAddress, uint8_t *pData, uint16_t Size);
         void recv(uint16_t DevAddress, uint8_t *pData, uint16_t Size);
     private:
-        I2C_HandleTypeDef* _pInstance;      
+        I2C_HandleTypeDef* _pInstance;
+
+        uint8_t _i2c_state;
+        uint16_t *_data;
+        uint16_t _size;
+        uint32_t _timeout;
+        uint8_t  _status;
+        
+        enum States {
+            I2C_OK,
+            I2C_ERR_HAL,
+            I2C_ERR_TO_S,
+            I2C_ERR_TO_W,
+            NIL,
+            START_READ16,
+            WAIT_COMPL_READ16,
+            START_WRITE16,
+            WAIT_COMPL_WRITE16
+        } _state;
 };
 #endif

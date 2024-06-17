@@ -1,4 +1,4 @@
-#include "Math.h"
+#include "Random.h"
 
 float random_float(float min, float max) {
     float r = (float)rand() / (float)RAND_MAX;

@@ -5,7 +5,7 @@ struct Register {
     struct Register *next = NULL;
 } *registers;
 
-uint16_t RegisterBank::_nv_ramOffset = 0;
+uint16_t RegisterBank::_extMemOffset = 0;
 
 RegisterBank::RegisterBank(uint16_t start, uint16_t size) {
     _preserve = false;
@@ -14,8 +14,8 @@ RegisterBank::RegisterBank(uint16_t start, uint16_t size) {
     _stop = _start + size;
     _initialize();
 }
-RegisterBank::RegisterBank(uint16_t start, uint16_t size, NV_RAM *_instance) {
-    _nv_ram = _instance;
+RegisterBank::RegisterBank(uint16_t start, uint16_t size, IExternalMemory *extMemInstance) {
+    _extMemInstance = extMemInstance;
     _preserve = true;
     _size = size;
     _start = start;
@@ -36,8 +36,8 @@ void RegisterBank::_initialize() {
     (void)memset(_registers, 0, sizeof(uint16_t) * _size);
 
     if(_preserve) {
-        _nv_ramLocation = _nv_ramOffset;
-        _nv_ramOffset =+ _size;
+        _extMemLocation = _extMemOffset;
+        _extMemOffset =+ _size;
     }
     
     struct Register *temp = registers, *r;
@@ -56,10 +56,10 @@ void RegisterBank::_initialize() {
 }
 
 void RegisterBank::load() {
-    if(_preserve) _nv_ram->read16(_nv_ramLocation, _registers, _size);
+    if(_preserve) _extMemInstance->read16(_extMemLocation, _registers, _size);
 }
 void RegisterBank::save() {
-    if(_preserve) _nv_ram->write16(_nv_ramLocation, _registers, _size);
+    if(_preserve) _extMemInstance->write16(_extMemLocation, _registers, _size);
 }
 void RegisterBank::init() {
     struct Register *temp = registers;
