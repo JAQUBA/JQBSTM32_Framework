@@ -6,9 +6,7 @@
 class RegisterBank {
     public:
         RegisterBank(uint16_t regAddress, uint16_t size);
-        RegisterBank(uint16_t regAddress, uint16_t size, IExternalMemory *extMem);
-
-        static void init();
+        RegisterBank(uint16_t regAddress, uint16_t size, IExternalMemory *extMem, int32_t offset = -1);
 
         uint16_t *getValuePtr(uint16_t regAddress);
         uint16_t *getRegisterPtr(uint16_t fullAddress);

@@ -2,10 +2,11 @@
 #define __UART_H_
 
 #include "../../Core.h"
+#include "Interface/IBus.h"
 
 #define UART_MAX_INSTANCES 2
 
-class UART {
+class UART : public IBus {
     public:
         UART_HandleTypeDef *_pInstance;
         UART(UART_HandleTypeDef *_instance);
@@ -14,9 +15,6 @@ class UART {
 
         void rxInterrupt();
         void txInterrupt();
-
-        void init();
-        void poll();
 
         void send(uint8_t *data, uint16_t length);
         void send(const char *data, uint16_t length);

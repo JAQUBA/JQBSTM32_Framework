@@ -2,10 +2,11 @@
 #define __I2C_H_
 
 #include "../../Core.h"
+#include "Interface/IBus.h"
 
 #define I2C_MAX_INSTANCES 2
 
-class I2C {
+class I2C : public IBus {
     public:
         I2C(I2C_HandleTypeDef* instance);
         static I2C *getInstance(I2C_HandleTypeDef *instance);

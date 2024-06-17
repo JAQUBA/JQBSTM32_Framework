@@ -6,9 +6,6 @@ uint8_t _UART_instancesNum;
 UART::UART(UART_HandleTypeDef *instance) {
     _pInstance = instance;
     _UART_instances[_UART_instancesNum++] = this;
-}
-
-void UART::init() {
     HAL_UART_Receive_IT(_pInstance, &Received_u1, 1);
 }
 
@@ -27,16 +24,16 @@ void UART::rxInterrupt() {
     lastReceivedByte = millis();
     received = true;
     HAL_UART_Receive_IT(_pInstance, &Received_u1, 1);
+    addTaskMain([&](taskStruct *task) {
+        if(received && millis() > lastReceivedByte + 20) {
+            if(fpOnReceive) fpOnReceive(rx_buffer, rx_data_index);
+            rx_data_index = 0;
+            received = false;
+        }
+    }, 0);
 }
 void UART::txInterrupt() {}
 
-void UART::poll() {
-    if(received && millis() > lastReceivedByte + 20) {
-        if(fpOnReceive) fpOnReceive(rx_buffer, rx_data_index);
-        rx_data_index = 0;
-        received = false;
-    }
-}
 void UART::onReceiveHandler(void(*onReceive)(uint8_t* data, uint16_t length)) {fpOnReceive = onReceive;}
 void UART::onTransmitHandler(void(*onTransmit)()) {fpOnTransmit = onTransmit;}
 
