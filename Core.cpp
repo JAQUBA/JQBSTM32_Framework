@@ -29,23 +29,22 @@ void delay(volatile uint32_t delay_ms) {HAL_Delay(delay_ms);}
 unsigned long ulMillis;
 unsigned long millis() {return ulMillis;}
 
-int main() {
-	HAL_Init();
+Core::Core() {
+  HAL_Init();
 	SystemClock_Config();
-	
-	init();
-
-	MX_TIM7_Init();
+  init();
+  MX_TIM7_Init();
 	HAL_TIM_Base_Start_IT(&htim7);
-	
 #ifdef DWT
 	DWT_COUNTER_ENABLE();
 #endif
-	setup();
+}
+Core _core;
 
+int main() {
+	setup();
 	while (1) {
         mainTasks.execute();
-        HAL_GPIO_TogglePin(D2_GPIO_Port, D2_Pin);
         loop();
     }
 }

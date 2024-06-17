@@ -13,7 +13,7 @@ I2C::I2C(I2C_HandleTypeDef* instance) {
 		// task->_single=true; //wykona sie tylko raz
 		// task->delay = 200; //co 200ms
 
-		HAL_GPIO_TogglePin(D0_GPIO_Port, D0_Pin);
+		// HAL_GPIO_TogglePin(D0_GPIO_Port, D0_Pin);
 
 
 	   	// switch (_state) {

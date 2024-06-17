@@ -18,6 +18,7 @@ void Encoder::timInterrupt() {
 Encoder::Encoder(TIM_HandleTypeDef *instance) {
 	_pInstance = instance;
 	_Encoder_instances[_Encoder_instancesNum++] = this;
+    init();
 }
 void Encoder::init() {
 	HAL_TIM_Encoder_Start_IT(_pInstance, TIM_CHANNEL_ALL);

@@ -11,6 +11,11 @@
 
 typedef const char *String;
 
+class Core {
+    public:
+        Core();
+};
+
 void addTaskMain(std::function<void(struct taskStruct *task)> functionPointer, uint32_t delay, bool single = false);
 void addTaskInterrupt(std::function<void(struct taskStruct *task)> functionPointer, uint32_t delay, bool single = false);
 

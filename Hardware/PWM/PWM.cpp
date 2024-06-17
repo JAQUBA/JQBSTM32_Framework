@@ -3,8 +3,6 @@
 PWM::PWM(TIM_HandleTypeDef *instance, uint32_t channel) {
     _channel = channel;
     _instance = instance;
-}
-void PWM::init() {
     HAL_TIM_PWM_Start(_instance, _channel);
 }
 void PWM::set(uint32_t value) {
