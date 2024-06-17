@@ -8,7 +8,7 @@ class PWM {
         PWM(TIM_HandleTypeDef *instance, uint32_t channel);
         void set(uint32_t value);
     private:
-        TIM_HandleTypeDef *_instance;
+        TIM_HandleTypeDef *_pHandler;
         uint32_t _channel;
 };
 

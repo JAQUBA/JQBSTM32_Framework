@@ -5,21 +5,23 @@ struct Register {
     struct Register *next = NULL;
 } *registers;
 
-uint16_t RegisterBank::_extMemOffset = 0;
-
 RegisterBank::RegisterBank(uint16_t start, uint16_t size) {
-    _preserve = false;
     _size = size;
     _start = start;
     _stop = _start + size;
+
     _initialize();
 }
-RegisterBank::RegisterBank(uint16_t start, uint16_t size, IExternalMemory *extMemInstance, int32_t offset) {
-    _extMemInstance = extMemInstance;
-    _preserve = true;
+RegisterBank::RegisterBank(uint16_t start, uint16_t size, IExternalMemory *extMemInstance, uint32_t offset) {
+    
     _size = size;
     _start = start;
     _stop = _start + size;
+
+    _extMemInstance = extMemInstance;
+    _extMemLocation = offset;
+    _extMemPreserve = true;
+
     _initialize();
 }
 
@@ -35,11 +37,6 @@ void RegisterBank::_initialize() {
     }
     (void)memset(_registers, 0, sizeof(uint16_t) * _size);
 
-    if(_preserve) {
-        _extMemLocation = _extMemOffset;
-        _extMemOffset =+ _size;
-    }
-    
     struct Register *temp = registers, *r;
     if(registers == NULL) {
         temp = (struct Register*)malloc(sizeof(struct Register));
@@ -54,18 +51,14 @@ void RegisterBank::_initialize() {
         temp->next = r;
     }
 
-    struct Register *temp2 = registers;
-    while(temp2 != NULL) {
-        if(temp2->bank->_preserve) temp2->bank->load();
-        temp2 = temp2->next;
-    }
+    load();
 }
 
 void RegisterBank::load() {
-    if(_preserve) _extMemInstance->read16(_extMemLocation, _registers, _size);
+    if(_extMemPreserve) _extMemInstance->readFromMemory(_extMemLocation, _registers, _size);
 }
 void RegisterBank::save() {
-    if(_preserve) _extMemInstance->write16(_extMemLocation, _registers, _size);
+    if(_extMemPreserve) _extMemInstance->writeToMemory(_extMemLocation, _registers, _size);
 }
 RegisterBank *RegisterBank::find(uint16_t fullAddress) {
     struct Register *temp = registers;

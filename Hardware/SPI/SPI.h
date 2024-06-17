@@ -5,8 +5,7 @@
 
 class SPI : public IBus {
     public:
-        SPI(SPI_HandleTypeDef *_instance);
-
+        SPI(SPI_HandleTypeDef *pHandler);
 };
 
 #endif

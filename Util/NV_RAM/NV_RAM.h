@@ -6,8 +6,14 @@
 
 class NV_RAM : public IExternalMemory {
     public:
-        NV_RAM(I2C *instance, uint8_t address, uint16_t pages, uint16_t pagesize, uint16_t offset=0);
-        void read16(uint16_t address, uint16_t *data, uint16_t size);
-        void write16(uint16_t address, uint16_t *data, uint16_t size);
+        NV_RAM(I2C *pInstance, uint8_t address, uint16_t pages, uint16_t pagesize);
+
+        void readFromMemory(uint16_t address, uint16_t *data, uint16_t size, bool blocking = false);
+        void writeToMemory(uint16_t address, uint16_t *data, uint16_t size, bool blocking = false);
+    
+    private:
+        // IBus *_pInstance;
+
+        // std::list<_memOperation> functions;
 };
 #endif

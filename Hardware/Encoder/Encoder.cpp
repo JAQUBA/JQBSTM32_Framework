@@ -3,9 +3,9 @@
 Encoder *_Encoder_instances[ENCODER_MAX_INSTANCES];
 uint8_t _Encoder_instancesNum = 0;
 
-Encoder *Encoder::getInstance(TIM_HandleTypeDef *_instance) {
+Encoder *Encoder::getInstance(TIM_HandleTypeDef *_pHandler) {
     for (size_t i = 0; i < _Encoder_instancesNum; i++) {
-        if(_Encoder_instances[i]->_pInstance->Instance == _instance->Instance) return _Encoder_instances[i];
+        if(_Encoder_instances[i]->_pHandler->Instance == _pHandler->Instance) return _Encoder_instances[i];
     }
     return nullptr;
 }
@@ -15,29 +15,29 @@ void Encoder::timInterrupt() {
 	if(fnCallback) fnCallback();
 }
 
-Encoder::Encoder(TIM_HandleTypeDef *instance) {
-	_pInstance = instance;
+Encoder::Encoder(TIM_HandleTypeDef *pHandler) {
+	_pHandler = pHandler;
 	_Encoder_instances[_Encoder_instancesNum++] = this;
     init();
 }
 void Encoder::init() {
-	HAL_TIM_Encoder_Start_IT(_pInstance, TIM_CHANNEL_ALL);
+	HAL_TIM_Encoder_Start_IT(_pHandler, TIM_CHANNEL_ALL);
 }
 
 bool Encoder::getDirection() {
-	return !__HAL_TIM_IS_TIM_COUNTING_DOWN(_pInstance);
+	return !__HAL_TIM_IS_TIM_COUNTING_DOWN(_pHandler);
 }
 
 int32_t Encoder::getValue() {
     if(!fnCallback) {
-        _value = (int16_t) _pInstance->Instance->CNT;
+        _value = (int16_t) _pHandler->Instance->CNT;
         if(_value < _min) {
             _value = _min;
-            _pInstance->Instance->CNT = _value;
+            _pHandler->Instance->CNT = _value;
         }
         else if(_value > _max) {
             _value = _max;
-            _pInstance->Instance->CNT = _value;
+            _pHandler->Instance->CNT = _value;
         }
         return _value;
     }
@@ -45,7 +45,7 @@ int32_t Encoder::getValue() {
 }
 void Encoder::setValue(int32_t value) {
     if(!fnCallback) {
-        _pInstance->Instance->CNT = value;
+        _pHandler->Instance->CNT = value;
         return;
     }
     _value = value;
@@ -61,8 +61,8 @@ void Encoder::attachInterrupt(callback_function_t callback) {
 	} else {
 		fnCallback = callback;
 		if (fnCallback) {
-		  __HAL_TIM_CLEAR_FLAG(_pInstance, TIM_FLAG_UPDATE);
-		  __HAL_TIM_ENABLE_IT(_pInstance, TIM_IT_UPDATE);
+		  __HAL_TIM_CLEAR_FLAG(_pHandler, TIM_FLAG_UPDATE);
+		  __HAL_TIM_ENABLE_IT(_pHandler, TIM_IT_UPDATE);
 		}
 	}
 }

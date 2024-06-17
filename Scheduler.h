@@ -2,8 +2,6 @@
 #define __SCHEDULER_H
 
 #include "Core.h"
-#include <functional>
-#include <list>
 
 struct taskStruct {
 	std::function<void(taskStruct *task)> functionPointer;

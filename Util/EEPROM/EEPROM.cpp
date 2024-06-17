@@ -2,10 +2,10 @@
 #include "math.h"
 EEPROM::EEPROM(IBus *instance, uint8_t address, uint16_t pages, uint16_t pagesize, uint16_t offset){
 	_instance = instance;
-	_address = address;
+	// _address = address;
 	_pages = pages;
 	_pageSize = pagesize;
-	_offset = offset;
+	// _offset = offset;
 }
 void EEPROM::read16(uint16_t address, uint16_t *data, uint16_t size) {
 	// _interface

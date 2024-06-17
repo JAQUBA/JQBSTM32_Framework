@@ -5,8 +5,8 @@ uint8_t _I2C_instancesNum = 0;
 
 #define _JMP(x) {_state = x; break;}
 
-I2C::I2C(I2C_HandleTypeDef* instance) {
-    _pInstance = instance;
+I2C::I2C(I2C_HandleTypeDef* pHandler) {
+    _pHandler = pHandler;
 	_I2C_instances[_I2C_instancesNum++] = this;
 
     addTaskMain([&](taskStruct *task) {
@@ -83,17 +83,17 @@ I2C::I2C(I2C_HandleTypeDef* instance) {
 	}, 0);
 
 }
-I2C *I2C::getInstance(I2C_HandleTypeDef *_instance) {
+I2C *I2C::getInstance(I2C_HandleTypeDef *pHandler) {
     for (size_t i = 0; i < _I2C_instancesNum; i++) {
-        if(_I2C_instances[i]->_pInstance->Instance == _instance->Instance) return _I2C_instances[i];
+        if(_I2C_instances[i]->_pHandler->Instance == pHandler->Instance) return _I2C_instances[i];
     }
     return nullptr;
 }
 void I2C::send(uint16_t DevAddress, uint8_t *pData, uint16_t Size) {
-	HAL_I2C_Master_Transmit(_pInstance, DevAddress,  pData,  Size, 1000);
+	HAL_I2C_Master_Transmit(_pHandler, DevAddress,  pData,  Size, 1000);
 }
 void I2C::recv(uint16_t DevAddress, uint8_t *pData, uint16_t Size) {
-    HAL_I2C_Master_Receive(_pInstance, DevAddress, pData, Size, 1000);
+    HAL_I2C_Master_Receive(_pHandler, DevAddress, pData, Size, 1000);
 }
 void I2C::txInterrupt() {
 }

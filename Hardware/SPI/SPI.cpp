@@ -1,5 +1,5 @@
 #include "SPI.h"
 
-SPI::SPI(SPI_HandleTypeDef *_instane) {
+SPI::SPI(SPI_HandleTypeDef *pHandler) {
     
 }

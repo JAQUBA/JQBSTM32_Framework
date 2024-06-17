@@ -8,10 +8,8 @@
 
 class UART : public IBus {
     public:
-        UART_HandleTypeDef *_pInstance;
-        UART(UART_HandleTypeDef *_instance);
-
-        static UART *getInstance(UART_HandleTypeDef *_instance);
+        UART(UART_HandleTypeDef *pHandler);
+        static UART *getInstance(UART_HandleTypeDef *pHandler);
 
         void rxInterrupt();
         void txInterrupt();
@@ -22,6 +20,8 @@ class UART : public IBus {
         void onReceiveHandler(void(*onReceive)(uint8_t* data, uint16_t length));
         void onTransmitHandler(void(*onTransmit)());
     private:
+        UART_HandleTypeDef *_pHandler;
+
         void(*fpOnTransmit)();
         void(*fpOnReceive)(uint8_t* data, uint16_t length);
 

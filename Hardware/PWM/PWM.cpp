@@ -1,10 +1,10 @@
 #include "PWM.h"
 
-PWM::PWM(TIM_HandleTypeDef *instance, uint32_t channel) {
+PWM::PWM(TIM_HandleTypeDef *pHandler, uint32_t channel) {
     _channel = channel;
-    _instance = instance;
-    HAL_TIM_PWM_Start(_instance, _channel);
+    _pHandler = pHandler;
+    HAL_TIM_PWM_Start(_pHandler, _channel);
 }
 void PWM::set(uint32_t value) {
-    __HAL_TIM_SET_COMPARE(_instance, _channel, value);
+    __HAL_TIM_SET_COMPARE(_pHandler, _channel, value);
 }

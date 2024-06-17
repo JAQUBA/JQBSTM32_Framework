@@ -2,8 +2,8 @@
 
 uint16_t Analog::rawADC[8];
 
-void Analog::init(ADC_HandleTypeDef *instance) {
-    HAL_ADC_Start_DMA(instance, (uint32_t*)rawADC, instance->Init.NbrOfConversion);
+void Analog::init(ADC_HandleTypeDef *pHandler) {
+    HAL_ADC_Start_DMA(pHandler, (uint32_t*)rawADC, pHandler->Init.NbrOfConversion);
 }
 Analog::Analog(uint8_t channelNumber) {
     _channelNumber = channelNumber;

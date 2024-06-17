@@ -7,6 +7,7 @@
 #include "main.h"
 #include "fl_bit.h"
 #include <functional>
+#include <list>
 #include "Scheduler.h"
 
 typedef const char *String;

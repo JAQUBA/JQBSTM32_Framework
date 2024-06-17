@@ -2,15 +2,14 @@
 #define __ENCODER_H_
 
 #include "../../Core.h"
-#include <functional>
 using callback_function_t = std::function<void(void)>;
 
 #define ENCODER_MAX_INSTANCES 2
 
 class Encoder {
     public:
-        Encoder(TIM_HandleTypeDef *instance);
-        static Encoder *getInstance(TIM_HandleTypeDef *instance);
+        Encoder(TIM_HandleTypeDef *pHandler);
+        static Encoder *getInstance(TIM_HandleTypeDef *pHandler);
 
         void init();
         
@@ -25,7 +24,7 @@ class Encoder {
         void timInterrupt();
 
     private:
-        TIM_HandleTypeDef *_pInstance;
+        TIM_HandleTypeDef *_pHandler;
 
         int32_t _value;
         int32_t _min = 0;
