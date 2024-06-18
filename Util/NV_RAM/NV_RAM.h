@@ -3,17 +3,10 @@
 #include "../../Core.h"
 #include "../../Hardware/I2C/I2C.h"
 #include "../../Interface/IExternalMemory.h"
+#include "../../Util/EEPROM/EEPROM.h"
 
-class NV_RAM : public IExternalMemory {
+class NV_RAM : public EEPROM {
     public:
-        NV_RAM(I2C *pInstance, uint8_t address, uint16_t pages, uint16_t pagesize);
-
-        void readFromMemory(uint16_t address, uint16_t *data, uint16_t size, bool blocking = false);
-        void writeToMemory(uint16_t address, uint16_t *data, uint16_t size, bool blocking = false);
-    
-    private:
-        // IBus *_pInstance;
-
-        // std::list<_memOperation> functions;
+        NV_RAM(I2C *pInstance, uint16_t DevAddress);// : EEPROM(pInstance, DevAddress) {}
 };
 #endif

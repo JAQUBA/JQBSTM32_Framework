@@ -5,19 +5,10 @@
 
 class IExternalMemory {
     public:
-        virtual void readFromMemory(uint16_t address, uint16_t *data, uint16_t size, bool blocking = false);
-        virtual void writeToMemory(uint16_t address, uint16_t *data, uint16_t size, bool blocking = false);
+        virtual void readFromMemory(uint16_t MemAddress, uint16_t *pData, uint16_t Size, bool Blocking = false) = 0;
+        virtual void writeToMemory(uint16_t MemAddress, uint16_t *pData, uint16_t Size, bool Blocking = false) = 0;
     protected:
         IBus *_pInstance;
-
-        
-        // struct _memOperation {
-        //     enum {READ, WRITE} operation;
-        // };
-
-		// uint8_t _address;
-        // uint16_t _pages;
-        // uint16_t _pageSize;
 };
 
 #endif

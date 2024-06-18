@@ -7,9 +7,13 @@
 
 class EEPROM : public IExternalMemory {
     public:
-        EEPROM(IBus *instance, uint8_t address, uint16_t pages, uint16_t pagesize, uint16_t offset=0);
-        void read16(uint16_t address, uint16_t *data, uint16_t size);
-        void write16(uint16_t address, uint16_t *data, uint16_t size);
-
+        EEPROM(I2C *pInstance, uint16_t DevAddress, uint16_t pages = 1, uint16_t pagesize = -1);
+        void readFromMemory(uint16_t MemAddress, uint8_t *pData, uint16_t Size, bool Blocking = false) {}
+        void writeToMemory(uint16_t MemAddress, uint8_t *pData, uint16_t Size, bool Blocking = false) {}
+    protected:
+        I2C *_pInstance;
+        uint16_t    _DevAddress;
+        uint16_t    _pages = 1;
+        uint16_t    _pageSize = -1;
 };
 #endif

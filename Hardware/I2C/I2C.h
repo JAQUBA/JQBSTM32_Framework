@@ -11,10 +11,15 @@ class I2C : public IBus {
         I2C(I2C_HandleTypeDef *pHandler);
         static I2C *getInstance(I2C_HandleTypeDef *pHandler);
 
-        void txInterrupt();
-
         void send(uint16_t DevAddress, uint8_t *pData, uint16_t Size);
-        void recv(uint16_t DevAddress, uint8_t *pData, uint16_t Size);
+        void receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size);
+
+        void readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t *data, uint16_t size, bool blocking = false);
+        void writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t *data, uint16_t size, bool blocking = false);
+        
+        void txInterrupt();
+        void rxInterrupt();
+
     private:
         I2C_HandleTypeDef* _pHandler;
 
