@@ -5,8 +5,8 @@
 
 class IExternalMemory {
     public:
-        virtual void readFromMemory(uint16_t MemAddress, uint16_t *pData, uint16_t Size, bool Blocking = false) = 0;
-        virtual void writeToMemory(uint16_t MemAddress, uint16_t *pData, uint16_t Size, bool Blocking = false) = 0;
+        virtual void readFromMemory(uint16_t MemAddress, uint8_t *pData, uint16_t Size, bool Blocking = false) {};
+        virtual void writeToMemory(uint16_t MemAddress, uint8_t *pData, uint16_t Size, bool Blocking = false) {};
     protected:
         IBus *_pInstance;
 };

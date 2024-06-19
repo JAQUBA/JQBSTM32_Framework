@@ -5,22 +5,37 @@ uint8_t _I2C_instancesNum = 0;
 
 #define _JMP(x) {_state = x; break;}
 
-I2C::I2C(I2C_HandleTypeDef* pHandler) {
-    _pHandler = pHandler;
-	_I2C_instances[_I2C_instancesNum++] = this;
-}
 I2C *I2C::getInstance(I2C_HandleTypeDef *pHandler) {
     for (size_t i = 0; i < _I2C_instancesNum; i++) {
         if(_I2C_instances[i]->_pHandler->Instance == pHandler->Instance) return _I2C_instances[i];
     }
     return nullptr;
 }
-void I2C::send(uint16_t DevAddress, uint8_t *pData, uint16_t Size) {
+void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c) {I2C::getInstance(hi2c)->rxInterrupt();}
+void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c) {I2C::getInstance(hi2c)->txInterrupt();}
+
+I2C::I2C(I2C_HandleTypeDef* pHandler) {
+    _pHandler = pHandler;
+	_I2C_instances[_I2C_instancesNum++] = this;
+	addTaskMain([&](taskStruct *task) {
+
+	}, 0);
+}
+
+void I2C::send(uint16_t DevAddress, uint8_t *pData, uint16_t Size, bool Blocking) {
 	HAL_I2C_Master_Transmit(_pHandler, DevAddress,  pData,  Size, 1000);
 }
-// void I2C::recv(uint16_t DevAddress, uint8_t *pData, uint16_t Size) {
-    // HAL_I2C_Master_Receive(_pHandler, DevAddress, pData, Size, 1000);
-// }
+void I2C::receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, bool Blocking) {
+    HAL_I2C_Master_Receive(_pHandler, DevAddress, pData, Size, 1000);
+}
+
+void I2C::readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size, bool Blocking) {
+	HAL_I2C_Mem_Read(_pHandler, DevAddress, MemAddress, I2C_MEMADD_SIZE_8BIT, pData, Size, 1000);
+}
+void I2C::writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size, bool Blocking) {
+	HAL_I2C_Mem_Read(_pHandler, DevAddress, MemAddress, I2C_MEMADD_SIZE_8BIT, pData, Size, 1000);
+}
+
 void I2C::txInterrupt() {
 
 }
@@ -29,9 +44,10 @@ void I2C::rxInterrupt() {
 }
 
 
+// while (HAL_I2C_GetState(_pInstance) == HAL_I2C_STATE_MEM_BUSY_TX) { }
 
-void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c) {I2C::getInstance(hi2c)->rxInterrupt();}
-void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c) {I2C::getInstance(hi2c)->txInterrupt();}
+
+
         
 
         

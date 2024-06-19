@@ -13,7 +13,6 @@ RegisterBank::RegisterBank(uint16_t start, uint16_t size) {
     _initialize();
 }
 RegisterBank::RegisterBank(uint16_t start, uint16_t size, IExternalMemory *extMemInstance, uint32_t offset) {
-    
     _size = size;
     _start = start;
     _stop = _start + size;
@@ -55,10 +54,10 @@ void RegisterBank::_initialize() {
 }
 
 void RegisterBank::load() {
-    if(_extMemPreserve) _extMemInstance->readFromMemory(_extMemLocation, _registers, _size);
+    if(_extMemPreserve) _extMemInstance->readFromMemory(_extMemLocation, (uint8_t *) _registers, _size);
 }
 void RegisterBank::save() {
-    if(_extMemPreserve) _extMemInstance->writeToMemory(_extMemLocation, _registers, _size);
+    if(_extMemPreserve) _extMemInstance->writeToMemory(_extMemLocation, (uint8_t *) _registers, _size);
 }
 RegisterBank *RegisterBank::find(uint16_t fullAddress) {
     struct Register *temp = registers;
