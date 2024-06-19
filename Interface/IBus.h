@@ -5,9 +5,6 @@
 
 class IBus {
     public:
-        virtual void txInterrupt() {};
-        virtual void rxInterrupt() {};
-
         virtual void send(uint8_t *data, uint16_t length) {};
         virtual void send(const char *data, uint16_t length) {};
     protected:

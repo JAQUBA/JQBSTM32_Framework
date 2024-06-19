@@ -1,6 +1,5 @@
 #include "EEPROM.h"
-#include "math.h"
-EEPROM::EEPROM(I2C *pInstance, uint16_t DevAddress, uint16_t pages, uint16_t pageSize){
+EEPROM::EEPROM(I2C *pInstance, uint16_t DevAddress, uint16_t pages, uint16_t pageSize) {
 	_pInstance = pInstance;
 	_DevAddress = DevAddress;
 	_pages = pages;

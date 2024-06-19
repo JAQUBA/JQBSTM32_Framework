@@ -3,7 +3,6 @@
 #include "../../Core.h"
 #include "../../Hardware/I2C/I2C.h"
 #include "../../Interface/IExternalMemory.h"
-#include "../../Interface/IBus.h"
 
 class EEPROM : public IExternalMemory {
     public:
