@@ -1,9 +1,13 @@
 #include "I2C.h"
+#include "Hardware/GPIO/GPIO.h"
+#include "Application/portMap.h"
+
+#include "usart.h"
+#include "Hardware/UART/UART.h"
+extern UART rs232;
 
 I2C *_I2C_instances[I2C_MAX_INSTANCES];
 uint8_t _I2C_instancesNum = 0;
-
-#define _JMP(x) {_state = x; break;}
 
 I2C *I2C::getInstance(I2C_HandleTypeDef *pHandler) {
     for (size_t i = 0; i < _I2C_instancesNum; i++) {
@@ -18,129 +22,126 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
     _pHandler = pHandler;
 	_I2C_instances[_I2C_instancesNum++] = this;
 	addTaskMain([&](taskStruct *task) {
+		if(operations.empty()) return;
+		currentOperation = operations.front();
 
+		char arr[128];
+		uint16_t len = sprintf(arr,
+			"%p %p\r\n",
+			currentOperation.pData,
+			currentOperation.pData++
+		);
+		rs232.send(arr, len);
+		
+		while (HAL_I2C_GetState(_pHandler) != HAL_I2C_STATE_READY) {}
+		HAL_I2C_Master_Transmit_DMA(
+			_pHandler, 
+			currentOperation.DevAddress,
+			currentOperation.pData,
+			currentOperation.Size
+		);
+		while (HAL_I2C_GetState(_pHandler) != HAL_I2C_STATE_READY) {}
+		operations.pop();
+		// GPIO.toggle(LED);
 	}, 0);
 }
 
-void I2C::send(uint16_t DevAddress, uint8_t *pData, uint16_t Size, bool Blocking) {
-	HAL_I2C_Master_Transmit(_pHandler, DevAddress,  pData,  Size, 1000);
-}
-void I2C::receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, bool Blocking) {
-    HAL_I2C_Master_Receive(_pHandler, DevAddress, pData, Size, 1000);
-}
-
-void I2C::readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size, bool Blocking) {
-	HAL_I2C_Mem_Read(_pHandler, DevAddress, MemAddress, I2C_MEMADD_SIZE_8BIT, pData, Size, 1000);
-}
-void I2C::writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size, bool Blocking) {
-	HAL_I2C_Mem_Read(_pHandler, DevAddress, MemAddress, I2C_MEMADD_SIZE_8BIT, pData, Size, 1000);
-}
-
 void I2C::txInterrupt() {
-
+	GPIO.toggle(LED);
 }
+
+
 void I2C::rxInterrupt() {
+}
 
+void I2C::send(uint16_t DevAddress, uint8_t *pData, uint16_t Size) {
+	i2cOperation operation;
+	operation.operationType = EoperationType::SEND;
+	operation.DevAddress = DevAddress;
+	operation.pData = pData;
+	operation.Size = Size;
+	operations.push(operation);
+}
+void I2C::receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size) {
+    i2cOperation operation;
+	operation.operationType = EoperationType::RECEIVE;
+	operation.DevAddress = DevAddress;
+	operation.pData = pData;
+	operation.Size = Size;
+	operations.push(operation);
+}
+
+void I2C::readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size) {
+	i2cOperation operation;
+	operation.operationType = EoperationType::MEM_READ;
+	operation.DevAddress = DevAddress;
+	operation.MemAddress = MemAddress;
+	operation.pData = pData;
+	operation.Size = Size;
+	operations.push(operation);
+}
+void I2C::writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size) {
+	i2cOperation operation;
+	operation.operationType = EoperationType::MEM_WRITE;
+	operation.DevAddress = DevAddress;
+	operation.MemAddress = MemAddress;
+	operation.pData = pData;
+	operation.Size = Size;
+	operations.push(operation);
 }
 
 
-// while (HAL_I2C_GetState(_pInstance) == HAL_I2C_STATE_MEM_BUSY_TX) { }
 
 
 
-        
+	// 	while (HAL_I2C_GetState(_pHandler) != HAL_I2C_STATE_READY)
+    // {
+    // } 
 
-        
-        
-        // struct _memOperation {
-        //     enum {READ, WRITE} operation;
-        // };
+		// while(
+		// 	HAL_I2C_Master_Transmit_IT(
+		// 	_pHandler, 
+		// 	currentOperation.DevAddress,
+		// 	currentOperation.pData,
+		// 	currentOperation.Size
+		// ) ;
+		// != HAL_OK) {
 
-        // std::list<_memOperation> functions;
-// HAL_I2C_Mem_Write(_instance, _address, ((address*2) + _offset), I2C_MEMADD_SIZE_8BIT, (uint8_t*)data, (size * 2), 1000);
-// HAL_StatusTypeDef HAL_I2C_Mem_Read(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint16_t MemAddress,
-//                                    uint16_t MemAddSize, uint8_t *pData, uint16_t Size, uint32_t Timeout);
-
-	// _pInstance->readFromMemory(_address, address, pData)
-	// _pInstance->send();
-	// _pInstance->send(address,data,size);
-	// HAL_I2C_Master_Receive_IT();
-	// HAL_I2c_
-	// HAL_SPI_Receive_IT();
-	// HAL_I2S_Receive_IT();
-	// HAL_UART_Receive_IT();
-	// HAL_IRDA_Receive_IT();
-	// HAL_I2C_Mem_Read(_pInstance, _address, ((address*2) + _offset), I2C_MEMADD_SIZE_8BIT, (uint8_t*)data, (size * 2), 1000);
-	// HAL_I2C_Mem_Read_IT();
-    // addTaskMain([&](taskStruct *task) {
-		// task->_single=true; //wykona sie tylko raz
-		// task->delay = 200; //co 200ms
-
-		// HAL_GPIO_TogglePin(D0_GPIO_Port, D0_Pin);
-
-
-	   	// switch (_state) {
-		// 	case START_READ16:{ 
-		// 		_i2c_state = HAL_I2C_Mem_Read_DMA(_instance, _address, ((_address*2) + _offset),
-		// 			I2C_MEMADD_SIZE_8BIT, (uint8_t*)_data, (_size * 2));
-
-		// 		_JMP(NIL);
-
-		// 		if (_i2c_state==HAL_OK){
-		// 			_timeout=4;
-		// 			_JMP(WAIT_COMPL_READ16);
-		// 		}
-		// 		else if (_i2c_state==HAL_ERROR){
-		// 			_status = I2C_ERR_HAL;
-		// 			_JMP(NIL);//ERR
-		// 		}
-		// 		if (_timeout==0){
-		// 			_status = I2C_ERR_TO_S;
-		// 			_JMP(NIL);//ERR
-		// 		}
-		// 	}
-
-		// 	case WAIT_COMPL_READ16:{
-		// 		if (HAL_I2C_STATE_READY == _instance->State){
-		// 			_JMP(NIL);//OK
-		// 		}
-		// 		if (_timeout==0){
-		// 			_status = I2C_ERR_TO_W;
-		// 			_JMP(NIL);//ERR
-		// 		}
-		// 	}
-
-		// 	case START_WRITE16:{ 
-		// 		//_i2c_state=HAL_I2C_Mem_Write_DMA(_instance, _address, ((_address*2) + _offset),
-		// 			//I2C_MEMADD_SIZE_8BIT, (uint8_t*)_data, (_size * 2));
-		// 		_JMP(NIL);
-
-		// 		if (_i2c_state==HAL_OK){
-		// 			_timeout=4;
-		// 			_JMP(WAIT_COMPL_WRITE16);
-		// 		}
-		// 		else if (_i2c_state==HAL_ERROR){
-		// 			_status = I2C_ERR_HAL;
-		// 			_JMP(NIL);//ERR
-		// 		}
-		// 		if (_timeout==0){
-		// 			_status = I2C_ERR_TO_S;
-		// 			_JMP(NIL);//ERR
-		// 		}
-		// 	}
-
-		// 	case WAIT_COMPL_WRITE16:{
-		// 		if (HAL_I2C_STATE_READY == _instance->State){
-		// 			_JMP(NIL);//OK
-		// 		}
-		// 		if (_timeout==0){
-		// 			_status = I2C_ERR_TO_W;
-		// 			_JMP(NIL);//ERR
-		// 		}
-		// 	}
-
-		// 	default: {
-
-		// 	}
 		// }
-	// }, 0);
+
+	// 	while (HAL_I2C_GetState(_pHandler) != HAL_I2C_STATE_READY)
+    // {
+    // } 
+
+		
+
+	// 	switch(i2cState) {
+	// 		case IDLE: {
+	// 			if(!operations.empty()) {
+	// 				currentOperation = operations.front();
+	// 				i2cState = WORK;
+	// 			}
+	// 			break;
+	// 		}
+	// 		case WORK: {
+	// 			if(currentOperation.operationType == EoperationType::SEND) {
+	// 				while(HAL_I2C_Master_Transmit_DMA(
+	// 					_pHandler,
+	// 					currentOperation.DevAddress,
+	// 					currentOperation.pData,
+	// 					currentOperation.Size
+	// 				) != HAL_OK) {
+
+	// 				}
+	// 				i2cState = FINISH;
+	// 			}
+	// 			break;
+	// 		}
+	// 		case FINISH: {
+	// 			operations.pop_front();
+	// 			i2cState = IDLE;
+	// 			return;
+	// 		}
+	// 		default: {
+	// 		}
+	// 	}

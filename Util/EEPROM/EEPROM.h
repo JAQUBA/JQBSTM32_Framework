@@ -7,8 +7,21 @@
 class EEPROM : public IExternalMemory {
     public:
         EEPROM(I2C *pInstance, uint16_t DevAddress, uint16_t pages = 1, uint16_t pagesize = -1);
-        void readFromMemory(uint16_t MemAddress, uint8_t *pData, uint16_t Size, bool Blocking = false);
-        void writeToMemory(uint16_t MemAddress, uint8_t *pData, uint16_t Size, bool Blocking = false);
+
+        void readFromMemory(
+            uint16_t MemAddress, 
+            uint8_t *pData, 
+            uint16_t Size, 
+            std::function<void(memOperation *operation)> functionPointer = nullptr
+        ) override;
+
+        void writeToMemory(
+            uint16_t MemAddress, 
+            uint8_t *pData, 
+            uint16_t Size, 
+            std::function<void(memOperation *operation)> functionPointer = nullptr
+        ) override;
+    
     protected:
         I2C *_pInstance;
         uint16_t    _DevAddress;
