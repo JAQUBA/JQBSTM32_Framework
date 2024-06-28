@@ -13,11 +13,11 @@ class I2C : public IBus {
         I2C(I2C_HandleTypeDef *pHandler);
         static I2C *getInstance(I2C_HandleTypeDef *pHandler);
 
-        void send(uint16_t DevAddress, uint8_t *pData, uint16_t Size);
-        void receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size);
+        void send(uint16_t DevAddress, uint8_t *pData, uint16_t Size, std::function<void()> callbackFn = nullptr);
+        void receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, std::function<void()> callbackFn = nullptr);
 
-        void readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size);
-        void writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size);
+        void readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size, std::function<void()> callbackFn = nullptr);
+        void writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size, std::function<void()> callbackFn = nullptr);
         
         void txInterrupt();
         void rxInterrupt();
@@ -39,8 +39,10 @@ class I2C : public IBus {
         
         enum {
             IDLE,
+            CHECK_FREE,
             WORK,
             WAITING,
+            CLEAR,
             FINISH,
         } i2cState = IDLE;
 
