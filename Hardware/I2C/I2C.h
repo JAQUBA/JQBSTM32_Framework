@@ -8,16 +8,18 @@
 
 #define I2C_MAX_INSTANCES 2
 
+using i2cCallback_f = std::function<void(uint8_t *pData, uint16_t Size)>;
+
 class I2C : public IBus {
     public:
         I2C(I2C_HandleTypeDef *pHandler);
         static I2C *getInstance(I2C_HandleTypeDef *pHandler);
 
-        void send(uint16_t DevAddress, uint8_t *pData, uint16_t Size, std::function<void()> callbackFn = nullptr);
-        void receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, std::function<void()> callbackFn = nullptr);
+        void send(uint16_t DevAddress, uint8_t *pData, uint16_t Size, i2cCallback_f callbackFn = nullptr);
+        void receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, i2cCallback_f callbackFn = nullptr);
 
-        void readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size, std::function<void()> callbackFn = nullptr);
-        void writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size, std::function<void()> callbackFn = nullptr);
+        void readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size, i2cCallback_f callbackFn = nullptr);
+        void writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size, i2cCallback_f callbackFn = nullptr);
         
         void txInterrupt();
         void rxInterrupt();
@@ -33,6 +35,7 @@ class I2C : public IBus {
             uint16_t MemAddress;
             uint8_t *pData;
             uint16_t Size;
+            i2cCallback_f callback_f;
         };
         
         std::queue<i2cOperation> operations;

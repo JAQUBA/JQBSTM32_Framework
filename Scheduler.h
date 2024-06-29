@@ -3,6 +3,15 @@
 
 #include "Core.h"
 
+#include <functional>
+#include <list>
+
+#define taskCallback [&](taskStruct *task)
+#define TASK(x) void x(taskStruct *task)
+
+using taskCallback_f = std::function<void(struct taskStruct *task)>;
+// #define taskCallback_f std::function<void(struct taskStruct *task)>
+
 struct taskStruct {
 	std::function<void(taskStruct *task)> functionPointer;
     volatile uint16_t _delay = 0;
@@ -18,7 +27,7 @@ struct taskStruct {
 
 class Scheduler {
     public:
-        void addTask(std::function<void(taskStruct *task)> functionPointer, uint32_t delay, bool single = false);
+        void addTask(taskCallback_f functionPointer, uint32_t delay, bool single = false);
         void execute();
         void poll1ms();
     private:

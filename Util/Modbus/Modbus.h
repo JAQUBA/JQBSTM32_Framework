@@ -25,6 +25,7 @@ class Modbus {
 class ModbusSlave : public Modbus {
     public:
         void setID(uint8_t slaveID);
+        void setID(uint8_t *slaveID);
     private:
 };
 

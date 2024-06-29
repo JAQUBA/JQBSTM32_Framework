@@ -16,7 +16,7 @@ class FDCAN {
 		void poll();
 		void send(uint32_t identifier, uint8_t *data, uint16_t dataLen, uint32_t DataLength = FDCAN_DLC_BYTES_8);
 
-		void handleMessage();
+		void RxFifo0Callback();
 	private:
 		FDCAN_HandleTypeDef *_pInstance;
 		FDCAN_FilterTypeDef sFilterConfig;

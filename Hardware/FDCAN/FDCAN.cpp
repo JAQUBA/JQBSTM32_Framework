@@ -44,7 +44,7 @@ FDCAN *FDCAN::getInstance(FDCAN_HandleTypeDef *_instance) {
     }
     return nullptr;
 }
-void FDCAN::handleMessage() {
+void FDCAN::RxFifo0Callback() {
     if(HAL_FDCAN_GetRxMessage(_pHandler, FDCAN_RX_FIFO0, &pRxHeader, recv_buff) != HAL_OK) return;
     hasPacket = true;
 }
@@ -79,6 +79,6 @@ void FDCAN::poll() {
     hasPacket = false;
 }
 extern "C" void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *pHandler, uint32_t RxFifo0ITs) {
-    if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) FDCAN::getInstance(pHandler)->handleMessage();
+    if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) FDCAN::getInstance(pHandler)->RxFifo0Callback();
 }
 #endif

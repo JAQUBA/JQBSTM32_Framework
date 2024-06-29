@@ -11,7 +11,7 @@ void EEPROM::readFromMemory(
 	uint16_t Size, 
 	std::function<void(memOperation *operation)> functionPointer
 ) {
-
+	_pInstance->readFromMemory(_DevAddress, MemAddress, pData, Size);
 }
 void EEPROM::writeToMemory(
 	uint16_t MemAddress, 
@@ -19,5 +19,5 @@ void EEPROM::writeToMemory(
 	uint16_t Size, 
 	std::function<void(memOperation *operation)> functionPointer
 ) {
-	// _pInstance->send();
+	_pInstance->writeToMemory(_DevAddress, MemAddress, pData, Size);
 }

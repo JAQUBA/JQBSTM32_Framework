@@ -7,6 +7,14 @@ UART::UART(UART_HandleTypeDef *pHandler) {
     _pHandler = pHandler;
     _UART_instances[_UART_instancesNum++] = this;
     HAL_UART_Receive_IT(_pHandler, &Received_u1, 1);
+
+    addTaskMain(taskCallback {
+        if(received && millis() > lastReceivedByte + 20) {
+            if(fpOnReceive) fpOnReceive(rx_buffer, rx_data_index);
+            rx_data_index = 0;
+            received = false;
+        }
+    }, 0);
 }
 
 UART *UART::getInstance(UART_HandleTypeDef *pHandler) {
@@ -24,25 +32,24 @@ void UART::rxInterrupt() {
     lastReceivedByte = millis();
     received = true;
     HAL_UART_Receive_IT(_pHandler, &Received_u1, 1);
-    addTaskMain([&](taskStruct *task) {
-        if(received && millis() > lastReceivedByte + 20) {
-            if(fpOnReceive) fpOnReceive(rx_buffer, rx_data_index);
-            rx_data_index = 0;
-            received = false;
-        }
-    }, 0);
 }
-void UART::txInterrupt() {}
+void UART::txInterrupt() {
 
-void UART::onReceiveHandler(void(*onReceive)(uint8_t* data, uint16_t length)) {fpOnReceive = onReceive;}
-void UART::onTransmitHandler(void(*onTransmit)()) {fpOnTransmit = onTransmit;}
+}
+
+void UART::onReceiveHandler(std::function<void(uint8_t* data, uint16_t length)> onReceive) {fpOnReceive = onReceive;}
+void UART::onTransmitHandler(std::function<void()> onTransmit) {fpOnTransmit = onTransmit;}
 
 void UART::send(uint8_t *data, uint16_t length) {
     if(fpOnTransmit) fpOnTransmit();
     // HAL_UART_Transmit_DMA(_pInstance, data, length);
     HAL_UART_Transmit(_pHandler, data, length, 1000);
 }
-void UART::send(const char *data, uint16_t length) {send((uint8_t *)data, length);}
+void UART::send(const char *data, uint16_t length) {
+    send((uint8_t *)data, length);
+}
+
+
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {UART::getInstance(huart)->rxInterrupt();}
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {UART::getInstance(huart)->txInterrupt();}

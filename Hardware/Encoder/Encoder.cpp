@@ -55,7 +55,7 @@ void Encoder::setLimits(int32_t min, int32_t max) {
     _max = max;
 }
 
-void Encoder::attachInterrupt(callback_function_t callback) {
+void Encoder::attachInterrupt(encoderCallback_f callback) {
 	if (fnCallback) {
 		fnCallback = callback;
 	} else {

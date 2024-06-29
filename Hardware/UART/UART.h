@@ -17,13 +17,13 @@ class UART : public IBus {
         void send(uint8_t *data, uint16_t length);
         void send(const char *data, uint16_t length);
         
-        void onReceiveHandler(void(*onReceive)(uint8_t* data, uint16_t length));
-        void onTransmitHandler(void(*onTransmit)());
+        void onReceiveHandler(std::function<void(uint8_t* data, uint16_t length)> onReceive);
+        void onTransmitHandler(std::function<void()> onTransmit);
     private:
         UART_HandleTypeDef *_pHandler;
 
-        void(*fpOnTransmit)();
-        void(*fpOnReceive)(uint8_t* data, uint16_t length);
+        std::function<void()> fpOnTransmit;
+        std::function<void(uint8_t* data, uint16_t length)> fpOnReceive;
 
         uint8_t Received_u1;
         

@@ -14,7 +14,7 @@ void NV_RAM::readFromMemory(
 	uint16_t Size, 
 	std::function<void(memOperation *operation)> functionPointer
 ) {
-
+	_pInstance->readFromMemory(_DevAddress, MemAddress, pData, Size);
 }
 void NV_RAM::writeToMemory(
 	uint16_t MemAddress, 
@@ -22,5 +22,5 @@ void NV_RAM::writeToMemory(
 	uint16_t Size, 
 	std::function<void(memOperation *operation)> functionPointer
 ) {
-
+	_pInstance->writeToMemory(_DevAddress, MemAddress, pData, Size);
 }

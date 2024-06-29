@@ -1,6 +1,6 @@
 #include "Scheduler.h"
 
-void Scheduler::addTask(std::function<void(taskStruct *task)> functionPointer, uint32_t delay, bool single) {
+void Scheduler::addTask(taskCallback_f functionPointer, uint32_t delay, bool single) {
     taskStruct node;
 
     node.functionPointer = functionPointer;

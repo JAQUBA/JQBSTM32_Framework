@@ -5,11 +5,12 @@
 
 class USB_CDC {
     public:
+        USB_CDC();
         bool send(uint8_t* Buf, uint16_t Len);
-        bool send(String buf);
+        bool send(const char *buf);
 
-        void onReceiveHandler(void(*onReceive)(uint8_t* data, uint32_t length));
-        void onTransmitHandler(void(*onTransmit)());
+        void onReceiveHandler(std::function<void(uint8_t* data, uint16_t length)> onReceive);
+        void onTransmitHandler(std::function<void()> onTransmit);
 
     private:
 };

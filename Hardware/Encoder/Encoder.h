@@ -2,7 +2,7 @@
 #define __ENCODER_H_
 
 #include "../../Core.h"
-using callback_function_t = std::function<void(void)>;
+using encoderCallback_f = std::function<void(void)>;
 
 #define ENCODER_MAX_INSTANCES 2
 
@@ -20,7 +20,7 @@ class Encoder {
 
         void setLimits(int32_t min, int32_t max);
 
-        void attachInterrupt(callback_function_t callback);
+        void attachInterrupt(encoderCallback_f callback);
         void timInterrupt();
 
     private:
@@ -30,7 +30,7 @@ class Encoder {
         int32_t _min = 0;
         int32_t _max = -1;
         
-        callback_function_t fnCallback;
+        encoderCallback_f fnCallback;
 };
 
 #endif
