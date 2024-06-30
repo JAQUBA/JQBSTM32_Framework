@@ -2,7 +2,6 @@
 #define __SCHEDULER_H
 
 #include "Core.h"
-
 #include <functional>
 #include <list>
 
@@ -10,7 +9,6 @@
 #define TASK(x) void x(taskStruct *task)
 
 using taskCallback_f = std::function<void(struct taskStruct *task)>;
-// #define taskCallback_f std::function<void(struct taskStruct *task)>
 
 struct taskStruct {
 	std::function<void(taskStruct *task)> functionPointer;

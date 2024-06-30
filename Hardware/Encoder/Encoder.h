@@ -2,6 +2,7 @@
 #define __ENCODER_H_
 
 #include "../../Core.h"
+
 using encoderCallback_f = std::function<void(void)>;
 
 #define ENCODER_MAX_INSTANCES 2
