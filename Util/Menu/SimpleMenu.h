@@ -3,6 +3,8 @@
 
 #include "../../Core.h"
 
+typedef const char *String;
+
 class SimpleMenu
 {
     public:

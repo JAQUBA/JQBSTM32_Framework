@@ -1,10 +1,13 @@
 #include "Modbus.h"
-#include "../CRC16/CRC16.h"
+#include "../Math/CRC16.h"
 
 void (*functionHandlers[4])(ModbusFrame *request) = { };
 
 void ModbusSlave::setID(uint8_t slaveID) {
     this->_slaveID = slaveID;
+}
+void ModbusSlave::setID(uint8_t *slaveID) {
+    this->_slaveID = *slaveID;
 }
 void Modbus::bind_function(ModbusFunction function, void(*functionPointer)(ModbusFrame *request)) {
     functionHandlers[function] = functionPointer;

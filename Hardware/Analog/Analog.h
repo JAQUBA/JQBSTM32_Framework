@@ -5,7 +5,7 @@
 
 class Analog {
     public:
-        static void init(ADC_HandleTypeDef *analog);
+        static void init(ADC_HandleTypeDef *pHandler);
         Analog(uint8_t channelNumber);
         uint16_t getRaw();
         uint16_t getValue();

@@ -1,23 +1,22 @@
 #ifndef __FDCAN_H_
 #define __FDCAN_H_
 
-// #ifdef __FDCAN_H__
-#include "Core.h"
+#include "../../Core.h"
 
 #define FDCAN_MAX_INSTANCES 1
 
 class FDCAN {
 	public:
-		FDCAN(FDCAN_HandleTypeDef *instance);
+		FDCAN(FDCAN_HandleTypeDef *pHandler);
 		void init();
 
-		static FDCAN *getInstance(FDCAN_HandleTypeDef *_instance);
+		static FDCAN *getInstance(FDCAN_HandleTypeDef *pHandler);
 
 		void onPacket(uint16_t commNumber, void(*handler)(uint8_t *data, uint16_t dataLen));
 		void poll();
 		void send(uint32_t identifier, uint8_t *data, uint16_t dataLen, uint32_t DataLength = FDCAN_DLC_BYTES_8);
 
-		void handleMessage();
+		void RxFifo0Callback();
 	private:
 		FDCAN_HandleTypeDef *_pInstance;
 		FDCAN_FilterTypeDef sFilterConfig;
@@ -36,7 +35,4 @@ class FDCAN {
 
 		struct handlerStruct *handlers;
 };
-
-
-// #endif
 #endif

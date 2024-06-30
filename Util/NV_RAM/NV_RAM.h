@@ -1,12 +1,14 @@
-#ifndef __EEPROM_H_
-#define __EEPROM_H_
+#ifndef __NV_RAM_H_
+#define __NV_RAM_H_
 #include "../../Core.h"
 #include "../../Hardware/I2C/I2C.h"
+#include "../../Hardware/SPI/SPI.h"
 #include "../../Interface/IExternalMemory.h"
 
-class EEPROM : public IExternalMemory {
+class NV_RAM : public IExternalMemory {
     public:
-        EEPROM(I2C *pInstance, uint16_t DevAddress, uint16_t pages = 1, uint16_t pagesize = -1);
+        NV_RAM(I2C *pInstance, uint16_t DevAddress);
+        NV_RAM(SPI *pInstance, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
 
         void readFromMemory(
             uint16_t MemAddress, 
@@ -21,11 +23,12 @@ class EEPROM : public IExternalMemory {
             uint16_t Size, 
             std::function<void(memOperation *operation)> functionPointer = nullptr
         ) override;
-    
+
     protected:
         I2C *_pInstance;
+        SPI *_pInstance2;
         uint16_t    _DevAddress;
-        uint16_t    _pages = 1;
-        uint16_t    _pageSize = -1;
+
+        
 };
 #endif

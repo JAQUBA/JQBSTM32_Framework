@@ -2,30 +2,28 @@
 #define __UART_H_
 
 #include "../../Core.h"
+#include "Interface/IBus.h"
 
 #define UART_MAX_INSTANCES 2
 
-class UART {
+class UART : public IBus {
     public:
-        UART_HandleTypeDef *_pInstance;
-        UART(UART_HandleTypeDef *_instance);
-
-        static UART *getInstance(UART_HandleTypeDef *_instance);
+        UART(UART_HandleTypeDef *pHandler);
+        static UART *getInstance(UART_HandleTypeDef *pHandler);
 
         void rxInterrupt();
         void txInterrupt();
 
-        void init();
-        void poll();
-
         void send(uint8_t *data, uint16_t length);
         void send(const char *data, uint16_t length);
         
-        void onReceiveHandler(void(*onReceive)(uint8_t* data, uint16_t length));
-        void onTransmitHandler(void(*onTransmit)());
+        void onReceiveHandler(std::function<void(uint8_t* data, uint16_t length)> onReceive);
+        void onTransmitHandler(std::function<void()> onTransmit);
     private:
-        void(*fpOnTransmit)();
-        void(*fpOnReceive)(uint8_t* data, uint16_t length);
+        UART_HandleTypeDef *_pHandler;
+
+        std::function<void()> fpOnTransmit;
+        std::function<void(uint8_t* data, uint16_t length)> fpOnReceive;
 
         uint8_t Received_u1;
         

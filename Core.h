@@ -7,12 +7,18 @@
 #include "main.h"
 #include "fl_bit.h"
 #include <functional>
+#include <list>
 #include "Scheduler.h"
 
-typedef const char *String;
+using taskCallback_f = std::function<void(struct taskStruct *task)>;
 
-void addTaskMain(std::function<void(struct taskStruct *task)> functionPointer, uint32_t delay, bool single = false);
-void addTaskInterrupt(std::function<void(struct taskStruct *task)> functionPointer, uint32_t delay, bool single = false);
+class Core {
+    public:
+        Core();
+};
+
+void addTaskMain(taskCallback_f functionPointer, uint32_t delay, bool single = false);
+void addTaskInterrupt(taskCallback_f functionPointer, uint32_t delay, bool single = false);
 
 #ifdef __cplusplus
 extern "C" {

@@ -1,11 +1,14 @@
-#include "EEPROM.h"
-EEPROM::EEPROM(I2C *pInstance, uint16_t DevAddress, uint16_t pages, uint16_t pageSize) {
+#include "NV_RAM.h"
+NV_RAM::NV_RAM(I2C *pInstance, uint16_t DevAddress) {
 	_pInstance = pInstance;
 	_DevAddress = DevAddress;
-	_pages = pages;
-	_pageSize = pageSize;
 }
-void EEPROM::readFromMemory(
+
+NV_RAM::NV_RAM(SPI *pInstance, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
+    _pInstance2 = pInstance;
+}
+
+void NV_RAM::readFromMemory(
 	uint16_t MemAddress, 
 	uint8_t *pData, 
 	uint16_t Size, 
@@ -13,7 +16,7 @@ void EEPROM::readFromMemory(
 ) {
 	_pInstance->readFromMemory(_DevAddress, MemAddress, pData, Size);
 }
-void EEPROM::writeToMemory(
+void NV_RAM::writeToMemory(
 	uint16_t MemAddress, 
 	uint8_t *pData, 
 	uint16_t Size, 

@@ -50,3 +50,6 @@ GPIO_PinState HardwareGPIO::readOutput(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
     if ((GPIOx->ODR & GPIO_Pin) != 0x00u) return GPIO_PIN_SET;
     else return GPIO_PIN_RESET;
 }
+
+void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin) {}
+void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {}

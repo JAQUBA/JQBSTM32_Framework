@@ -4,8 +4,8 @@
 Scheduler mainTasks;
 Scheduler interruptTasks;
 
-void addTaskInterrupt(std::function<void(taskStruct *task)> functionPointer, uint32_t delay, bool single) {interruptTasks.addTask(functionPointer, delay, single);}
-void addTaskMain(std::function<void(taskStruct *task)> functionPointer, uint32_t delay, bool single) {mainTasks.addTask(functionPointer, delay, single);}
+void addTaskInterrupt(taskCallback_f functionPointer, uint32_t delay, bool single) {interruptTasks.addTask(functionPointer, delay, single);}
+void addTaskMain(taskCallback_f functionPointer, uint32_t delay, bool single) {mainTasks.addTask(functionPointer, delay, single);}
 
 #ifdef DWT
 uint8_t DWT_COUNTER_ENABLE(void) {
@@ -29,20 +29,20 @@ void delay(volatile uint32_t delay_ms) {HAL_Delay(delay_ms);}
 unsigned long ulMillis;
 unsigned long millis() {return ulMillis;}
 
-int main() {
-	HAL_Init();
+Core::Core() {
+  HAL_Init();
 	SystemClock_Config();
-	
-	init();
-
-	MX_TIM7_Init();
+  init();
+  MX_TIM7_Init();
 	HAL_TIM_Base_Start_IT(&htim7);
-	
 #ifdef DWT
 	DWT_COUNTER_ENABLE();
 #endif
-	setup();
+}
+Core _core;
 
+int main() {
+	setup();
 	while (1) {
         mainTasks.execute();
         loop();
@@ -59,3 +59,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 long map(long x, long in_min, long in_max, long out_min, long out_max) {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
+
+__weak void init() {}
+__weak void setup() {}
+__weak void loop() {}
