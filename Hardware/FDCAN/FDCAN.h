@@ -7,11 +7,9 @@
 
 class FDCAN {
 	public:
-		FDCAN(FDCAN_HandleTypeDef *pHandler);
-		void init();
-
 		static FDCAN *getInstance(FDCAN_HandleTypeDef *pHandler);
-
+		FDCAN(FDCAN_HandleTypeDef *pHandler);
+		
 		void onPacket(uint16_t commNumber, void(*handler)(uint8_t *data, uint16_t dataLen));
 		void poll();
 		void send(uint32_t identifier, uint8_t *data, uint16_t dataLen, uint32_t DataLength = FDCAN_DLC_BYTES_8);
