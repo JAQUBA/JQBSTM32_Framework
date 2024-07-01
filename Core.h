@@ -28,8 +28,8 @@ void init();
 void setup();
 void loop();
 
-extern unsigned long ulMillis;
-unsigned long millis();
+extern uint32_t ulMillis;
+uint32_t millis();
 void delay(volatile uint32_t delay_ms);
 void delay_us(volatile uint32_t delay_us);
 

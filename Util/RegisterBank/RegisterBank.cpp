@@ -12,7 +12,7 @@ RegisterBank::RegisterBank(uint16_t start, uint16_t size) {
 
     _initialize();
 }
-RegisterBank::RegisterBank(uint16_t start, uint16_t size, IExternalMemory *extMemInstance, uint32_t offset) {
+RegisterBank::RegisterBank(uint16_t start, uint16_t size, IExternalMemory *extMemInstance, uint16_t offset) {
     _size = size;
     _start = start;
     _stop = _start + size;

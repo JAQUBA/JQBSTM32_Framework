@@ -50,5 +50,7 @@ class I2C : public IBus {
         } i2cState = IDLE;
 
         i2cOperation currentOperation;
+
+        uint32_t operationTimeout;
 };
 #endif

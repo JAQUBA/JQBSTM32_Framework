@@ -26,8 +26,8 @@ void delay_us(volatile uint32_t delay_us) {
 }
 #endif
 void delay(volatile uint32_t delay_ms) {HAL_Delay(delay_ms);}
-unsigned long ulMillis;
-unsigned long millis() {return ulMillis;}
+uint32_t ulMillis;
+uint32_t millis() {return ulMillis;}
 
 Core::Core() {
   HAL_Init();
