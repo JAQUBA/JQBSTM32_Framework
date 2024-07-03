@@ -19,12 +19,11 @@ class Modbus {
         void receive(uint8_t* data, uint16_t length, void(*functionPointer)(uint8_t *data, uint16_t size));
         void bind_function(ModbusFunction function, void(*functionPointer)(ModbusFrame *request));
     protected:
-        uint8_t _slaveID;
+        uint8_t *_slaveID;
 };
 
 class ModbusSlave : public Modbus {
     public:
-        void setID(uint8_t slaveID);
         void setID(uint8_t *slaveID);
     private:
 };

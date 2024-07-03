@@ -3,17 +3,14 @@
 
 void (*functionHandlers[4])(ModbusFrame *request) = { };
 
-void ModbusSlave::setID(uint8_t slaveID) {
-    this->_slaveID = slaveID;
-}
 void ModbusSlave::setID(uint8_t *slaveID) {
-    this->_slaveID = *slaveID;
+    this->_slaveID = slaveID;
 }
 void Modbus::bind_function(ModbusFunction function, void(*functionPointer)(ModbusFrame *request)) {
     functionHandlers[function] = functionPointer;
 }
 void Modbus::receive(uint8_t* data, uint16_t length, void (*functionPointer)(uint8_t *data, uint16_t size)) {
-    if(data[0] != _slaveID) return;
+    if(data[0] != *_slaveID) return;
     ModbusFrame *modbusFrame = (ModbusFrame*) malloc(sizeof(ModbusFrame));
     modbusFrame->function = (ModbusFunction) data[1];
     modbusFrame->address = (data[2]<<8) | data[3];
@@ -21,7 +18,7 @@ void Modbus::receive(uint8_t* data, uint16_t length, void (*functionPointer)(uin
 
     uint16_t len = 0;
     uint8_t buffer[512];
-    buffer[len++] = (uint8_t)_slaveID;
+    buffer[len++] = (uint8_t)*_slaveID;
     buffer[len++] = (uint8_t)modbusFrame->function;
 
     switch((uint8_t)modbusFrame->function) {
