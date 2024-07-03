@@ -36,6 +36,7 @@ class I2C : public IBus {
             uint8_t *pData;
             uint16_t Size;
             i2cCallback_f callback_f;
+            bool free = true;
         };
         
         std::queue<i2cOperation> operations;

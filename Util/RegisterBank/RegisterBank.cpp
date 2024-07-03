@@ -12,18 +12,17 @@ RegisterBank::RegisterBank(uint16_t start, uint16_t size) {
 
     _initialize();
 }
-RegisterBank::RegisterBank(uint16_t start, uint16_t size, IExternalMemory *extMemInstance, uint16_t offset) {
+RegisterBank::RegisterBank(uint16_t start, uint16_t size, IExternalMemory *extMemInstance, uint16_t extMemLocation) {
     _size = size;
     _start = start;
     _stop = _start + size;
 
     _extMemInstance = extMemInstance;
-    _extMemLocation = offset;
+    _extMemLocation = extMemLocation;
     _extMemPreserve = true;
 
     _initialize();
 }
-
 void RegisterBank::_initialize() {
     if(_size > 0) {
         _registers = (uint16_t*)malloc(sizeof(uint16_t) * _size);
@@ -49,15 +48,13 @@ void RegisterBank::_initialize() {
         r->next = NULL;
         temp->next = r;
     }
-
     load();
 }
-
 void RegisterBank::load() {
-    if(_extMemPreserve) _extMemInstance->readFromMemory(_extMemLocation, (uint8_t *) _registers, _size);
+    if(_extMemPreserve) _extMemInstance->readFromMemory(_extMemLocation, (uint8_t*) _registers, _size*2);
 }
 void RegisterBank::save() {
-    if(_extMemPreserve) _extMemInstance->writeToMemory(_extMemLocation, (uint8_t *) _registers, _size);
+    if(_extMemPreserve) _extMemInstance->writeToMemory(_extMemLocation, (uint8_t*) _registers, _size*2);
 }
 RegisterBank *RegisterBank::find(uint16_t fullAddress) {
     struct Register *temp = registers;
@@ -74,11 +71,9 @@ void RegisterBank::setValue(uint16_t regAddress, uint16_t value) {
 uint16_t RegisterBank::getValue(uint16_t regAddress) {
     return _registers[regAddress];
 }
-
 uint16_t *RegisterBank::getValuePtr(uint16_t regAddress) {
     return _registers + regAddress;
 }
-
 void RegisterBank::setRegister(uint16_t fullAddress, uint16_t value) {
     _registers[fullAddress-_start] = value;
     save();
@@ -89,7 +84,6 @@ uint16_t RegisterBank::getRegister(uint16_t fullAddress) {
 uint16_t *RegisterBank::getRegisterPtr(uint16_t fullAddress) {
     return _registers + (fullAddress-_start);
 }
-
 void RegisterBank::free_bank() {
     free(_registers);
 }

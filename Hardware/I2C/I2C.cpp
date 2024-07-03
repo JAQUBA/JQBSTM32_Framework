@@ -1,6 +1,4 @@
 #include "I2C.h"
-#include "Hardware/GPIO/GPIO.h"
-#include "Application/portMap.h"
 
 I2C *_I2C_instances[I2C_MAX_INSTANCES];
 uint8_t _I2C_instancesNum = 0;
@@ -55,35 +53,33 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 					}
 				}
 				else if(currentOperation.operationType == EoperationType::MEM_READ) {
-					// if(HAL_I2C_Mem_Read_IT(
-					// 	_pHandler, 
-					// 	0xA0,
-					// 	0x10,
-					// 	I2C_MEMADD_SIZE_8BIT,
-					// 	// currentOperation.pData,
-					// 	data,
-					// 	16
-					// ) == HAL_OK) {
-						i2cState = WAITING;
-					// }
+					if(HAL_I2C_Mem_Read_IT(
+						_pHandler, 
+						currentOperation.DevAddress,
+						currentOperation.MemAddress,
+						I2C_MEMADD_SIZE_8BIT,
+						currentOperation.pData,
+						currentOperation.Size
+					) == HAL_OK) {
+						i2cState = FINISH;
+					}
 				}
 				else if(currentOperation.operationType == EoperationType::MEM_WRITE) {
-					// if(HAL_I2C_Mem_Write_DMA(
-					// 	_pHandler, 
-					// 	currentOperation.DevAddress,
-					// 	currentOperation.MemAddress,
-					// 	I2C_MEMADD_SIZE_8BIT,
-					// 	currentOperation.pData,
-					// 	currentOperation.Size
-					// ) == HAL_OK) {
-						i2cState = WAITING;
-					// }
+					if(HAL_I2C_Mem_Write_DMA(
+						_pHandler, 
+						currentOperation.DevAddress,
+						currentOperation.MemAddress,
+						I2C_MEMADD_SIZE_8BIT,
+						currentOperation.pData,
+						currentOperation.Size
+					) == HAL_OK) {
+						i2cState = FINISH;
+					}
 				}
 				break;
 			}
 			case WAITING: {
 				if(millis() >= operationTimeout) {
-					GPIO.toggle(LED);
 					i2cState = CLEAR;
 				}
 				break;
@@ -95,7 +91,7 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 				break;
 			}
 			case CLEAR: {
-				free(currentOperation.pData);
+				if(currentOperation.free) free(currentOperation.pData);
 				operations.pop();
 				i2cState = IDLE;
 				break;
@@ -115,52 +111,45 @@ void I2C::rxInterrupt() {
 		i2cState = FINISH;
 	}
 }
-
-void I2C::send(uint16_t DevAddress, uint8_t *pData, uint16_t Size, i2cCallback_f callbackFn) {
-	i2cOperation operation;
-	operation.operationType = EoperationType::SEND;
-	operation.DevAddress = DevAddress;
-	operation.pData = (uint8_t*)malloc(Size);
-	memcpy(operation.pData, pData, Size);
-	operation.Size = Size;
-	operation.callback_f = callbackFn;
-	operations.push(operation);
-}
 void I2C::receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, i2cCallback_f callbackFn) {
     i2cOperation operation;
 	operation.operationType = EoperationType::RECEIVE;
 	operation.DevAddress = DevAddress;
-	operation.pData = (uint8_t*)malloc(Size);
+	operation.pData = pData;
+	operation.Size = Size;
+	operation.callback_f = callbackFn;
+	operation.free = false;
+	operations.push(operation);
+}
+void I2C::send(uint16_t DevAddress, uint8_t *pData, uint16_t Size, i2cCallback_f callbackFn) {
+	i2cOperation operation;
+	operation.operationType = EoperationType::SEND;
+	operation.DevAddress = DevAddress;
+	operation.pData = (uint8_t*) malloc(Size);
 	memcpy(operation.pData, pData, Size);
 	operation.Size = Size;
 	operation.callback_f = callbackFn;
 	operations.push(operation);
 }
 void I2C::readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size, i2cCallback_f callbackFn) {
-	HAL_I2C_Mem_Read(_pHandler, DevAddress, MemAddress, I2C_MEMADD_SIZE_8BIT, pData, Size*2, HAL_MAX_DELAY);
-	return;
-	// i2cOperation operation;
-	// operation.operationType = EoperationType::MEM_READ;
-	// operation.DevAddress = DevAddress;
-	// operation.MemAddress = MemAddress;
-	// operation.pData = pData;
-	// operation.pData = (uint8_t*)malloc(Size);
-	// memcpy(operation.pData, pData, Size);
-	// operation.Size = Size;
-	// operation.callback_f = callbackFn;
-	// operations.push(operation);
+	i2cOperation operation;
+	operation.operationType = EoperationType::MEM_READ;
+	operation.DevAddress = DevAddress;
+	operation.MemAddress = MemAddress;
+	operation.pData = pData;
+	operation.Size = Size;
+	operation.callback_f = callbackFn;
+	operation.free = false;
+	operations.push(operation);
 }
 void I2C::writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size, i2cCallback_f callbackFn) {
-	HAL_I2C_Mem_Write(_pHandler, DevAddress, MemAddress, I2C_MEMADD_SIZE_8BIT, pData, Size*2, HAL_MAX_DELAY);
-	return;
-	// i2cOperation operation;
-	// operation.operationType = EoperationType::MEM_WRITE;
-	// operation.DevAddress = DevAddress;
-	// operation.MemAddress = MemAddress;
-	// operation.pData = pData;
-	// operation.pData = (uint8_t*)malloc(Size);
-	// memcpy(operation.pData, pData, Size);
-	// operation.Size = Size;
-	// operation.callback_f = callbackFn;
-	// operations.push(operation);
+	i2cOperation operation;
+	operation.operationType = EoperationType::MEM_WRITE;
+	operation.DevAddress = DevAddress;
+	operation.MemAddress = MemAddress;
+	operation.pData = (uint8_t*) malloc(Size);
+	memcpy(operation.pData, pData, Size);
+	operation.Size = Size;
+	operation.callback_f = callbackFn;
+	operations.push(operation);
 }
