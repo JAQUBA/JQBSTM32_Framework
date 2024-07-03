@@ -13,8 +13,8 @@ void Analog::configureChannel(uint16_t *offset, uint16_t *divider) {
     _divider = divider;
 }
 uint16_t Analog::getValue() {
-    // return (uint16_t)(((rawADC[_channelNumber] * ((*_divider)*10) ) >> 20) - (*_offset) );
-    return rawADC[_channelNumber];
+    return (uint16_t)(((rawADC[_channelNumber] * ((*_divider)*2)) >> 12) - (*_offset) );
+    // return rawADC[_channelNumber];
 }
 uint16_t Analog::getRaw() {
     // uint32_t vdda_voltage = __HAL_ADC_CALC_VREFANALOG_VOLTAGE(rawADC[7], ADC_RESOLUTION_12B);
