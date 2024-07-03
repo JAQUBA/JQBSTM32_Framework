@@ -11,19 +11,17 @@ class EEPROM : public IExternalMemory {
         void readFromMemory(
             uint16_t MemAddress, 
             uint8_t *pData, 
-            uint16_t Size, 
-            std::function<void(memOperation *operation)> functionPointer = nullptr
+            uint16_t Size
         ) override;
 
         void writeToMemory(
             uint16_t MemAddress, 
             uint8_t *pData, 
-            uint16_t Size, 
-            std::function<void(memOperation *operation)> functionPointer = nullptr
+            uint16_t Size
         ) override;
     
     protected:
-        I2C *_pInstance;
+        I2C         *_pInstance;
         uint16_t    _DevAddress;
         uint16_t    _pages = 1;
         uint16_t    _pageSize = -1;
