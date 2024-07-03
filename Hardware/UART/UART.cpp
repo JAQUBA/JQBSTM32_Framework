@@ -3,9 +3,19 @@
 UART *_UART_instances[UART_MAX_INSTANCES];
 uint8_t _UART_instancesNum;
 
+UART *UART::getInstance(UART_HandleTypeDef *pHandler) {
+    for (size_t i = 0; i < _UART_instancesNum; i++) {
+        if(_UART_instances[i]->_pHandler->Instance == pHandler->Instance) return _UART_instances[i];
+    }
+    return nullptr;
+}
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {UART::getInstance(huart)->rxInterrupt();}
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {UART::getInstance(huart)->txInterrupt();}
+
 UART::UART(UART_HandleTypeDef *pHandler) {
     _pHandler = pHandler;
     _UART_instances[_UART_instancesNum++] = this;
+    
     HAL_UART_Receive_IT(_pHandler, &Received_u1, 1);
 
     addTaskMain(taskCallback {
@@ -17,12 +27,7 @@ UART::UART(UART_HandleTypeDef *pHandler) {
     }, 0);
 }
 
-UART *UART::getInstance(UART_HandleTypeDef *pHandler) {
-    for (size_t i = 0; i < _UART_instancesNum; i++) {
-        if(_UART_instances[i]->_pHandler->Instance == pHandler->Instance) return _UART_instances[i];
-    }
-    return nullptr;
-}
+
 void UART::rxInterrupt() {
     rx_buffer[rx_data_index] = Received_u1;
     rx_data_index++;
@@ -51,5 +56,3 @@ void UART::send(const char *data, uint16_t length) {
 
 
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {UART::getInstance(huart)->rxInterrupt();}
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {UART::getInstance(huart)->txInterrupt();}
