@@ -24,6 +24,8 @@ class I2C : public IBus {
         void txInterrupt();
         void rxInterrupt();
 
+        uint16_t queueSize();
+
     private:
         I2C_HandleTypeDef* _pHandler;
 
@@ -40,6 +42,7 @@ class I2C : public IBus {
         };
         
         std::queue<i2cOperation> operations;
+        uint16_t lol = sizeof(i2cOperation);
         
         enum {
             IDLE,

@@ -153,3 +153,6 @@ void I2C::writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData
 	operation.callback_f = callbackFn;
 	operations.push(operation);
 }
+uint16_t I2C::queueSize() {
+	return operations.size();
+}
