@@ -4,21 +4,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "main.h"
-#include "fl_bit.h"
 #include <functional>
 #include <list>
+#include <queue>
+#include "main.h"
+#include "fl_bit.h"
 #include "Scheduler.h"
 
 using taskCallback_f = std::function<void(struct taskStruct *task)>;
+using voidCallback_f = std::function<void(void)>;
 
 class Core {
     public:
         Core();
 };
 
-void addTaskMain(taskCallback_f functionPointer, uint32_t delay, bool single = false);
-void addTaskInterrupt(taskCallback_f functionPointer, uint32_t delay, bool single = false);
+void addTaskMain(taskCallback_f functionPointer, uint32_t delay = 0, bool single = false);
+void addTaskInterrupt(taskCallback_f functionPointer, uint32_t delay = 0, bool single = false);
 
 #ifdef __cplusplus
 extern "C" {

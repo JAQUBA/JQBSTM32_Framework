@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 
+using dataCallback_f = std::function<void(uint8_t *pData, uint16_t Size)>;
+
 class IBus {
     public:
     protected:
