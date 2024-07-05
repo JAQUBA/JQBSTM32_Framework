@@ -11,7 +11,6 @@ class FDCAN {
 		FDCAN(FDCAN_HandleTypeDef *pHandler);
 		
 		void onPacket(uint16_t commNumber, void(*handler)(uint8_t *data, uint16_t dataLen));
-		void poll();
 		void send(uint32_t identifier, uint8_t *data, uint16_t dataLen, uint32_t DataLength = FDCAN_DLC_BYTES_8);
 
 		void RxFifo0Callback();
