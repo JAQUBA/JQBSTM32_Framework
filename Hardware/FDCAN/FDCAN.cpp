@@ -10,6 +10,9 @@ FDCAN *FDCAN::getInstance(FDCAN_HandleTypeDef *_instance) {
     }
     return nullptr;
 }
+void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *pHandler, uint32_t RxFifo0ITs) {
+    if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) FDCAN::getInstance(pHandler)->rxInterrupt();
+}
 
 FDCAN::FDCAN(FDCAN_HandleTypeDef *pHandler) {
     _pInstance = pHandler;
@@ -40,20 +43,25 @@ FDCAN::FDCAN(FDCAN_HandleTypeDef *pHandler) {
         uint32_t commNumber = pRxHeader.Identifier;
         while (temp != NULL) {
             if(temp->commNumber == commNumber) {
-                temp->handler(recv_buff, sizeof(recv_buff));
+                temp->handler(pData, sizeof(pData));
                 break;
             }
             temp = temp->next;
         }
         hasPacket = false;
-    }, 0);
+    });
 }
-
-void FDCAN::RxFifo0Callback() {
-    if(HAL_FDCAN_GetRxMessage(_pInstance, FDCAN_RX_FIFO0, &pRxHeader, recv_buff) != HAL_OK) return;
+void FDCAN::rxInterrupt() {
+    if(HAL_FDCAN_GetRxMessage(_pInstance, FDCAN_RX_FIFO0, &pRxHeader, pData) != HAL_OK) return;
     hasPacket = true;
 }
-void FDCAN::onPacket(uint16_t commNumber, void(*handler)(uint8_t *data, uint16_t dataLen)) {
+void FDCAN::send(uint32_t identifier, uint8_t *pData, uint16_t Size, uint32_t DataLength) {
+    pTxHeader.Identifier = identifier;
+    pTxHeader.DataLength = DataLength;
+    HAL_FDCAN_AddMessageToTxFifoQ(_pInstance, &pTxHeader, pData);
+}
+
+void FDCAN::onPacket(uint16_t commNumber, dataCallback_f handler) {
     struct handlerStruct *temp = handlers, *r;
     if(handlers==NULL) {
         temp = (struct handlerStruct *)malloc(sizeof(struct handlerStruct));
@@ -69,15 +77,5 @@ void FDCAN::onPacket(uint16_t commNumber, void(*handler)(uint8_t *data, uint16_t
 		r->next=NULL;
 		temp->next=r;
     }
-}
-
-void FDCAN::send(uint32_t identifier, uint8_t *data, uint16_t dataLen, uint32_t DataLength) {
-    pTxHeader.Identifier = identifier;
-    pTxHeader.DataLength = DataLength;
-    HAL_FDCAN_AddMessageToTxFifoQ(_pInstance, &pTxHeader, data);
-}
-
-void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *pHandler, uint32_t RxFifo0ITs) {
-    if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) FDCAN::getInstance(pHandler)->RxFifo0Callback();
 }
 #endif
