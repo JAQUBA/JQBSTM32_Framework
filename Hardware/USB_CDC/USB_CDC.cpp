@@ -32,13 +32,18 @@ USB_CDC::USB_CDC() {
 				break;
 			}
 			case WORK: {
+				operationTimeout = millis()+50;
 				if(currentOperation.operationType == EoperationType::SEND) {
-					operationTimeout = millis()+1000;
-					if(CDC_Transmit_FS(
+					uint8_t result = CDC_Transmit_FS(
 						currentOperation.pData,
 						currentOperation.Size
-					) == USBD_OK) {
+					);
+					if(result == USBD_OK) {
 						operationState = WAITING;
+					} else if(result == USBD_BUSY) {
+						operationState = WAITING;
+					} else {
+						operationState = CLEAR;
 					}
 					break;
 				}
