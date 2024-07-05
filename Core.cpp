@@ -33,8 +33,8 @@ Core::Core() {
   HAL_Init();
 	SystemClock_Config();
   init();
-  MX_TIM7_Init();
-	HAL_TIM_Base_Start_IT(&htim7);
+  // MX_TIM7_Init();
+	HAL_TIM_Base_Start_IT(&htim4);
 #ifdef DWT
 	DWT_COUNTER_ENABLE();
 #endif
@@ -49,7 +49,7 @@ int main() {
     }
 }
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-	if (htim == &htim7 ) {
+	if (htim == &htim4 ) {
 		interruptTasks.poll1ms();
 		interruptTasks.execute();
 		mainTasks.poll1ms();

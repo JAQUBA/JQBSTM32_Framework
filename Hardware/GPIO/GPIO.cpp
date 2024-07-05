@@ -32,7 +32,7 @@ void HardwareGPIO::setup(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t mode, 
     GPIO_InitStruct.Mode = mode;
     GPIO_InitStruct.Pull = pullup;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = alternate;
+    // GPIO_InitStruct.Alternate = alternate;
     HAL_GPIO_Init(GPIOx, &GPIO_InitStruct);
 }
 
