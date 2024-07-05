@@ -1,5 +1,8 @@
 # JQBSTM32_Framework
 
+![Status projektu](https://img.shields.io/badge/status-w%20rozwoju-yellow)
+![Licencja](https://img.shields.io/badge/licencja-GPL-blue)
+
 ## Opis projektu
 
 JQBSTM32_Framework to framework ułatwiający rozwój aplikacji na mikrokontrolery STM32. Umożliwia szybkie i efektywne tworzenie projektów, zarządzanie zasobami i optymalizację kodu. Framework ten zawiera zestaw bibliotek i narzędzi, które wspierają różne aspekty programowania mikrokontrolerów STM32.
@@ -34,6 +37,10 @@ Aby użyć JQBSTM32_Framework w swoim projekcie, postępuj zgodnie z poniższymi
     - Zasoby sprzętowe trzymane są w katalogu `Hardware`.
     - Biblioteki do obsługi peryferiów znajdują się w katalogu `Utils`.
 
+4. **STM32CubeMX**: Projekt został skonfigurowany za pomocą STM32CubeMX. Można go dalej dostosować przy użyciu tego narzędzia.
+
+5. **Visual Studio Code i PlatformIO**: Do kompilacji i wgrywania oprogramowania na urządzenie wymagane jest środowisko Visual Studio Code z wtyczką PlatformIO.
+
 ## Wymagania
 
 - **System operacyjny**: Windows, macOS, Linux
@@ -53,25 +60,6 @@ Aby użyć JQBSTM32_Framework w swoim projekcie, postępuj zgodnie z poniższymi
 ## Kontakt
 
 Jeśli masz pytania dotyczące projektu, możesz się skontaktować poprzez [profil GitHub](https://github.com/JAQUBA).
-
-## Dodatkowe informacje
-
-![Status projektu](https://img.shields.io/badge/status-w%20rozwoju-yellow)
-![Licencja](https://img.shields.io/badge/licencja-GPL-blue)
-
-JQBSTM32 Framework jest frameworkiem do programowania mikrokontrolerów STM32, rozwijanym przez JAQUBA. Projekt jest nadal w fazie rozwoju.
-
-## Użycie
-
-1. **STM32CubeMX**: Projekt został skonfigurowany za pomocą STM32CubeMX. Można go dalej dostosować przy użyciu tego narzędzia.
-
-2. **Visual Studio Code i PlatformIO**: Do kompilacji i wgrywania oprogramowania na urządzenie wymagane jest środowisko Visual Studio Code z wtyczką PlatformIO.
-
-## Struktura projektu
-
-- **Hardware/**: Zawiera pliki konfiguracyjne sprzętowe używane przez STM32CubeMX.
-  
-- **Utils/**: Biblioteki i narzędzia do obsługi peryferiów mikrokontrolera.
 
 ## Licencja
 
