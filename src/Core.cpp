@@ -1,5 +1,4 @@
 #include "Core.h"
-#include "tim.h"
 
 Scheduler mainTasks;
 Scheduler interruptTasks;

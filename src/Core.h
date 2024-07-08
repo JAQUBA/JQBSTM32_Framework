@@ -12,6 +12,7 @@
 #include <list>
 #include <queue>
 #include "main.h"
+#include "tim.h"
 #include "fl_bit.h"
 #include "Scheduler.h"
 
