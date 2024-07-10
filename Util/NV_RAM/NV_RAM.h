@@ -12,7 +12,7 @@ class NV_RAM : public IExternalMemory {
     public:
         NV_RAM(I2C *pInstance, uint16_t DevAddress, uint16_t pages = 1, uint16_t pagesize = -1);
         NV_RAM(SPI *pInstance, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
-
+        NV_RAM(SPI *pInstance, uint8_t CS_Addres);
         void readFromMemory(
             uint16_t MemAddress, 
             uint8_t *pData, 
@@ -26,12 +26,13 @@ class NV_RAM : public IExternalMemory {
         ) override;
 
     protected:
-        I2C         *_pInstanceI2C;
-        uint16_t    _DevAddress;
+        I2C             *_pInstanceI2C;
+        uint16_t        _DevAddress;
 
-        bool isSPI = false;
-        SPI         *_pInstanceSPI;
-        GPIO_TypeDef* _CSPort;
-        uint16_t    _CSPin;
+        bool            isSPI = false;
+        SPI             *_pInstanceSPI;
+        GPIO_TypeDef    *_CSPort;
+        uint16_t        _CSPin;
+        uint8_t         _CS_Addres;
 };
 #endif
