@@ -32,7 +32,7 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 				break;
 			}
 			case WORK: {
-				operationTimeout = millis()+10;
+				operationTimeout = millis()+2;
 				if(currentOperation.operationType == EoperationType::SEND) {
 					if(HAL_I2C_Master_Transmit_DMA(
 						_pHandler, 
