@@ -1,6 +1,10 @@
 #ifndef __CORE_H_
 #define __CORE_H_
 
+#ifndef TASK_TIMER
+#define TASK_TIMER htim7
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
