@@ -11,6 +11,7 @@ UART *UART::getInstance(UART_HandleTypeDef *pHandler) {
 }
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {UART::getInstance(huart)->rxInterrupt();}
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {UART::getInstance(huart)->txInterrupt();}
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {UART::getInstance(huart)->errorInterrupt();}
 
 UART::UART(UART_HandleTypeDef *pHandler) {
     _pHandler = pHandler;
@@ -89,6 +90,11 @@ void UART::rxInterrupt() {
 }
 void UART::txInterrupt() {
     if(operationState == WAITING) {
+		operationState = FINISH;
+	}
+}
+void UART::errorInterrupt() {
+	if (HAL_UART_GetError(_pHandler) & HAL_UART_ERROR_DMA) {
 		operationState = FINISH;
 	}
 }

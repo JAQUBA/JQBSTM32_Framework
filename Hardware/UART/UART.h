@@ -13,6 +13,7 @@ class UART : public IBus {
 
         void rxInterrupt();
         void txInterrupt();
+        void errorInterrupt();
 
         void send(uint8_t *pData, uint16_t Size, dataCallback_f callbackFn = nullptr);
         
