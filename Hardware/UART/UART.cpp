@@ -47,8 +47,8 @@ void UART::onTransmitHandler(std::function<void()> onTransmit) {fpOnTransmit = o
 
 void UART::send(uint8_t *data, uint16_t length) {
     if(fpOnTransmit) fpOnTransmit();
-    // HAL_UART_Transmit_DMA(_pInstance, data, length);
-    HAL_UART_Transmit(_pHandler, data, length, 1000);
+    HAL_UART_Transmit_DMA(_pHandler, data, length);
+    // HAL_UART_Transmit(_pHandler, data, length, 1000);
 }
 void UART::send(const char *data, uint16_t length) {
     send((uint8_t *)data, length);
