@@ -24,6 +24,55 @@ UART::UART(UART_HandleTypeDef *pHandler) {
             rx_data_index = 0;
             received = false;
         }
+        switch(operationState) {
+			case IDLE: {
+				if(!operations.empty()) {
+					currentOperation = operations.front();
+					operationState = CHECK_FREE;
+				}
+				break;
+			}
+			case CHECK_FREE: {
+				if(HAL_UART_GetState(_pHandler) == HAL_UART_STATE_READY) {
+					operationState = WORK;
+				}
+				break;
+			}
+			case WORK: {
+				operationTimeout = millis()+2;
+				if(currentOperation.operationType == EoperationType::SEND) {
+					if(HAL_UART_Transmit_DMA(
+						_pHandler,
+						currentOperation.pData,
+						currentOperation.Size
+					) == HAL_OK) {
+						operationState = WAITING;
+					}
+				}
+				break;
+			}
+			case WAITING: {
+				if(millis() >= operationTimeout) {
+					operationState = CLEAR;
+				}
+				break;
+			}
+			case FINISH: {
+				if(currentOperation.callback_f != nullptr) currentOperation.callback_f(currentOperation.pData,
+						currentOperation.Size);
+				operationState = CLEAR;
+				break;
+			}
+			case CLEAR: {
+				if(currentOperation.free) free(currentOperation.pData);
+				operations.pop();
+				operationState = IDLE;
+				break;
+			}
+			default: {}
+		}
+
+
     }, 0);
 }
 
@@ -39,20 +88,21 @@ void UART::rxInterrupt() {
     HAL_UART_Receive_IT(_pHandler, &Received_u1, 1);
 }
 void UART::txInterrupt() {
-
+    if(operationState == WAITING) {
+		operationState = FINISH;
+	}
 }
 
 void UART::onReceiveHandler(std::function<void(uint8_t* data, uint16_t length)> onReceive) {fpOnReceive = onReceive;}
 void UART::onTransmitHandler(std::function<void()> onTransmit) {fpOnTransmit = onTransmit;}
 
-void UART::send(uint8_t *data, uint16_t length) {
-    if(fpOnTransmit) fpOnTransmit();
-    HAL_UART_Transmit_DMA(_pHandler, data, length);
-    // HAL_UART_Transmit(_pHandler, data, length, 1000);
+
+void UART::send(uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
+    operation operation;
+	operation.operationType = EoperationType::SEND;
+	operation.pData = (uint8_t*) malloc(Size);
+	memcpy(operation.pData, pData, Size);
+	operation.Size = Size;
+	operation.callback_f = callbackFn;
+	operations.push(operation);
 }
-void UART::send(const char *data, uint16_t length) {
-    send((uint8_t *)data, length);
-}
-
-
-

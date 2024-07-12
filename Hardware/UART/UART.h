@@ -14,8 +14,7 @@ class UART : public IBus {
         void rxInterrupt();
         void txInterrupt();
 
-        void send(uint8_t *data, uint16_t length);
-        void send(const char *data, uint16_t length);
+        void send(uint8_t *pData, uint16_t Size, dataCallback_f callbackFn = nullptr);
         
         void onReceiveHandler(std::function<void(uint8_t* data, uint16_t length)> onReceive);
         void onTransmitHandler(std::function<void()> onTransmit);
@@ -32,6 +31,20 @@ class UART : public IBus {
 
         uint8_t  rx_data_index = 0;
         uint8_t  rx_buffer[256];
+
+        uint32_t operationTimeout;
+        enum {IDLE, CHECK_FREE, WORK, WAITING, CLEAR, FINISH} operationState = IDLE;
+        enum EoperationType {SEND};
+        
+        struct operation {
+            EoperationType operationType;
+            uint8_t *pData;
+            uint16_t Size;
+            dataCallback_f callback_f;
+            bool free = true;
+        } currentOperation;
+        
+        std::queue<operation> operations;
 };
 
 #endif
