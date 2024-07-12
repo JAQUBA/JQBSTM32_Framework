@@ -1,14 +1,16 @@
 #include "Core.h"
+
 #include "Hardware/GPIO/GPIO.h"
 
-#define LED LED_GPIO_Port, LED_Pin
+#define LED GPIOC, GPIO_PIN_13
 
 void init() {
-    MX_TIM4_Init();
+    GPIO.setup(LED, GPIO_MODE_AF_PP);
 }
-
 void setup() {
+    GPIO.set(LED, HIGH);
     addTaskMain(taskCallback {
         GPIO.toggle(LED);
-    }, 1000);
+        task->delay++;
+    }, 200);
 }
