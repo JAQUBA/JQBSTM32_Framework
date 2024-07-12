@@ -19,6 +19,7 @@ class I2C : public IBus {
         
         void txInterrupt();
         void rxInterrupt();
+        void errorInterrupt();
 
         uint16_t queueSize();
 
