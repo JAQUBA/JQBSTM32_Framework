@@ -1,0 +1,23 @@
+{
+    "name": "JQBSTM32",
+    "version": "1.0.0",
+    "description": "opis",
+    "keywords": "planet, happiness, people",
+    "repository":
+    {
+      "type": "git",
+      "url": "https://github.com/JAQUBA/JQBSTM32_Framework.git"
+    },
+    "authors":
+    [
+      {
+        "name": "JAQUBA",
+        "email": "kjakubowski0492@gmail.com",
+        "url": "https://github.com/JAQUBA",
+        "maintainer": true
+      }
+    ],
+    "license": "MIT",
+    "frameworks": "stm32cube",
+    "platforms": "ststm32"
+  }
