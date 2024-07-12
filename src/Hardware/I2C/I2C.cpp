@@ -11,6 +11,7 @@ I2C *I2C::getInstance(I2C_HandleTypeDef *pHandler) {
 }
 void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c) {I2C::getInstance(hi2c)->rxInterrupt();}
 void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c) {I2C::getInstance(hi2c)->txInterrupt();}
+void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {I2C::getInstance(hi2c)->errorInterrupt();}
 
 I2C::I2C(I2C_HandleTypeDef* pHandler) {
     _pHandler = pHandler;
@@ -31,7 +32,7 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 				break;
 			}
 			case WORK: {
-				operationTimeout = millis()+1000;
+				operationTimeout = millis()+2;
 				if(currentOperation.operationType == EoperationType::SEND) {
 					if(HAL_I2C_Master_Transmit_DMA(
 						_pHandler, 
@@ -53,7 +54,7 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 					}
 				}
 				else if(currentOperation.operationType == EoperationType::MEM_READ) {
-					if(HAL_I2C_Mem_Read_IT(
+					if(HAL_I2C_Mem_Read_IT(//??????????????????????
 						_pHandler, 
 						currentOperation.DevAddress,
 						currentOperation.MemAddress,
@@ -80,7 +81,7 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 			}
 			case WAITING: {
 				if(millis() >= operationTimeout) {
-					operationState = CLEAR;
+					operationState = FINISH;
 				}
 				break;
 			}
@@ -111,6 +112,12 @@ void I2C::rxInterrupt() {
 		operationState = FINISH;
 	}
 }
+void I2C::errorInterrupt() {
+	if (HAL_I2C_GetError(_pHandler) & HAL_I2C_ERROR_AF) {
+		operationState = FINISH;
+	}
+}
+
 void I2C::receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
     operation operation;
 	operation.operationType = EoperationType::RECEIVE;
