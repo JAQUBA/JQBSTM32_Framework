@@ -10,7 +10,8 @@
 1. **Uruchom STM32CubeMX**.
 2. **Wybierz mikrokontroler**: W naszym przypadku `STM32F103C8Tx`.
 
-![STM32CubeMX Pinout](../../docs/9_2.png)
+![STM32CubeMX Pinout1](../../docs/9.png)
+![STM32CubeMX Pinout2](../../docs/9_2.png)
 
 3. **Skonfiguruj peryferia**: W naszym przypadku ustawienia dla `TIM4`.
 
