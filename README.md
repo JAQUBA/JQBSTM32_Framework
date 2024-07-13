@@ -1,76 +1,76 @@
 # JQBSTM32_Framework
 
-![Status projektu](https://img.shields.io/badge/status-w%20rozwoju-yellow)
-![Licencja](https://img.shields.io/badge/licencja-GPL-blue)
+![Project Status](https://img.shields.io/badge/status-in%20development-yellow)
+![License](https://img.shields.io/badge/license-GPL-blue)
 
-## Opis projektu
+## Project Description
 
-JQBSTM32_Framework to framework ułatwiający rozwój aplikacji na mikrokontrolery STM32. Umożliwia szybkie i efektywne tworzenie projektów, zarządzanie zasobami i optymalizację kodu. Framework zawiera zestaw bibliotek i narzędzi wspierających różne aspekty programowania mikrokontrolerów STM32.
+JQBSTM32_Framework is a framework designed to facilitate the development of applications for STM32 microcontrollers. It enables quick and efficient project creation, resource management, and code optimization. The framework includes a set of libraries and tools supporting various aspects of STM32 microcontroller programming.
 
-**Uwaga:** Projekt jest nadal w fazie rozwoju.
+**Note:** The project is still in development.
 
-## Instalacja
+## Installation
 
-Aby zainstalować JQBSTM32_Framework, wykonaj następujące kroki:
+To install JQBSTM32_Framework, follow these steps:
 
-1. **Dodanie jako submoduł**
+1. **Add as a submodule**
 
     ```bash
     git submodule add https://github.com/JAQUBA/JQBSTM32_Framework.git
     cd JQBSTM32_Framework
     ```
 
-2. **Instalacja zależności**
+2. **Install dependencies**
 
-    - Upewnij się, że masz zainstalowane wymagane narzędzia i biblioteki. Szczegółowe instrukcje znajdują się w sekcji [Wymagania](#wymagania).
+    - Make sure you have the required tools and libraries installed. Detailed instructions can be found in the [Requirements](#requirements) section.
 
-## Użycie
+## Usage
 
-Aby użyć JQBSTM32_Framework w swoim projekcie, postępuj zgodnie z poniższymi krokami:
+To use JQBSTM32_Framework in your project, follow these steps:
 
-1. **Konfiguracja środowiska**
-    - Zainstaluj Visual Studio Code oraz rozszerzenie PlatformIO.
-    - Skonfiguruj STM32CubeMX do generowania kodu startowego dla Twojego projektu.
+1. **Set up the environment**
+    - Install Visual Studio Code and the PlatformIO extension.
+    - Configure STM32CubeMX to generate the startup code for your project.
 
-2. **Tworzenie nowego projektu**
-    - Skorzystaj z dostarczonych skryptów i szablonów projektów, aby szybko rozpocząć pracę.
+2. **Create a new project**
+    - Use the provided scripts and project templates to quickly start working.
 
-3. **Struktura katalogów**
-    - Zasoby sprzętowe znajdują się w katalogu `Hardware`.
-    - Biblioteki do obsługi peryferiów znajdują się w katalogu `Utils`.
+3. **Directory structure**
+    - Hardware resources are located in the `Hardware` directory.
+    - Peripheral libraries are located in the `Utils` directory.
 
-4. **STM32CubeMX**: Projekt został skonfigurowany za pomocą STM32CubeMX. Można go dalej dostosować przy użyciu tego narzędzia.
+4. **STM32CubeMX**: The project is configured using STM32CubeMX. It can be further customized using this tool.
 
-5. **Visual Studio Code i PlatformIO**: Do kompilacji i wgrywania oprogramowania na urządzenie wymagane jest środowisko Visual Studio Code z wtyczką PlatformIO.
+5. **Visual Studio Code and PlatformIO**: Visual Studio Code with the PlatformIO plugin is required to compile and upload the software to the device.
 
-## Wymagania
+## Requirements
 
-- **System operacyjny**: Windows, macOS, Linux
-- **Narzędzia**:
+- **Operating System**: Windows, macOS, Linux
+- **Tools**:
     - STM32CubeMX
-    - Visual Studio Code z rozszerzeniem PlatformIO
-    - Kompilator ARM (np. arm-none-eabi-gcc)
-    - Narzędzia do debugowania (np. OpenOCD, ST-Link)
-- **Biblioteki**:
+    - Visual Studio Code with the PlatformIO extension
+    - ARM Compiler (e.g., arm-none-eabi-gcc)
+    - Debugging tools (e.g., OpenOCD, ST-Link)
+- **Libraries**:
     - CMSIS
     - STM32 HAL
 
-## Przykładowy projekt
+## Example Project
 
-### Krok 1: Konfiguracja STM32CubeMX
+### Step 1: STM32CubeMX Configuration
 
-1. Uruchom STM32CubeMX.
-2. Wybierz mikrokontroler: `STM32F103C8Tx`.
-3. Skonfiguruj peryferia: np. `TIM4`.
-4. Konfiguracja projektu:
-   - Nazwa: `STM32Blink`.
+1. Launch STM32CubeMX.
+2. Select the microcontroller: `STM32F103C8Tx`.
+3. Configure peripherals: e.g., `TIM4`.
+4. Project configuration:
+   - Name: `STM32Blink`.
    - IDE: `EwARM`.
-5. Generowanie kodu.
+5. Generate the code.
 
-### Krok 2: Konfiguracja PlatformIO
+### Step 2: PlatformIO Configuration
 
-1. Utwórz nowy projekt w PlatformIO.
-2. Skonfiguruj plik `platformio.ini`:
+1. Create a new project in PlatformIO.
+2. Configure the `platformio.ini` file:
 
     ```ini
     [platformio]
@@ -87,14 +87,14 @@ Aby użyć JQBSTM32_Framework w swoim projekcie, postępuj zgodnie z poniższymi
         -DTASK_TIMER=htim4
     ```
 
-## Autorzy
+## Authors
 
-- **JAQUBA** - główny autor
+- **JAQUBA** - main author
 
-## Kontakt
+## Contact
 
-Jeśli masz pytania dotyczące projektu, możesz się skontaktować poprzez [profil GitHub](https://github.com/JAQUBA).
+If you have any questions about the project, you can contact via [GitHub profile](https://github.com/JAQUBA).
 
-## Licencja
+## License
 
-Ten projekt jest licencjonowany na zasadach GNU General Public License v3.0. Więcej informacji można znaleźć w pliku LICENSE dostępnym w tym repozytorium.
+This project is licensed under the terms of the GNU General Public License v3.0. More information can be found in the LICENSE file available in this repository.
