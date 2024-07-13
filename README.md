@@ -9,21 +9,6 @@ JQBSTM32_Framework is a framework designed to facilitate the development of appl
 
 **Note:** The project is still in development.
 
-## Installation
-
-To install JQBSTM32_Framework, follow these steps:
-
-1. **Add as a submodule**
-
-    ```bash
-    git submodule add https://github.com/JAQUBA/JQBSTM32_Framework.git
-    cd JQBSTM32_Framework
-    ```
-
-2. **Install dependencies**
-
-    - Make sure you have the required tools and libraries installed. Detailed instructions can be found in the [Requirements](#requirements) section.
-
 ## Usage
 
 To use JQBSTM32_Framework in your project, follow these steps:
@@ -49,11 +34,6 @@ To use JQBSTM32_Framework in your project, follow these steps:
 - **Tools**:
     - STM32CubeMX
     - Visual Studio Code with the PlatformIO extension
-    - ARM Compiler (e.g., arm-none-eabi-gcc)
-    - Debugging tools (e.g., OpenOCD, ST-Link)
-- **Libraries**:
-    - CMSIS
-    - STM32 HAL
 
 ## Example Project
 
@@ -62,9 +42,7 @@ To use JQBSTM32_Framework in your project, follow these steps:
 1. Launch STM32CubeMX.
 2. Select the microcontroller: `STM32F103C8Tx`.
 3. Configure peripherals: e.g., `TIM4`.
-4. Project configuration:
-   - Name: `STM32Blink`.
-   - IDE: `EwARM`.
+4. Project configuration
 5. Generate the code.
 
 ### Step 2: PlatformIO Configuration
