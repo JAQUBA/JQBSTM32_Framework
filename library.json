@@ -22,8 +22,6 @@
     "frameworks": "stm32cube",
     "platforms": "ststm32",
     "build": {
-      "flags": [
-        "-I Core/Inc"
-      ]
+      "flags": "-ICore/Inc"
     }
 }
