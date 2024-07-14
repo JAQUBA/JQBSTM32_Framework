@@ -22,8 +22,9 @@
     "frameworks": "stm32cube",
     "platforms": "ststm32",
     "build": {
+      "extraScript": "scripts/includeCore.py",
       "flags": [
-          "-I ../../../../Core/Inc"
+        "-I ../../../../Core/Inc"
       ]
     }
 }
