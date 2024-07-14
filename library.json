@@ -1,12 +1,13 @@
 {
     "name": "JQBSTM32",
-    "version": "1.0.0",
-    "description": "opis",
-    "keywords": "planet, happiness, people",
+    "version": "1.0.0-alpha",
+    "description": "Framework for fast development STM32 applications with CubeMX and PlatformIO",
+    "keywords": "stm32, platformio, cubemx",
     "repository":
     {
       "type": "git",
-      "url": "https://github.com/JAQUBA/JQBSTM32_Framework.git"
+      "url": "https://github.com/JAQUBA/JQBSTM32_Framework.git",
+      "branch": "master"
     },
     "authors":
     [
@@ -17,7 +18,12 @@
         "maintainer": true
       }
     ],
-    "license": "MIT",
+    "license": "GPL-3.0-or-later",
     "frameworks": "stm32cube",
-    "platforms": "ststm32"
-  }
+    "platforms": "ststm32",
+    "build": {
+      "flags": [
+        "-I Core/Inc"
+      ]
+    }
+}
