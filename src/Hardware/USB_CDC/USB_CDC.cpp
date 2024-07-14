@@ -1,7 +1,7 @@
 #ifdef _JQB_USE_USB_CDC
 #include "USB_CDC.h"
 
-#include "USB_DEVICE/App/usbd_cdc_if.h"
+#include "usbd_cdc_if.h"
 extern USBD_HandleTypeDef hUsbDeviceFS;
 
 USB_CDC *_USB_CDC_instance;
