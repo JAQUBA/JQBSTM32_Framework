@@ -22,6 +22,7 @@
     "frameworks": "stm32cube",
     "platforms": "ststm32",
     "build": {
+      "libLDFMode": "deep+",
       "extraScript": "scripts/includeCore.py"
     }
 }
