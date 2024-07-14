@@ -22,11 +22,8 @@
     "frameworks": "stm32cube",
     "platforms": "ststm32",
     "build": {
-      "extraScript": "scripts/makehex.py",
       "flags": [
-          "-I ../../../../Core/Inc",
-          "-I ../../../../USB_Device/App",
-          "-I ../../../../USB_Device/Target"
+          "-I ../../../../Core/Inc"
       ]
     }
 }
