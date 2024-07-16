@@ -1,6 +1,8 @@
 #include "Core.h"
 #include "tim.h"
 
+#include "spi.h"
+
 Scheduler mainTasks;
 Scheduler interruptTasks;
 
@@ -42,6 +44,38 @@ Core _core;
 
 int main() {
 	setup();
+
+
+uint8_t wrbuf3[12]={0x02,0,0,123,207,35,7,94,53,240,185,45};
+uint8_t wrbuf4[12]={0x06,0,0,123,207,35,7,94,53,240,185,45};
+uint8_t wrbuf5[12]={0x01,0x82,0,123,207,35,7,94,53,240,185,45};
+uint8_t rdbuf[32];
+
+
+
+    HAL_GPIO_WritePin(SPI2_A0_GPIO_Port, SPI2_A0_Pin, GPIO_PIN_SET);	
+    HAL_Delay(100);
+
+
+HAL_Delay(100);
+    HAL_GPIO_WritePin(SPI2_A0_GPIO_Port, SPI2_A0_Pin, GPIO_PIN_RESET);
+		//HAL_SPI_TransmitReceive(&hspi2, wrbuf1, rdbuf, 10, 4);
+		HAL_SPI_TransmitReceive(&hspi2, wrbuf5, rdbuf, 2, 1000);
+		HAL_GPIO_WritePin(SPI2_A0_GPIO_Port, SPI2_A0_Pin, GPIO_PIN_SET);	
+
+HAL_Delay(100);
+    HAL_GPIO_WritePin(SPI2_A0_GPIO_Port, SPI2_A0_Pin, GPIO_PIN_RESET);
+		//HAL_SPI_TransmitReceive(&hspi2, wrbuf1, rdbuf, 10, 4);
+		HAL_SPI_TransmitReceive(&hspi2, wrbuf4, rdbuf, 1, 1000);
+		HAL_GPIO_WritePin(SPI2_A0_GPIO_Port, SPI2_A0_Pin, GPIO_PIN_SET);	
+
+HAL_Delay(100);
+
+    HAL_GPIO_WritePin(SPI2_A0_GPIO_Port, SPI2_A0_Pin, GPIO_PIN_RESET);
+		//HAL_SPI_TransmitReceive(&hspi2, wrbuf1, rdbuf, 10, 4);
+		HAL_SPI_TransmitReceive(&hspi2, wrbuf3, rdbuf, 11, 1000);
+		HAL_GPIO_WritePin(SPI2_A0_GPIO_Port, SPI2_A0_Pin, GPIO_PIN_SET);	
+
 	while (1) {
         mainTasks.execute();
         loop();

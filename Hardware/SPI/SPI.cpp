@@ -38,13 +38,13 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 				break;
 			}
 			case WORK: {
-				operationTimeout = millis()+2;
+				operationTimeout = millis()+20;
 				if(currentOperation.operationType == EoperationType::TRANSMIT) {
                     HAL_GPIO_WritePin(currentOperation.GPIOx, currentOperation.GPIO_Pin, GPIO_PIN_RESET);
-					if(HAL_SPI_Transmit_DMA(
+					if(HAL_SPI_Transmit(
 						_pHandler, 
 						currentOperation.pData,
-						currentOperation.Size
+						currentOperation.Size, 20
 					) == HAL_OK) {
 						operationState = WAITING;
 					}
