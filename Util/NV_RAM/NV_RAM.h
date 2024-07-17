@@ -7,7 +7,9 @@
 
 class NV_RAM : public IExternalMemory {
     public:
-        NV_RAM(I2C *pInstance, uint16_t DevAddress, uint16_t MemAdress, uint16_t size);
+        NV_RAM(I2C *pInstance,
+            uint16_t DevAddress,
+            uint32_t BaseAddress);
         
         void readFromMemory(
             uint32_t MemAddress, 

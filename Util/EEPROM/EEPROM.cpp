@@ -2,14 +2,16 @@
 
 EEPROM::EEPROM(I2C *pInstance,
  	uint16_t DevAddress,
-	uint16_t MemAdress,
-	uint16_t size) {
+	uint32_t BaseAddress) {
+	//uint16_t MemAdress,
+	//uint16_t size) {
 
 	_pInstanceI2C = pInstance;
 	_DevAddress = DevAddress;
-	_MemAdress = MemAdress;
-    _size = size;
+	_MemAdress = BaseAddress;
+    //_size = size;
 }
+/*
 EEPROM::EEPROM(SPI *pInstance,
  	GPIO_TypeDef* GPIOx,
 	uint16_t GPIO_Pin,
@@ -25,9 +27,9 @@ EEPROM::EEPROM(SPI *pInstance,
 
 EEPROM::EEPROM(SPI *pInstance,
  	GPIO_TypeDef* GPIOx,
-	uint16_t GPIO_Pin,
-	uint32_t MemAdress,
-	uint16_t size) {
+	uint16_t GPIO_Pin) {
+	//uint32_t MemAdress,
+	//uint16_t size) {
 
 	_pInstance = pInstance;
 	_CSPort = GPIOx;
@@ -35,7 +37,7 @@ EEPROM::EEPROM(SPI *pInstance,
 	_MemAdress = MemAdress;
     _size = size;
 }
-
+*/
 
 void EEPROM::readFromMemory(
 	uint32_t MemAddress, 

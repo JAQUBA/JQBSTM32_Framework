@@ -5,20 +5,26 @@ struct Register {
     struct Register *next = NULL;
 } *registers;
 
-RegisterBank::RegisterBank(uint16_t start, uint16_t size) {
+RegisterBank::RegisterBank(uint16_t start,
+    uint16_t size) {
+
     _size = size;
     _start = start;
     _stop = _start + size;
 
     _initialize();
 }
-RegisterBank::RegisterBank(uint16_t start, uint16_t size, IExternalMemory *extMemInstance, uint16_t extMemLocation) {
+
+RegisterBank::RegisterBank(uint16_t start,
+    uint16_t size,
+    IExternalMemory *extMemInstance) {
+        
     _size = size;
     _start = start;
     _stop = _start + size;
 
     _extMemInstance = extMemInstance;
-    _extMemLocation = extMemLocation;
+   // _extMemLocation = extMemLocation;
     _extMemPreserve = true;
 
     _initialize();

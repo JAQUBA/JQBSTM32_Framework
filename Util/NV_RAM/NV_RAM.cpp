@@ -2,13 +2,12 @@
 
 NV_RAM::NV_RAM(I2C *pInstance,
  	uint16_t DevAddress,
-	uint16_t MemAdress,
-	uint16_t size) {
+	uint32_t BaseAddress) {
 
 	_pInstanceI2C = pInstance;
 	_DevAddress = DevAddress;
-	_MemAdress = MemAdress;
-    _size = size;
+	_MemAdress = BaseAddress;
+    //_size = size;
 }
 
 void NV_RAM::readFromMemory(
