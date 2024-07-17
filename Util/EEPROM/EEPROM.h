@@ -7,10 +7,15 @@
 
 class EEPROM : public IExternalMemory {
     public:
-        EEPROM(I2C *pInstance, uint16_t DevAddress, uint32_t BaseAddress);
-       // EEPROM(SPI *pInstance, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
-       //EEPROM(SPI *pInstance, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t MemAdress, uint16_t size);
+        EEPROM(I2C *pInstance,
+            uint16_t DevAddress,
+            uint32_t BaseAddress);
 
+        EEPROM(SPI *pInstance,
+            GPIO_TypeDef* GPIOx,
+            uint16_t GPIO_Pin,
+            uint32_t BaseAddress);
+       
         void readFromMemory(
             uint32_t MemAddress, 
             uint8_t *pData, 
@@ -24,7 +29,6 @@ class EEPROM : public IExternalMemory {
         ) override;
     
     protected:
-        //uint32_t
         uint32_t        _MemAdress;
         uint16_t        _size;
 
@@ -36,6 +40,5 @@ class EEPROM : public IExternalMemory {
         SPI             *_pInstanceSPI;
         GPIO_TypeDef    * _CSPort;
         uint16_t        _CSPin;
-        
 };
 #endif
