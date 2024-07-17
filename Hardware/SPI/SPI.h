@@ -12,11 +12,19 @@ class SPI : public IBus {
         SPI(SPI_HandleTypeDef *pHandler);
         static SPI *getInstance(SPI_HandleTypeDef *pHandler);
 
-        void transmit(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin,    uint8_t *pData, uint16_t Size, dataCallback_f callbackFn = nullptr);
-        void receive(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn = nullptr);
+        void transmit(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin,
+            uint8_t *pData, uint16_t Size, dataCallback_f callbackFn = nullptr
+            );
+        void receive(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin,
+            uint8_t *pData, uint16_t Size, dataCallback_f callbackFn = nullptr
+            );
 
-        void readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn = nullptr);
-        void writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn = nullptr);
+        void readFromMemory(uint16_t DevAddress, uint16_t MemAddress,
+            uint8_t *pData, uint16_t Size, dataCallback_f callbackFn = nullptr
+            );
+        void writeToMemory(uint16_t DevAddress, uint16_t MemAddress,
+            uint8_t *pData, uint16_t Size, dataCallback_f callbackFn = nullptr
+            );
         
         void txInterrupt();
         void rxInterrupt();

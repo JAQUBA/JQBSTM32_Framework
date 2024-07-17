@@ -6,12 +6,12 @@
 class IExternalMemory {
     public:
         virtual void readFromMemory(
-            uint16_t MemAddress, 
+            uint32_t MemAddress, 
             uint8_t *pData, 
             uint16_t Size
         ) = 0;
         virtual void writeToMemory(
-            uint16_t MemAddress, 
+            uint32_t MemAddress, 
             uint8_t *pData, 
             uint16_t Size
         ) = 0;

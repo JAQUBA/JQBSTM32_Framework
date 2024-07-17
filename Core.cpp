@@ -45,16 +45,6 @@ Core _core;
 int main() {
 	setup();
 
-
-
-
-
-
-
-
-
-    
-
 	while (1) {
         mainTasks.execute();
         loop();
