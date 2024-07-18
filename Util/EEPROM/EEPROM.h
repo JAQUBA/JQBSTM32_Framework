@@ -29,9 +29,8 @@ class EEPROM : public IExternalMemory {
         ) override;
     
     protected:
-        uint32_t        _MemAdress;
-        uint16_t        _size;
-
+        uint32_t        _BaseAddress;
+       
         I2C             *_pInstanceI2C;
         uint16_t        _DevAddress;
 

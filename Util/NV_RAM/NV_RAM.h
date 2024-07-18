@@ -2,7 +2,6 @@
 #define __NV_RAM_H_
 #include "../../Core.h"
 #include "../../Hardware/I2C/I2C.h"
-//#include "../../Hardware/SPI/SPI.h"
 #include "../../Interface/IExternalMemory.h"
 
 class NV_RAM : public IExternalMemory {

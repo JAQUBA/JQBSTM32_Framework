@@ -124,7 +124,7 @@ void SPI::transmit(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint8_t *pData, uint1
 	operations.push(operation);
 }
 
-void SPI::readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
+void SPI::readFromMemory(uint32_t MemAddress,uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
 	operation operation;
 	operation.operationType = EoperationType::MEM_READ;
 	//operation.DevAddress = DevAddress;
@@ -135,7 +135,7 @@ void SPI::readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pDat
 	operation.free = false;
 	operations.push(operation);
 }
-void SPI::writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
+void SPI::writeToMemory(uint32_t MemAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
 	operation operation;
 	operation.operationType = EoperationType::MEM_WRITE;
 	//operation.DevAddress = DevAddress;

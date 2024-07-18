@@ -19,10 +19,10 @@ class SPI : public IBus {
             uint8_t *pData, uint16_t Size, dataCallback_f callbackFn = nullptr
             );
 
-        void readFromMemory(uint16_t DevAddress, uint16_t MemAddress,
+        void readFromMemory(uint32_t MemAddress,
             uint8_t *pData, uint16_t Size, dataCallback_f callbackFn = nullptr
             );
-        void writeToMemory(uint16_t DevAddress, uint16_t MemAddress,
+        void writeToMemory(uint32_t MemAddress,
             uint8_t *pData, uint16_t Size, dataCallback_f callbackFn = nullptr
             );
         
@@ -40,12 +40,13 @@ class SPI : public IBus {
         enum EoperationType {RECEIVE, TRANSMIT, MEM_READ, MEM_WRITE};
         
         struct operation {
-            EoperationType operationType;
-            GPIO_TypeDef* GPIOx;
-            uint16_t GPIO_Pin;
-            uint8_t *pData;
-            uint16_t Size;
-            dataCallback_f callback_f;
+            EoperationType  operationType;
+            uint32_t        MemAddress;
+            GPIO_TypeDef*   GPIOx;
+            uint16_t        GPIO_Pin;
+            uint8_t         *pData;
+            uint16_t        Size;
+            dataCallback_f  callback_f;
             bool free = true;
         } currentOperation;
         

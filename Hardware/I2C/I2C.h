@@ -15,7 +15,7 @@ class I2C : public IBus {
         void receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn = nullptr);
 
         void readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn = nullptr);
-        void writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn = nullptr);
+        void writeToMemory( uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn = nullptr);
         
         void txInterrupt();
         void rxInterrupt();

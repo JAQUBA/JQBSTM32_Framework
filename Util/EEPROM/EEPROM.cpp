@@ -3,13 +3,11 @@
 EEPROM::EEPROM(I2C *pInstance,
  	uint16_t DevAddress,
 	uint32_t BaseAddress) {
-	//uint16_t MemAdress,
-	//uint16_t size) {
-
+	
 	_pInstanceI2C = pInstance;
 	_DevAddress = DevAddress;
-	_MemAdress = BaseAddress;
-    //_size = size;
+	_BaseAddress = BaseAddress;
+    isSPI = false;
 }
 
 EEPROM::EEPROM(SPI *pInstance,
@@ -20,8 +18,8 @@ EEPROM::EEPROM(SPI *pInstance,
 	_pInstance = pInstance;
 	_CSPort = GPIOx;
 	_CSPin = GPIO_Pin;
-	_MemAdress = BaseAddress;
-    //_size = size;
+	_BaseAddress = BaseAddress;
+    isSPI = true;
 }
 
 void EEPROM::readFromMemory(
@@ -29,15 +27,15 @@ void EEPROM::readFromMemory(
 	uint8_t *pData, 
 	uint16_t Size
 ) {
+	uint32_t mem_address = _BaseAddress + MemAddress;
+
 	if(isSPI) {
-		_pInstanceSPI->readFromMemory(_DevAddress, MemAddress, pData, Size);	// _pInstanceSPI;
+		
+		_pInstanceSPI->readFromMemory(mem_address, pData, Size);
 	}else{
-		_pInstanceI2C->readFromMemory(_DevAddress, MemAddress, pData, Size);
+		_pInstanceI2C->readFromMemory(_DevAddress, mem_address, pData, Size);
 	}
 
-
-
-	
 }
 
 void EEPROM::writeToMemory(
@@ -45,5 +43,11 @@ void EEPROM::writeToMemory(
 	uint8_t *pData, 
 	uint16_t Size
 ) {
-	//_pInstanceI2C->writeToMemory(_DevAddress, MemAddress, pData, Size);
+	uint32_t mem_address = _BaseAddress + MemAddress;
+
+	if(isSPI) {
+		_pInstanceSPI->writeToMemory(mem_address, pData, Size);
+	}else{
+		_pInstanceI2C->writeToMemory(_DevAddress, mem_address, pData, Size);
+	}
 }
