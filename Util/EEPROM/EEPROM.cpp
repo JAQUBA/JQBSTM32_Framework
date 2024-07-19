@@ -25,7 +25,8 @@ EEPROM::EEPROM(SPI *pInstance,
 }
 
 void EEPROM::readFromMemory(
-	uint32_t MemAddress, 
+	uint32_t MemAddress,
+	uint16_t MemAddSize,
 	uint8_t *pData, 
 	uint16_t Size
 ) {
@@ -41,7 +42,8 @@ void EEPROM::readFromMemory(
 }
 
 void EEPROM::writeToMemory(
-	uint32_t MemAddress, 
+	uint32_t MemAddress,
+	uint16_t MemAddSize, 
 	uint8_t *pData, 
 	uint16_t Size
 ) {

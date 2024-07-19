@@ -9,7 +9,7 @@ class RegisterBank {
             uint16_t size);
         RegisterBank(uint16_t regAddress,
             uint16_t size,
-            IExternalMemory *extMemInstance);//, uint16_t extMemLocation);
+            IExternalMemory *extMemInstance);
 
         uint16_t *getValuePtr(uint16_t regAddress);
         uint16_t *getRegisterPtr(uint16_t fullAddress);

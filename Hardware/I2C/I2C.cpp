@@ -54,7 +54,7 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 					}
 				}
 				else if(currentOperation.operationType == EoperationType::MEM_READ) {
-					if(HAL_I2C_Mem_Read_IT(//??????????????????????
+					if(HAL_I2C_Mem_Read_DMA(
 						_pHandler, 
 						currentOperation.DevAddress,
 						currentOperation.MemAddress,

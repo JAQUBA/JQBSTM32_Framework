@@ -18,18 +18,20 @@ class EEPROM : public IExternalMemory {
             uint32_t BaseAddress);
        
         void readFromMemory(
-            uint32_t MemAddress, 
+            uint32_t MemAddress,
+            uint16_t MemAddSize, 
             uint8_t *pData, 
             uint16_t Size
         ) override;
 
         void writeToMemory(
-            uint32_t MemAddress, 
+            uint32_t MemAddress,
+            uint16_t MemAddSize, 
             uint8_t *pData, 
             uint16_t Size
         ) override;
 
-        
+
     
     protected:
         I2C             *_pInstanceI2C;

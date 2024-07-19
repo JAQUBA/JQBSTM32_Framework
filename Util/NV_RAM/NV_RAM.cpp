@@ -10,14 +10,16 @@ NV_RAM::NV_RAM(I2C *pInstance,
 }
 
 void NV_RAM::readFromMemory(
-	uint32_t MemAddress, 
+	uint32_t MemAddress,
+	uint16_t MemAddSize, 
 	uint8_t *pData, 
 	uint16_t Size
 ) {
 	_pInstanceI2C->readFromMemory(_DevAddress, MemAddress, pData, Size);
 }
 void NV_RAM::writeToMemory(
-	uint32_t MemAddress, 
+	uint32_t MemAddress,
+	uint16_t MemAddSize, 
 	uint8_t *pData, 
 	uint16_t Size
 ) {
