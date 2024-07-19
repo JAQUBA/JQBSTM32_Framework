@@ -38,13 +38,13 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 				break;
 			}
 			case WORK: {
-				operationTimeout = millis()+20;
+				operationTimeout = millis()+2;
 				if(currentOperation.operationType == EoperationType::TRANSMIT) {
                     HAL_GPIO_WritePin(currentOperation.GPIOx, currentOperation.GPIO_Pin, GPIO_PIN_RESET);
-					if(HAL_SPI_Transmit(
+					if(HAL_SPI_Transmit_DMA(
 						_pHandler, 
 						currentOperation.pData,
-						currentOperation.Size, 20
+						currentOperation.Size
 					) == HAL_OK) {
 						operationState = WAITING;
 					}
@@ -59,6 +59,30 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 						operationState = WAITING;
 					}
 				}
+				else if(currentOperation.operationType == EoperationType::MEM_READ) {
+					if(HAL_SPI_Receive_DMA(
+						_pHandler, 
+						//currentOperation.DevAddress,
+						//currentOperation.MemAddress,
+						//currentOperation.MemAddSize,
+						currentOperation.pData,
+						currentOperation.Size
+					) == HAL_OK) {
+						operationState = FINISH;
+					}
+				}
+				else if(currentOperation.operationType == EoperationType::MEM_WRITE) {
+					if(HAL_SPI_Transmit_DMA(
+						_pHandler, 
+						//currentOperation.DevAddress,
+						//currentOperation.MemAddress,
+						//currentOperation.MemAddSize,
+						currentOperation.pData,
+						currentOperation.Size
+					) == HAL_OK) {
+						operationState = FINISH;
+					}
+				}
 				break;
 			}
 			case WAITING: {
@@ -68,8 +92,10 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 				break;
 			}
 			case FINISH: {
-				if(currentOperation.callback_f != nullptr) currentOperation.callback_f(currentOperation.pData,
-						currentOperation.Size);
+				if(currentOperation.callback_f != nullptr){
+				   currentOperation.callback_f(currentOperation.pData,
+				   currentOperation.Size);
+				}   
 				operationState = CLEAR;
 				break;
 			}

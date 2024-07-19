@@ -9,9 +9,15 @@ I2C *I2C::getInstance(I2C_HandleTypeDef *pHandler) {
     }
     return nullptr;
 }
-void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c) {I2C::getInstance(hi2c)->rxInterrupt();}
-void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c) {I2C::getInstance(hi2c)->txInterrupt();}
-void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {I2C::getInstance(hi2c)->errorInterrupt();}
+void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c) {
+	I2C::getInstance(hi2c)->rxInterrupt();
+}
+void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c) {
+	I2C::getInstance(hi2c)->txInterrupt();
+}
+void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {
+	I2C::getInstance(hi2c)->errorInterrupt();
+}
 
 I2C::I2C(I2C_HandleTypeDef* pHandler) {
     _pHandler = pHandler;
@@ -86,8 +92,10 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 				break;
 			}
 			case FINISH: {
-				if(currentOperation.callback_f != nullptr) currentOperation.callback_f(currentOperation.pData,
-						currentOperation.Size);
+				if(currentOperation.callback_f != nullptr){
+				   currentOperation.callback_f(currentOperation.pData,
+				   currentOperation.Size);
+				}
 				operationState = CLEAR;
 				break;
 			}
