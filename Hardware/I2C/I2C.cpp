@@ -58,7 +58,7 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 						_pHandler, 
 						currentOperation.DevAddress,
 						currentOperation.MemAddress,
-						I2C_MEMADD_SIZE_8BIT,
+						currentOperation.MemAddSize,
 						currentOperation.pData,
 						currentOperation.Size
 					) == HAL_OK) {
@@ -70,7 +70,7 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 						_pHandler, 
 						currentOperation.DevAddress,
 						currentOperation.MemAddress,
-						I2C_MEMADD_SIZE_8BIT,
+						currentOperation.MemAddSize,
 						currentOperation.pData,
 						currentOperation.Size
 					) == HAL_OK) {

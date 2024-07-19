@@ -34,6 +34,7 @@ class I2C : public IBus {
             EoperationType operationType;
             uint16_t DevAddress;
             uint16_t MemAddress;
+            uint16_t MemAddSize;
             uint8_t *pData;
             uint16_t Size;
             dataCallback_f callback_f;

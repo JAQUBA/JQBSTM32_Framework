@@ -2,11 +2,13 @@
 
 EEPROM::EEPROM(I2C *pInstance,
  	uint16_t DevAddress,
-	uint32_t BaseAddress) {
+	uint32_t BaseAddress,
+	uint16_t MemAddSize) {
 	
 	_pInstanceI2C = pInstance;
 	_DevAddress = DevAddress;
 	_BaseAddress = BaseAddress;
+	_MemAddSize = MemAddSize;
     isSPI = false;
 }
 

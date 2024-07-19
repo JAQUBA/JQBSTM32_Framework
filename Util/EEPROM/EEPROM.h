@@ -9,7 +9,8 @@ class EEPROM : public IExternalMemory {
     public:
         EEPROM(I2C *pInstance,
             uint16_t DevAddress,
-            uint32_t BaseAddress);
+            uint32_t BaseAddress,
+            uint16_t MemAddSize);
 
         EEPROM(SPI *pInstance,
             GPIO_TypeDef* GPIOx,
@@ -27,12 +28,14 @@ class EEPROM : public IExternalMemory {
             uint8_t *pData, 
             uint16_t Size
         ) override;
+
+        
     
     protected:
-        uint32_t        _BaseAddress;
-       
         I2C             *_pInstanceI2C;
         uint16_t        _DevAddress;
+        uint32_t        _BaseAddress;
+        uint16_t        _MemAddSize;
 
         bool            isSPI = false;
 
