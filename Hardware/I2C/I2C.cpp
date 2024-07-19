@@ -121,7 +121,8 @@ void I2C::rxInterrupt() {
 	}
 }
 void I2C::errorInterrupt() {
-	if (HAL_I2C_GetError(_pHandler) & HAL_I2C_ERROR_AF) {
+	//if (HAL_I2C_GetError(_pHandler) & HAL_I2C_ERROR_AF) {
+	if (HAL_I2C_GetError(_pHandler) > HAL_I2C_ERROR_NONE) {
 		operationState = FINISH;
 	}
 }

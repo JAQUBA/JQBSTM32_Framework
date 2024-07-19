@@ -46,9 +46,11 @@ class SPI : public IBus {
         struct operation {
             EoperationType  operationType;
             uint32_t        MemAddress;
+            uint16_t        MemAddSize;
             GPIO_TypeDef*   GPIOx;
             uint16_t        GPIO_Pin;
-            uint8_t         *pData;
+            uint8_t         *pData_tx;
+            uint8_t         *pData_rx;
             uint16_t        Size;
             dataCallback_f  callback_f;
             bool free = true;

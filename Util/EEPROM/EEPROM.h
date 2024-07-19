@@ -15,7 +15,8 @@ class EEPROM : public IExternalMemory {
         EEPROM(SPI *pInstance,
             GPIO_TypeDef* GPIOx,
             uint16_t GPIO_Pin,
-            uint32_t BaseAddress);
+            uint32_t BaseAddress,
+            uint16_t MemAddSize);
        
         void readFromMemory(
             uint32_t MemAddress,

@@ -15,12 +15,14 @@ EEPROM::EEPROM(I2C *pInstance,
 EEPROM::EEPROM(SPI *pInstance,
  	GPIO_TypeDef* GPIOx,
 	uint16_t GPIO_Pin,
-	uint32_t BaseAddress) {
+	uint32_t BaseAddress,
+	uint16_t MemAddSize) {
 
 	_pInstance = pInstance;
 	_CSPort = GPIOx;
 	_CSPin = GPIO_Pin;
 	_BaseAddress = BaseAddress;
+	_MemAddSize = MemAddSize;
     isSPI = true;
 }
 

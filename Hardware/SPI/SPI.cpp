@@ -41,9 +41,10 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 				operationTimeout = millis()+2;
 				if(currentOperation.operationType == EoperationType::TRANSMIT) {
                     HAL_GPIO_WritePin(currentOperation.GPIOx, currentOperation.GPIO_Pin, GPIO_PIN_RESET);
-					if(HAL_SPI_Transmit_DMA(
+					if(HAL_SPI_TransmitReceive_DMA(
 						_pHandler, 
-						currentOperation.pData,
+						currentOperation.pData_tx,
+						currentOperation.pData_rx,
 						currentOperation.Size
 					) == HAL_OK) {
 						operationState = WAITING;
@@ -51,33 +52,36 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 				}
 				else if(currentOperation.operationType == EoperationType::RECEIVE) {
                     HAL_GPIO_WritePin(currentOperation.GPIOx, currentOperation.GPIO_Pin, GPIO_PIN_RESET);
-					if(HAL_SPI_Receive_DMA(
+					if(HAL_SPI_TransmitReceive_DMA(
 						_pHandler, 
-						currentOperation.pData,
+						currentOperation.pData_tx,
+						currentOperation.pData_rx,
 						currentOperation.Size
 					) == HAL_OK) {
 						operationState = WAITING;
 					}
 				}
 				else if(currentOperation.operationType == EoperationType::MEM_READ) {
-					if(HAL_SPI_Receive_DMA(
+					if(HAL_SPI_TransmitReceive_DMA(
 						_pHandler, 
 						//currentOperation.DevAddress,
 						//currentOperation.MemAddress,
 						//currentOperation.MemAddSize,
-						currentOperation.pData,
+						currentOperation.pData_tx,
+						currentOperation.pData_rx,
 						currentOperation.Size
 					) == HAL_OK) {
 						operationState = FINISH;
 					}
 				}
 				else if(currentOperation.operationType == EoperationType::MEM_WRITE) {
-					if(HAL_SPI_Transmit_DMA(
+					if(HAL_SPI_TransmitReceive_DMA(
 						_pHandler, 
 						//currentOperation.DevAddress,
 						//currentOperation.MemAddress,
 						//currentOperation.MemAddSize,
-						currentOperation.pData,
+						currentOperation.pData_tx,
+						currentOperation.pData_rx,
 						currentOperation.Size
 					) == HAL_OK) {
 						operationState = FINISH;
@@ -93,14 +97,14 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 			}
 			case FINISH: {
 				if(currentOperation.callback_f != nullptr){
-				   currentOperation.callback_f(currentOperation.pData,
+				   currentOperation.callback_f(currentOperation.pData_tx,
 				   currentOperation.Size);
 				}   
 				operationState = CLEAR;
 				break;
 			}
 			case CLEAR: {
-				if(currentOperation.free) free(currentOperation.pData);
+				if(currentOperation.free) free(currentOperation.pData_tx);
 				operations.pop();
                 HAL_GPIO_WritePin(currentOperation.GPIOx, currentOperation.GPIO_Pin, GPIO_PIN_SET);
 				operationState = IDLE;
@@ -113,16 +117,19 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 
 void SPI::txInterrupt() {
 	if(operationState == WAITING) {
+		HAL_GPIO_WritePin(currentOperation.GPIOx, currentOperation.GPIO_Pin, GPIO_PIN_SET);
 		operationState = FINISH;
 	}
 }
 void SPI::rxInterrupt() {
 	if(operationState == WAITING) {
+		HAL_GPIO_WritePin(currentOperation.GPIOx, currentOperation.GPIO_Pin, GPIO_PIN_SET);
 		operationState = FINISH;
 	}
 }
 void SPI::errorInterrupt() {
 	if (HAL_SPI_GetError(_pHandler) > HAL_SPI_ERROR_NONE) {
+		HAL_GPIO_WritePin(currentOperation.GPIOx, currentOperation.GPIO_Pin, GPIO_PIN_SET);
 		operationState = FINISH;
 	}
 }
@@ -132,7 +139,7 @@ void SPI::receive(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint8_t *pData, uint16
 	operation.operationType = EoperationType::RECEIVE;
     operation.GPIOx = GPIOx;
     operation.GPIO_Pin = GPIO_Pin;
-	operation.pData = pData;
+	operation.pData_rx = pData;
 	operation.Size = Size;
 	operation.callback_f = callbackFn;
 	operation.free = false;
@@ -143,8 +150,8 @@ void SPI::transmit(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint8_t *pData, uint1
 	operation.operationType = EoperationType::TRANSMIT;
 	operation.GPIOx = GPIOx;
     operation.GPIO_Pin = GPIO_Pin;
-	operation.pData = (uint8_t*) malloc(Size);
-	memcpy(operation.pData, pData, Size);
+	operation.pData_tx = (uint8_t*) malloc(Size);
+	memcpy(operation.pData_tx, pData, Size);
 	operation.Size = Size;
 	operation.callback_f = callbackFn;
 	operations.push(operation);
@@ -153,9 +160,7 @@ void SPI::transmit(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint8_t *pData, uint1
 void SPI::readFromMemory(uint32_t MemAddress,uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
 	operation operation;
 	operation.operationType = EoperationType::MEM_READ;
-	//operation.DevAddress = DevAddress;
-	//operation.MemAddress = MemAddress;
-	operation.pData = pData;
+	operation.pData_rx = pData;
 	operation.Size = Size;
 	operation.callback_f = callbackFn;
 	operation.free = false;
@@ -164,10 +169,9 @@ void SPI::readFromMemory(uint32_t MemAddress,uint8_t *pData, uint16_t Size, data
 void SPI::writeToMemory(uint32_t MemAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
 	operation operation;
 	operation.operationType = EoperationType::MEM_WRITE;
-	//operation.DevAddress = DevAddress;
-	//operation.MemAddress = MemAddress;
-	operation.pData = (uint8_t*) malloc(Size);
-	memcpy(operation.pData, pData, Size);
+	operation.MemAddress = MemAddress;
+	operation.pData_tx = (uint8_t*) malloc(Size);
+	memcpy(operation.pData_tx, pData, Size);
 	operation.Size = Size;
 	operation.callback_f = callbackFn;
 	operations.push(operation);
