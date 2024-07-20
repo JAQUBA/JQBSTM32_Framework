@@ -64,7 +64,6 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 				else if(currentOperation.operationType == EoperationType::MEM_READ) {
 					if(HAL_SPI_TransmitReceive_DMA(
 						_pHandler, 
-						//currentOperation.DevAddress,
 						//currentOperation.MemAddress,
 						//currentOperation.MemAddSize,
 						currentOperation.pData_tx,
@@ -77,7 +76,6 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 				else if(currentOperation.operationType == EoperationType::MEM_WRITE) {
 					if(HAL_SPI_TransmitReceive_DMA(
 						_pHandler, 
-						//currentOperation.DevAddress,
 						//currentOperation.MemAddress,
 						//currentOperation.MemAddSize,
 						currentOperation.pData_tx,
@@ -157,22 +155,62 @@ void SPI::transmit(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint8_t *pData, uint1
 	operations.push(operation);
 }
 
-void SPI::readFromMemory(uint32_t MemAddress,uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
+void SPI::readFromMemory(uint32_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
 	operation operation;
 	operation.operationType = EoperationType::MEM_READ;
-	operation.pData_rx = pData;
+
+	operation.MemAddress = MemAddress;
+	operation.MemAddSize = MemAddSize;
 	operation.Size = Size;
+
+	buff_add[0] = (MemAddSize & 0x00FF0000)>>16;
+	buff_add[1] = (MemAddSize & 0x0000FF00)>>8;
+	buff_add[2] = (MemAddSize & 0x000000FF);
+
+	operation.pData_tx = (uint8_t*) malloc(Size + MemAddSize);//wyzerowac
+
+	if (MemAddSize==3) {
+		memcpy(operation.pData_tx, buff_add, MemAddSize);
+	} else if (MemAddSize==2) {
+		memcpy(operation.pData_tx, buff_add+1, MemAddSize);
+	} else if (MemAddSize==1) {
+		memcpy(operation.pData_tx, buff_add+2, MemAddSize);
+	} else {
+		//nieporawny add
+	}
+	
+	memcpy(operation.pData_tx + MemAddSize, pData, Size + operation.MemAddSize);
+
+	operation.pData_rx = pData;
 	operation.callback_f = callbackFn;
 	operation.free = false;
 	operations.push(operation);
 }
-void SPI::writeToMemory(uint32_t MemAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
+void SPI::writeToMemory(uint32_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
 	operation operation;
 	operation.operationType = EoperationType::MEM_WRITE;
+
 	operation.MemAddress = MemAddress;
-	operation.pData_tx = (uint8_t*) malloc(Size);
-	memcpy(operation.pData_tx, pData, Size);
+	operation.MemAddSize = MemAddSize;
 	operation.Size = Size;
+
+	buff_add[0] = (MemAddSize & 0x00FF0000)>>16;
+	buff_add[1] = (MemAddSize & 0x0000FF00)>>8;
+	buff_add[2] = (MemAddSize & 0x000000FF);
+
+	operation.pData_tx = (uint8_t*) malloc(Size + MemAddSize);//wyzerowac
+
+	if (MemAddSize==3) {
+		memcpy(operation.pData_tx, buff_add, MemAddSize);
+	} else if (MemAddSize==2) {
+		memcpy(operation.pData_tx, buff_add+1, MemAddSize);
+	} else if (MemAddSize==1) {
+		memcpy(operation.pData_tx, buff_add+2, MemAddSize);
+	} else {
+		//nieporawny add
+	}
+	memcpy(operation.pData_tx + MemAddSize, pData, Size + operation.MemAddSize);
+
 	operation.callback_f = callbackFn;
 	operations.push(operation);
 }

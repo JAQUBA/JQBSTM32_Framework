@@ -22,10 +22,12 @@ class SPI : public IBus {
             dataCallback_f callbackFn = nullptr
             );
         void readFromMemory(uint32_t MemAddress,
+            uint16_t MemAddSize,
             uint8_t *pData, uint16_t Size,
             dataCallback_f callbackFn = nullptr
             );
         void writeToMemory(uint32_t MemAddress,
+            uint16_t MemAddSize,
             uint8_t *pData, uint16_t Size,
             dataCallback_f callbackFn = nullptr
             );
@@ -36,6 +38,7 @@ class SPI : public IBus {
         uint16_t queueSize();
     private:
         SPI_HandleTypeDef* _pHandler;
+        uint8_t buff_add[3]={0,0,0};
 
         uint32_t operationTimeout;
         enum {IDLE, CHECK_FREE, WORK, WAITING,
