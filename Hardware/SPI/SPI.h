@@ -6,6 +6,8 @@
 
 #define SPI_MAX_INSTANCES 2
 
+
+
 class SPI : public IBus {
     public:
         SPI(SPI_HandleTypeDef *pHandler);
@@ -42,6 +44,7 @@ class SPI : public IBus {
 
         uint32_t operationTimeout;
         enum {IDLE, CHECK_FREE, WORK, WAITING,
+         WAIT_CMD_WREN_END, WRITE, WAIT_WRITE_END, WAIT_CMD_WRDI_END,
             CLEAR, FINISH} operationState = IDLE;
         enum EoperationType {RECEIVE, TRANSMIT,
             MEM_READ, MEM_WRITE};

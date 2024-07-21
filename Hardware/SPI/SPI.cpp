@@ -3,6 +3,17 @@
 SPI *_SPI_instances[SPI_MAX_INSTANCES];
 uint8_t _SPI_instancesNum = 0;
 
+const uint8_t CMD_WREN = 0x06; //0000 0110 Set Write Enable Latch
+const uint8_t CMD_WRITE = 0x02; //0000 0010 Write Memory Data
+const uint8_t CMD_READ = 0x03; //0000 0011 Read Memory Data
+const uint8_t CMD_RDSR = 0x05; //0000 0101 Read Status Register
+const uint8_t CMD_WRSR = 0x01; //0000 0001 Write Status Register
+const uint8_t CMD_WRDI = 0x04; //0000 0100 Write Disable
+const uint8_t CMD_SLEEP = 0xB9; // 1011 1001 Enter Sleep Mode
+const uint8_t CMD_FASTREAD = 0x0A; // 0000 1011 Fast Read Memory Data
+const uint8_t CMD_RDID = 0x9F ; // 1001 1111 Read Device ID
+const uint8_t CMD_SNR= 0xC3 ; // 1100 0011 Read Device S/N
+
 SPI *SPI::getInstance(SPI_HandleTypeDef *pHandler) {
     for (size_t i = 0; i < _SPI_instancesNum; i++) {
         if(_SPI_instances[i]->_pHandler->Instance == pHandler->Instance) return _SPI_instances[i];
@@ -64,25 +75,47 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 				else if(currentOperation.operationType == EoperationType::MEM_READ) {
 					if(HAL_SPI_TransmitReceive_DMA(
 						_pHandler, 
-						//currentOperation.MemAddress,
-						//currentOperation.MemAddSize,
 						currentOperation.pData_tx,
 						currentOperation.pData_rx,
 						currentOperation.Size
 					) == HAL_OK) {
-						operationState = FINISH;
+						operationState = WAITING;
 					}
 				}
 				else if(currentOperation.operationType == EoperationType::MEM_WRITE) {
-					if(HAL_SPI_TransmitReceive_DMA(
-						_pHandler, 
-						//currentOperation.MemAddress,
-						//currentOperation.MemAddSize,
-						currentOperation.pData_tx,
-						currentOperation.pData_rx,
-						currentOperation.Size
-					) == HAL_OK) {
-						operationState = FINISH;
+					uint8_t wrcmd[1]={CMD_WREN};
+					if(HAL_SPI_TransmitReceive_DMA(_pHandler, wrcmd,
+						currentOperation.pData_rx, 1) == HAL_OK) {
+						operationState = WAIT_CMD_WREN_END;
+					}
+				}
+				break;
+			}
+			case WAIT_CMD_WREN_END: {
+				if(millis() >= operationTimeout) {
+					operationState = FINISH;
+				}
+				break;
+			}
+			case WRITE: {
+				if(millis() >= operationTimeout) {
+					operationState = FINISH;
+				}
+				else {
+					if(HAL_SPI_TransmitReceive_DMA(_pHandler, currentOperation.pData_tx,
+						currentOperation.pData_rx, 1) == HAL_OK) {
+						operationState = WAIT_WRITE_END;
+					}
+				}
+				break;
+			}
+			case WAIT_CMD_WRDI_END: {
+				if(millis() >= operationTimeout) {
+					operationState = FINISH;
+				}else {
+					if(HAL_SPI_TransmitReceive_DMA(_pHandler, currentOperation.pData_tx,
+						currentOperation.pData_rx, 1) == HAL_OK) {
+						operationState = WAITING;
 					}
 				}
 				break;
@@ -114,8 +147,12 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 }
 
 void SPI::txInterrupt() {
+	HAL_GPIO_WritePin(currentOperation.GPIOx, currentOperation.GPIO_Pin, GPIO_PIN_SET);
 	if(operationState == WAITING) {
-		HAL_GPIO_WritePin(currentOperation.GPIOx, currentOperation.GPIO_Pin, GPIO_PIN_SET);
+		operationState = FINISH;
+	} else if(operationState == WAIT_CMD_WREN_END) {
+		operationState = WRITE;
+	} else if(operationState == WAIT_CMD_WREN_END) {
 		operationState = FINISH;
 	}
 }
@@ -161,7 +198,7 @@ void SPI::readFromMemory(uint32_t MemAddress, uint16_t MemAddSize, uint8_t *pDat
 
 	operation.MemAddress = MemAddress;
 	operation.MemAddSize = MemAddSize;
-	operation.Size = Size;
+	operation.Size = Size + MemAddSize;
 
 	buff_add[0] = (MemAddSize & 0x00FF0000)>>16;
 	buff_add[1] = (MemAddSize & 0x0000FF00)>>8;
@@ -179,7 +216,7 @@ void SPI::readFromMemory(uint32_t MemAddress, uint16_t MemAddSize, uint8_t *pDat
 		//nieporawny add
 	}
 	
-	memcpy(operation.pData_tx + MemAddSize, pData, Size + operation.MemAddSize);
+	memcpy(operation.pData_tx + MemAddSize, pData, Size);
 
 	operation.pData_rx = pData;
 	operation.callback_f = callbackFn;
@@ -192,7 +229,7 @@ void SPI::writeToMemory(uint32_t MemAddress, uint16_t MemAddSize, uint8_t *pData
 
 	operation.MemAddress = MemAddress;
 	operation.MemAddSize = MemAddSize;
-	operation.Size = Size;
+	operation.Size = Size + MemAddSize;
 
 	buff_add[0] = (MemAddSize & 0x00FF0000)>>16;
 	buff_add[1] = (MemAddSize & 0x0000FF00)>>8;
@@ -209,7 +246,7 @@ void SPI::writeToMemory(uint32_t MemAddress, uint16_t MemAddSize, uint8_t *pData
 	} else {
 		//nieporawny add
 	}
-	memcpy(operation.pData_tx + MemAddSize, pData, Size + operation.MemAddSize);
+	memcpy(operation.pData_tx + MemAddSize, pData, Size);
 
 	operation.callback_f = callbackFn;
 	operations.push(operation);
