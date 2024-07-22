@@ -9,9 +9,15 @@ I2C *I2C::getInstance(I2C_HandleTypeDef *pHandler) {
     }
     return nullptr;
 }
-void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c) {I2C::getInstance(hi2c)->rxInterrupt();}
-void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c) {I2C::getInstance(hi2c)->txInterrupt();}
-void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {I2C::getInstance(hi2c)->errorInterrupt();}
+void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c) {
+	I2C::getInstance(hi2c)->rxInterrupt();
+}
+void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c) {
+	I2C::getInstance(hi2c)->txInterrupt();
+}
+void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {
+	I2C::getInstance(hi2c)->errorInterrupt();
+}
 
 I2C::I2C(I2C_HandleTypeDef* pHandler) {
     _pHandler = pHandler;
@@ -54,15 +60,15 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 					}
 				}
 				else if(currentOperation.operationType == EoperationType::MEM_READ) {
-					if(HAL_I2C_Mem_Read_IT(//??????????????????????
+					if(HAL_I2C_Mem_Read_DMA(
 						_pHandler, 
 						currentOperation.DevAddress,
 						currentOperation.MemAddress,
-						I2C_MEMADD_SIZE_8BIT,
+						currentOperation.MemAddSize,
 						currentOperation.pData,
 						currentOperation.Size
 					) == HAL_OK) {
-						operationState = FINISH;
+						operationState = WAITING;//FINISH;///////////////
 					}
 				}
 				else if(currentOperation.operationType == EoperationType::MEM_WRITE) {
@@ -70,11 +76,11 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 						_pHandler, 
 						currentOperation.DevAddress,
 						currentOperation.MemAddress,
-						I2C_MEMADD_SIZE_8BIT,
+						currentOperation.MemAddSize,
 						currentOperation.pData,
 						currentOperation.Size
 					) == HAL_OK) {
-						operationState = FINISH;
+						operationState = WAITING;//FINISH;//????????????????
 					}
 				}
 				break;
@@ -86,8 +92,10 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 				break;
 			}
 			case FINISH: {
-				if(currentOperation.callback_f != nullptr) currentOperation.callback_f(currentOperation.pData,
-						currentOperation.Size);
+				if(currentOperation.callback_f != nullptr){
+				   currentOperation.callback_f(currentOperation.pData,
+				   currentOperation.Size);
+				}
 				operationState = CLEAR;
 				break;
 			}
@@ -113,7 +121,8 @@ void I2C::rxInterrupt() {
 	}
 }
 void I2C::errorInterrupt() {
-	if (HAL_I2C_GetError(_pHandler) & HAL_I2C_ERROR_AF) {
+	//if (HAL_I2C_GetError(_pHandler) & HAL_I2C_ERROR_AF) {
+	if (HAL_I2C_GetError(_pHandler) > HAL_I2C_ERROR_NONE) {
 		operationState = FINISH;
 	}
 }

@@ -1,34 +1,58 @@
 #include "EEPROM.h"
-EEPROM::EEPROM(I2C *pInstance, uint16_t DevAddress, uint16_t pages, uint16_t pageSize) {
-	_pInstance = pInstance;
+
+EEPROM::EEPROM(I2C *pInstance,
+ 	uint16_t DevAddress,
+	uint32_t BaseAddress,
+	uint16_t MemAddSize) {
+	
+	_pInstanceI2C = pInstance;
 	_DevAddress = DevAddress;
-	_pages = pages;
-	_pageSize = pageSize;
+	_BaseAddress = BaseAddress;
+	_MemAddSize = MemAddSize;
+    isSPI = false;
 }
-EEPROM::EEPROM(SPI *pInstance, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint16_t pages, uint16_t pagesize) {
-	_pInstanceSPI = pInstance;
+
+EEPROM::EEPROM(SPI *pInstance,
+ 	GPIO_TypeDef* GPIOx,
+	uint16_t GPIO_Pin,
+	uint32_t BaseAddress,
+	uint16_t MemAddSize) {
+
+	_pInstance = pInstance;
 	_CSPort = GPIOx;
 	_CSPin = GPIO_Pin;
-	_pages = pages;
-	_pageSize = pagesize;
+	_BaseAddress = BaseAddress;
+	_MemAddSize = MemAddSize;
+    isSPI = true;
 }
-EEPROM::EEPROM(SPI *pInstance, uint8_t CS_Addres, uint16_t pages, uint16_t pagesize) {
-	_pInstanceSPI = pInstance;
-	_CS_Addres = CS_Addres;
-	_pages = pages;
-	_pageSize = pagesize;
-}
+
 void EEPROM::readFromMemory(
-	uint16_t MemAddress, 
+	uint32_t MemAddress,
+	uint16_t MemAddSize,
 	uint8_t *pData, 
 	uint16_t Size
 ) {
-	_pInstance->readFromMemory(_DevAddress, MemAddress, pData, Size);
+	uint32_t mem_address = _BaseAddress + MemAddress;
+
+	if(isSPI) {
+		_pInstanceSPI->readFromMemory(mem_address, MemAddSize, pData, Size);
+	}else{
+		_pInstanceI2C->readFromMemory(_DevAddress, mem_address, pData, Size);
+	}
+
 }
+
 void EEPROM::writeToMemory(
-	uint16_t MemAddress, 
+	uint32_t MemAddress,
+	uint16_t MemAddSize, 
 	uint8_t *pData, 
 	uint16_t Size
 ) {
-	_pInstance->writeToMemory(_DevAddress, MemAddress, pData, Size);
+	uint32_t mem_address = _BaseAddress + MemAddress;
+
+	if(isSPI) {
+		_pInstanceSPI->writeToMemory(mem_address, MemAddSize, pData, Size);
+	}else{
+		_pInstanceI2C->writeToMemory(_DevAddress, mem_address, pData, Size);
+	}
 }

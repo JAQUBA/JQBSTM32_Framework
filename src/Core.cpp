@@ -1,5 +1,7 @@
 #include "Core.h"
 
+#include "spi.h"
+
 Scheduler mainTasks;
 Scheduler interruptTasks;
 
@@ -41,6 +43,7 @@ Core _core;
 
 int main() {
 	setup();
+
 	while (1) {
         mainTasks.execute();
         loop();

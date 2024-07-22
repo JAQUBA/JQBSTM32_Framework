@@ -5,20 +5,25 @@ struct Register {
     struct Register *next = NULL;
 } *registers;
 
-RegisterBank::RegisterBank(uint16_t start, uint16_t size) {
+RegisterBank::RegisterBank(uint16_t start,
+    uint16_t size) {
+
     _size = size;
     _start = start;
     _stop = _start + size;
 
     _initialize();
 }
-RegisterBank::RegisterBank(uint16_t start, uint16_t size, IExternalMemory *extMemInstance, uint16_t extMemLocation) {
+
+RegisterBank::RegisterBank(uint16_t start,
+    uint16_t size,
+    IExternalMemory *extMemInstance) {
+        
     _size = size;
     _start = start;
     _stop = _start + size;
 
     _extMemInstance = extMemInstance;
-    _extMemLocation = extMemLocation;
     _extMemPreserve = true;
 
     _initialize();
@@ -51,10 +56,12 @@ void RegisterBank::_initialize() {
     load();
 }
 void RegisterBank::load() {
-    if(_extMemPreserve) _extMemInstance->readFromMemory(_extMemLocation, (uint8_t*) _registers, _size*2);
+     if(_extMemPreserve) _extMemInstance->readFromMemory(_extMemLocation,
+       _extMemInstance->_MemAddSize, (uint8_t*) _registers, _size*2);
 }
 void RegisterBank::save() {
-    if(_extMemPreserve) _extMemInstance->writeToMemory(_extMemLocation, (uint8_t*) _registers, _size*2);
+    if(_extMemPreserve) _extMemInstance->writeToMemory(_extMemLocation,
+      _extMemInstance->_MemAddSize,(uint8_t*) _registers, _size*2);
 }
 RegisterBank *RegisterBank::find(uint16_t fullAddress) {
     struct Register *temp = registers;
