@@ -68,7 +68,7 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 						currentOperation.pData,
 						currentOperation.Size
 					) == HAL_OK) {
-						operationState = FINISH;///////////////
+						operationState = WAITING;//FINISH;///////////////
 					}
 				}
 				else if(currentOperation.operationType == EoperationType::MEM_WRITE) {
@@ -80,7 +80,7 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 						currentOperation.pData,
 						currentOperation.Size
 					) == HAL_OK) {
-						operationState = FINISH;//????????????????
+						operationState = WAITING;//FINISH;//????????????????
 					}
 				}
 				break;
