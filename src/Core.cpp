@@ -1,7 +1,5 @@
 #include "Core.h"
 
-#include "spi.h"
-
 Scheduler mainTasks;
 Scheduler interruptTasks;
 
