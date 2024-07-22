@@ -35,7 +35,7 @@ void EEPROM::readFromMemory(
 	uint32_t mem_address = _BaseAddress + MemAddress;
 
 	if(isSPI) {
-		_pInstanceSPI->readFromMemory(mem_address, MemAddSize, pData, Size);
+		_pInstanceSPI->readFromMemory(_CSPort, _CSPin, mem_address, MemAddSize, pData, Size);
 	}else{
 		_pInstanceI2C->readFromMemory(_DevAddress, mem_address, pData, Size);
 	}
@@ -51,7 +51,7 @@ void EEPROM::writeToMemory(
 	uint32_t mem_address = _BaseAddress + MemAddress;
 
 	if(isSPI) {
-		_pInstanceSPI->writeToMemory(mem_address, MemAddSize, pData, Size);
+		_pInstanceSPI->writeToMemory(_CSPort, _CSPin, mem_address, MemAddSize, pData, Size);
 	}else{
 		_pInstanceI2C->writeToMemory(_DevAddress, mem_address, pData, Size);
 	}
