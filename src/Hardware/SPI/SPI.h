@@ -6,7 +6,7 @@
 
 #define SPI_MAX_INSTANCES 2
 
-
+extern uint32_t err;
 
 class SPI : public IBus {
     public:
@@ -23,12 +23,16 @@ class SPI : public IBus {
             uint8_t *pData, uint16_t Size,
             dataCallback_f callbackFn = nullptr
             );
-        void readFromMemory(uint32_t MemAddress,
+        void readFromMemory(GPIO_TypeDef* GPIOx,
+            uint16_t GPIO_Pin,
+            uint32_t MemAddress,
             uint16_t MemAddSize,
             uint8_t *pData, uint16_t Size,
             dataCallback_f callbackFn = nullptr
             );
-        void writeToMemory(uint32_t MemAddress,
+        void writeToMemory(GPIO_TypeDef* GPIOx,
+            uint16_t GPIO_Pin,
+            uint32_t MemAddress,
             uint16_t MemAddSize,
             uint8_t *pData, uint16_t Size,
             dataCallback_f callbackFn = nullptr
@@ -43,7 +47,7 @@ class SPI : public IBus {
         uint8_t buff_add[4]={0,0,0,0};
 
         uint32_t operationTimeout;
-        enum {IDLE, CHECK_FREE, WORK, WAITING,
+        enum {IDLE, CHECK_FREE, WORK, WAITING,FINISH_READ_MEM,
          WAIT_CMD_WREN_END, WRITE, WAIT_WRITE_END, WAIT_CMD_WRDI_END,CMD_WRDI,WAIT_READ_END,READ_END,
             CLEAR, FINISH} operationState = IDLE;
         enum EoperationType {RECEIVE, TRANSMIT,

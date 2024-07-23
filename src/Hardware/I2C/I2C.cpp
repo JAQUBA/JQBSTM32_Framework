@@ -39,6 +39,7 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 			}
 			case WORK: {
 				operationTimeout = millis()+2;
+
 				if(currentOperation.operationType == EoperationType::SEND) {
 					if(HAL_I2C_Master_Transmit_DMA(
 						_pHandler, 
@@ -56,7 +57,7 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 						currentOperation.pData,
 						currentOperation.Size
 					) == HAL_OK) {
-						operationState = WAITING;
+						operationState = WAITING; 
 					}
 				}
 				else if(currentOperation.operationType == EoperationType::MEM_READ) {
@@ -121,7 +122,6 @@ void I2C::rxInterrupt() {
 	}
 }
 void I2C::errorInterrupt() {
-	//if (HAL_I2C_GetError(_pHandler) & HAL_I2C_ERROR_AF) {
 	if (HAL_I2C_GetError(_pHandler) > HAL_I2C_ERROR_NONE) {
 		operationState = FINISH;
 	}
@@ -142,6 +142,7 @@ void I2C::send(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallback_
 	operation.operationType = EoperationType::SEND;
 	operation.DevAddress = DevAddress;
 	operation.pData = (uint8_t*) malloc(Size);
+	operation.free = true;
 	memcpy(operation.pData, pData, Size);
 	operation.Size = Size;
 	operation.callback_f = callbackFn;
@@ -164,6 +165,7 @@ void I2C::writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData
 	operation.DevAddress = DevAddress;
 	operation.MemAddress = MemAddress;
 	operation.pData = (uint8_t*) malloc(Size);
+	operation.free = true;
 	memcpy(operation.pData, pData, Size);
 	operation.Size = Size;
 	operation.callback_f = callbackFn;
