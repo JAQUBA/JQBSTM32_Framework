@@ -6,7 +6,7 @@
 
 #define SPI_MAX_INSTANCES 2
 
-
+extern uint32_t err;
 
 class SPI : public IBus {
     public:
