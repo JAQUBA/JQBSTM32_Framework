@@ -25,19 +25,14 @@ SPI *SPI::getInstance(SPI_HandleTypeDef *pHandler) {
 }
 
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
-
     err=100;
-
     SPI::getInstance(hspi)->txInterrupt();
 }
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi) {
-
 	err=200;
     SPI::getInstance(hspi)->rxInterrupt();
 }
 void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi) {
-
-
 	err=300;
     SPI::getInstance(hspi)->errorInterrupt();
 }

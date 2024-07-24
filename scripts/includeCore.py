@@ -2,10 +2,10 @@ import os
 Import("env")
 
 env.Append(CPPPATH=["$PROJECT_DIR/Core/Inc"])
-env.BuildSources(
-    os.path.join("$BUILD_DIR", "Core", "Src"),
-    os.path.join("$PROJECT_DIR", "Core", "Src")
-)
+# env.BuildSources(
+#     os.path.join("$BUILD_DIR", "Core", "Src"),
+#     os.path.join("$PROJECT_DIR", "Core", "Src")
+# )
 
 for item in env.GetProjectConfig().parse_multi_values(env.GetProjectOption("using", "")):
     if item == "FDCAN":
