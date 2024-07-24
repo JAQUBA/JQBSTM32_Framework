@@ -14,8 +14,8 @@ const uint8_t CMD_FASTREAD = 0x0A; // 0000 1011 Fast Read Memory Data
 const uint8_t CMD_RDID = 0x9F ; // 1001 1111 Read Device ID
 const uint8_t CMD_SNR= 0xC3 ; // 1100 0011 Read Device S/N
 
-uint8_t rdBuf[100]= {0};
-uint8_t wrBuf[100]= {0};
+uint8_t rdBuf[300]= {0};
+uint8_t wrBuf[300]= {0};
 
 SPI *SPI::getInstance(SPI_HandleTypeDef *pHandler) {
     for (size_t i = 0; i < _SPI_instancesNum; i++) {
@@ -91,19 +91,24 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 						currentOperation.pData_rx,
 						currentOperation.Size
 					) == HAL_OK) {
-						operationState = WAIT_READ_END;
+						operationState = WAITING;//WAIT_READ_END;
 					}
 				}
 				else if(currentOperation.operationType == EoperationType::MEM_WRITE) {
-					uint8_t wrcmd[1]={CMD_WREN};
-					if(HAL_SPI_TransmitReceive_DMA(_pHandler, wrcmd,
-						currentOperation.pData_rx, 1) == HAL_OK) {
-						operationState = WAIT_CMD_WREN_END;
+					HAL_GPIO_WritePin(currentOperation.GPIOx, currentOperation.GPIO_Pin, GPIO_PIN_RESET);
+					if(HAL_SPI_TransmitReceive_DMA(
+						_pHandler, 
+						currentOperation.pData_tx,
+						currentOperation.pData_rx,
+						currentOperation.Size
+					) == HAL_OK) {
+						operationState = WAITING;//WAIT_READ_END;
+					}
 					}
 				}
 				break;
-			}
-			case WAIT_CMD_WREN_END: {
+		
+			/*case WAIT_CMD_WREN_END: {
 				if(millis() >= operationTimeout) {
 					operationState = FINISH;
 				}
@@ -165,7 +170,7 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 				}   
 				operationState = CLEAR;
 				break;
-			}
+			}*/
 
 			case WAITING: {
 				if(millis() >= operationTimeout) {
@@ -286,6 +291,8 @@ uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
 	} else {
 		//nieporawny add
 	}
+
+	
 	
 	operation.pData_rx = pData;
 	operation.callback_f = callbackFn;
@@ -300,30 +307,35 @@ void SPI::writeToMemory(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin,
 	operation operation;
 	operation.operationType = EoperationType::MEM_WRITE;
 
+	operation.GPIOx = GPIOx;
+    operation.GPIO_Pin = GPIO_Pin;
 	operation.MemAddress = MemAddress;
 	operation.MemAddSize = MemAddSize;
-	operation.Size = Size + MemAddSize+1;
+	operation.Size = Size + MemAddSize + 1;
 
-	buff_add[0] = CMD_WRITE;
-	buff_add[1] = (MemAddSize & 0x00FF0000)>>16;
-	buff_add[2] = (MemAddSize & 0x0000FF00)>>8;
-	buff_add[3] = (MemAddSize & 0x000000FF);
+	operation.pData_tx = (uint8_t*) malloc(operation.Size);
+	memset(operation.pData_tx, 0, operation.Size);
 
-	operation.pData_tx = (uint8_t*) malloc(Size + MemAddSize+1);
-	memset(operation.pData_tx, 0, Size + MemAddSize);
+	*(operation.pData_tx+0) = CMD_WRITE;
 
 	if (MemAddSize==3) {
-		memcpy(operation.pData_tx+1, buff_add, MemAddSize);
+		*(operation.pData_tx+1) = (uint8_t)((MemAddress & 0x00FF0000)>>16);
+		*(operation.pData_tx+2) = (uint8_t)((MemAddress & 0x0000FF00)>>8);
+		*(operation.pData_tx+3) = (uint8_t)((MemAddress & 0x000000FF));
 	} else if (MemAddSize==2) {
-		memcpy(operation.pData_tx+1, buff_add+1, MemAddSize);
+		*(operation.pData_tx+1) = (uint8_t)((MemAddress & 0x0000FF00)>>8);
+		*(operation.pData_tx+2) = (uint8_t)((MemAddress & 0x000000FF));
 	} else if (MemAddSize==1) {
-		memcpy(operation.pData_tx+1, buff_add+2, MemAddSize);
+		*(operation.pData_tx+1) = (uint8_t)((MemAddress & 0x000000FF));
 	} else {
 		//nieporawny add
 	}
-	memcpy(operation.pData_tx + MemAddSize+1, pData, Size);
+	
+	memcpy(operation.pData_tx+1+MemAddSize, pData, Size);
 
+	operation.pData_rx = rdBuf;
 	operation.callback_f = callbackFn;
+	operation.free = true;
 	operations.push(operation);
 }
 
