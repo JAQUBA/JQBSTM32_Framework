@@ -56,7 +56,7 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 				break;
 			}
 			case WORK: {
-				operationTimeout = millis()+2;
+				operationTimeout = millis()+3;
 				if(currentOperation.operationType == EoperationType::TRANSMIT) {
                     HAL_GPIO_WritePin(currentOperation.GPIOx, currentOperation.GPIO_Pin, GPIO_PIN_RESET);
 					if(HAL_SPI_TransmitReceive_DMA(
@@ -65,7 +65,6 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 						currentOperation.pData_rx,
 						currentOperation.Size
 					) == HAL_OK) {
-						//operationTimeout = millis()+2;
 						operationState = WAITING;
 					}// else {//HAL ERR
 						//operationState = FINISH;
@@ -79,13 +78,13 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 						currentOperation.pData_rx,
 						currentOperation.Size
 					) == HAL_OK) {
-						//operationTimeout = millis()+2;
 						operationState = WAITING;
 					} //else {
 					//	operationState = FINISH;
 					//}
 				}
 				else if(currentOperation.operationType == EoperationType::MEM_READ) {
+					HAL_GPIO_WritePin(currentOperation.GPIOx, currentOperation.GPIO_Pin, GPIO_PIN_RESET);
 					if(HAL_SPI_TransmitReceive_DMA(
 						_pHandler, 
 						currentOperation.pData_tx,
@@ -264,33 +263,33 @@ uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
 	operation operation;
 	operation.operationType = EoperationType::MEM_READ;
 
+	operation.GPIOx = GPIOx;
+    operation.GPIO_Pin = GPIO_Pin;
 	operation.MemAddress = MemAddress;
 	operation.MemAddSize = MemAddSize;
 	operation.Size = Size + MemAddSize + 1;
 
-	buff_add[0] = CMD_READ;
-	buff_add[1] = (MemAddSize & 0x00FF0000)>>16;
-	buff_add[2] = (MemAddSize & 0x0000FF00)>>8;
-	buff_add[3] = (MemAddSize & 0x000000FF);
-
 	operation.pData_tx = (uint8_t*) malloc(operation.Size);
 	memset(operation.pData_tx, 0, operation.Size);
 
+	*(operation.pData_tx+0) = CMD_READ;
+
 	if (MemAddSize==3) {
-		memcpy(operation.pData_tx+1, buff_add, MemAddSize);
+		*(operation.pData_tx+1) = (uint8_t)((MemAddress & 0x00FF0000)>>16);
+		*(operation.pData_tx+2) = (uint8_t)((MemAddress & 0x0000FF00)>>8);
+		*(operation.pData_tx+3) = (uint8_t)((MemAddress & 0x000000FF));
 	} else if (MemAddSize==2) {
-		memcpy(operation.pData_tx+1, buff_add+1, MemAddSize);
+		*(operation.pData_tx+1) = (uint8_t)((MemAddress & 0x0000FF00)>>8);
+		*(operation.pData_tx+2) = (uint8_t)((MemAddress & 0x000000FF));
 	} else if (MemAddSize==1) {
-		memcpy(operation.pData_tx+1, buff_add+2, MemAddSize);
+		*(operation.pData_tx+1) = (uint8_t)((MemAddress & 0x000000FF));
 	} else {
 		//nieporawny add
 	}
 	
-	memcpy(operation.pData_tx + 1 + MemAddSize, pData, Size);
-
 	operation.pData_rx = pData;
 	operation.callback_f = callbackFn;
-	operation.free = false;
+	operation.free = true;
 	operations.push(operation);
 }
 
