@@ -5,8 +5,11 @@
 #include "Interface/IBus.h"
 
 #define SPI_MAX_INSTANCES 2
+#define SPI_MEMADD_SIZE_1_BYTE 1
+#define SPI_MEMADD_SIZE_2_BYTE 2
+#define SPI_MEMADD_SIZE_3_BYTE 3
 
-extern uint32_t err;
+extern uint32_t err;//testy!
 
 class SPI : public IBus {
     public:
@@ -44,12 +47,9 @@ class SPI : public IBus {
         uint16_t queueSize();
     private:
         SPI_HandleTypeDef* _pHandler;
-        uint8_t buff_add[4]={0,0,0,0};
-
         uint32_t operationTimeout;
-        enum {IDLE, CHECK_FREE, WORK, WAITING,FINISH_READ_MEM,
-         WAIT_CMD_WREN_END, WRITE, WAIT_WRITE_END, WAIT_CMD_WRDI_END,CMD_WRDI,WAIT_READ_END,READ_END,
-            CLEAR, FINISH} operationState = IDLE;
+        enum {IDLE, CHECK_FREE, WORK, WAITING,
+              CLEAR, FINISH} operationState = IDLE;
         enum EoperationType {RECEIVE, TRANSMIT,
             MEM_READ, MEM_WRITE};
         

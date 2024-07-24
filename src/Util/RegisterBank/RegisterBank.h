@@ -7,6 +7,7 @@ class RegisterBank {
     public:
         RegisterBank(uint16_t regAddress,
             uint16_t size);
+            
         RegisterBank(uint16_t regAddress,
             uint16_t size,
             IExternalMemory *extMemInstance);

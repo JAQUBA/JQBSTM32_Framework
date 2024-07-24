@@ -14,8 +14,7 @@ const uint8_t CMD_FASTREAD = 0x0A; // 0000 1011 Fast Read Memory Data
 const uint8_t CMD_RDID = 0x9F ; // 1001 1111 Read Device ID
 const uint8_t CMD_SNR= 0xC3 ; // 1100 0011 Read Device S/N
 
-uint8_t rdBuf[300]= {0};
-uint8_t wrBuf[300]= {0};
+static uint8_t rdBuf[300]= {0};//co z tym zrobić?
 
 SPI *SPI::getInstance(SPI_HandleTypeDef *pHandler) {
     for (size_t i = 0; i < _SPI_instancesNum; i++) {
@@ -104,74 +103,9 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 					) == HAL_OK) {
 						operationState = WAITING;//WAIT_READ_END;
 					}
-					}
 				}
 				break;
-		
-			/*case WAIT_CMD_WREN_END: {
-				if(millis() >= operationTimeout) {
-					operationState = FINISH;
-				}
-				break;
-			}
-			case WRITE: {
-				if(millis() >= operationTimeout) {
-					operationState = FINISH;
-				}
-				else {
-					if(HAL_SPI_TransmitReceive_DMA(_pHandler, currentOperation.pData_tx,//WRITE
-						currentOperation.pData_rx, currentOperation.Size) == HAL_OK) {
-						operationState = WAIT_WRITE_END;
-					}
-				}
-				break;
-			}
-
-			case WAIT_WRITE_END: {
-				if(millis() >= operationTimeout) {
-					operationState = FINISH;
-				}else{
-					uint8_t wrcmd[1]={CMD_WRDI};
-					if(HAL_SPI_TransmitReceive_DMA(_pHandler, wrcmd,
-						currentOperation.pData_rx, 1) == HAL_OK) {
-						operationState = WAIT_CMD_WRDI_END;
-					}
-				}
-				break;
-			}
-
-			case WAIT_CMD_WRDI_END: {
-				if(millis() >= operationTimeout) {
-					operationState = FINISH;
-				}else {
-					operationState = FINISH;
-				}
-				break;
-			}
-
-
-			case WAIT_READ_END: {
-				if(millis() >= operationTimeout) {
-					operationState = FINISH;
-				}
-				break;
-			}
-
-			case READ_END: {
-				currentOperation.pData_rx+=(currentOperation.MemAddSize+1);
-				operationState = FINISH_READ_MEM;
-				break;
-			}
-
-			case FINISH_READ_MEM: {
-				if(currentOperation.callback_f != nullptr){
-				   currentOperation.callback_f(currentOperation.pData_rx,
-				   currentOperation.Size-=(currentOperation.MemAddSize+1));
-				}   
-				operationState = CLEAR;
-				break;
-			}*/
-
+			}	
 			case WAITING: {
 				if(millis() >= operationTimeout) {
 					HAL_GPIO_WritePin(currentOperation.GPIOx, currentOperation.GPIO_Pin, GPIO_PIN_SET);
@@ -201,32 +135,19 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 
 void SPI::txInterrupt() {
 	operationState = FINISH;
-	//if(operationState == WAITING) {
-		//operationState = FINISH;
-	//}/* else if(operationState == WAIT_CMD_WREN_END) {
-	/*	operationState = WRITE;
-	} else if(operationState == WAIT_WRITE_END) {
-		operationState = CMD_WRDI;
-	} else if(operationState == WAIT_CMD_WRDI_END) {
+	if(operationState == WAITING) {
 		operationState = FINISH;
-	} else {
-		operationState = FINISH;
-	}*/
+	}
 }
 void SPI::rxInterrupt() {
 	operationState = FINISH;
-	//if(operationState == WAITING) {
-	//	operationState = FINISH;
-	//}/*else if(operationState == WAIT_READ_END) {
-	/*	operationState = READ_END;
-	} else{
+	if(operationState == WAITING) {
 		operationState = FINISH;
-	}*/
+	}
 }
 
 void SPI::errorInterrupt() {
 	if (HAL_SPI_GetError(_pHandler) > HAL_SPI_ERROR_NONE) {
-		//HAL_GPIO_WritePin(currentOperation.GPIOx, currentOperation.GPIO_Pin, GPIO_PIN_SET);
     	operationState = FINISH;
 	}
 }
@@ -236,7 +157,6 @@ void SPI::receive(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint8_t *pData, uint16
 	operation.operationType = EoperationType::RECEIVE;
     operation.GPIOx = GPIOx;
     operation.GPIO_Pin = GPIO_Pin;
-	operation.pData_tx = wrBuf;
 	operation.pData_rx = pData;
 	operation.Size = Size;
 	operation.callback_f = callbackFn;
@@ -247,13 +167,9 @@ void SPI::receive(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint8_t *pData, uint16
 void SPI::transmit(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
 	operation operation;
 	operation.operationType = EoperationType::TRANSMIT;
-
-    operation.pData_tx = pData;
-	operation.pData_rx = rdBuf;
-
+   	operation.pData_rx = rdBuf;
 	operation.GPIOx = GPIOx;
     operation.GPIO_Pin = GPIO_Pin;
-
 	operation.pData_tx = (uint8_t*) malloc(Size);
 	memcpy(operation.pData_tx, pData, Size);
 	operation.Size = Size;
@@ -291,9 +207,6 @@ uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
 	} else {
 		//nieporawny add
 	}
-
-	
-	
 	operation.pData_rx = pData;
 	operation.callback_f = callbackFn;
 	operation.free = true;
