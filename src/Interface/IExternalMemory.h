@@ -3,6 +3,10 @@
 
 #include "../Interface/IBus.h"
 
+#define MEMADD_SIZE_8BIT            (0x00000001U)
+#define MEMADD_SIZE_16BIT           (0x00000002U)
+#define MEMADD_SIZE_32BIT           (0x00000004U)
+
 class IExternalMemory {
     public:
         virtual void readFromMemory(
