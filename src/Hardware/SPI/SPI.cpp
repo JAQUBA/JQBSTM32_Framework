@@ -76,12 +76,11 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 			}	
 			case WAITING: {
 				if(millis() >= operationTimeout) {
-					operationState = FINISH;
+					operationState = CLEAR;
 				}
 				break;
 			}
 			case FINISH: {
-				HAL_GPIO_WritePin(currentOperation.GPIOx, currentOperation.GPIO_Pin, GPIO_PIN_SET);
 				if(currentOperation.callback_f != nullptr) {
 					currentOperation.callback_f(
 						currentOperation.operationType==EoperationType::TRANSMIT?
@@ -93,6 +92,7 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 				break;
 			}
 			case CLEAR: {
+				HAL_GPIO_WritePin(currentOperation.GPIOx, currentOperation.GPIO_Pin, GPIO_PIN_SET);
 				if(currentOperation.free) free(currentOperation.pData_tx);
 				operations.pop();
 				operationState = IDLE;

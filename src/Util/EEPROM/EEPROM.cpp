@@ -23,6 +23,7 @@ EEPROM::EEPROM(
 	_MemAddSize = MemAddSize;
     isSPI = false;
 }
+uint8_t rxBuf[300];
 
 EEPROM::EEPROM(
 	SPI *pInstance,
@@ -37,8 +38,9 @@ EEPROM::EEPROM(
 	_BaseAddress = BaseAddress;
 	_MemAddSize = MemAddSize;
     isSPI = true;
-	uint8_t txBuf = CMD_WREN;
-	_pInstanceSPI->transmit(_CSPort, _CSPin, &txBuf, 1);
+
+	uint8_t txBuf[1] = {CMD_WREN};
+	// _pInstanceSPI->transmitReceive(_CSPort, _CSPin, txBuf, rxBuf, 1);
 
 }
 
