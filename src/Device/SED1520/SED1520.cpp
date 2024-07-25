@@ -14,7 +14,7 @@
 SED1520::SED1520(I2C* i2c) {
 	_i2c = i2c;
 	uint8_t buf[3] = {0x06, 0x00, 0x00};
-	_i2c->send(0x4e, buf, 3);
+	_i2c->transmit(0x4e, buf, 3);
 	addBuffer(0xFF, DATA, ALL);
 	addBuffer(0xFF, DATA, ALL);
 	addBuffer(0xFF, DATA, ALL);
@@ -81,6 +81,6 @@ void SED1520::addBuffer(uint8_t data, Control command, Sector sector) {
 void SED1520::flush() {
 	uint8_t arr[dataQueue.size()];
     std::copy(dataQueue.begin(), dataQueue.end(), arr);
-	_i2c->send(0x4e, arr, dataQueue.size());
+	_i2c->transmit(0x4e, arr, dataQueue.size());
 	dataQueue.clear();
 }

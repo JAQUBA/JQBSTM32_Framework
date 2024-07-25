@@ -15,21 +15,23 @@ class UART : public IBus {
         void txInterrupt();
         void errorInterrupt();
 
-        void send(uint8_t *pData, uint16_t Size, dataCallback_f callbackFn = nullptr);
+        void transmit(
+            uint8_t *pData, uint16_t Size,
+            dataCallback_f callbackFn = nullptr
+        );
         
-        void onReceiveHandler(std::function<void(uint8_t* data, uint16_t length)> onReceive);
-        void onTransmitHandler(std::function<void()> onTransmit);
+        void onReceiveHandler(dataCallback_f onReceive);
+        void onTransmitHandler(voidCallback_f onTransmit);
     private:
         UART_HandleTypeDef *_pHandler;
 
-        std::function<void()> fpOnTransmit;
-        std::function<void(uint8_t* data, uint16_t length)> fpOnReceive;
+        dataCallback_f fpOnReceive;
+        voidCallback_f fpOnTransmit;
 
         uint8_t Received_u1;
         
         bool received = false;
         unsigned long lastReceivedByte = 0;
-
         uint8_t  rx_data_index = 0;
         uint8_t  rx_buffer[256];
 

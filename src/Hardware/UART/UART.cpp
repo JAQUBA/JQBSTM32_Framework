@@ -1,5 +1,4 @@
 #include "UART.h"
-
 UART *_UART_instances[UART_MAX_INSTANCES];
 uint8_t _UART_instancesNum;
 
@@ -25,6 +24,7 @@ UART::UART(UART_HandleTypeDef *pHandler) {
             rx_data_index = 0;
             received = false;
         }
+
         switch(operationState) {
 			case IDLE: {
 				if(!operations.empty()) {
@@ -34,13 +34,13 @@ UART::UART(UART_HandleTypeDef *pHandler) {
 				break;
 			}
 			case CHECK_FREE: {
-				if(HAL_UART_GetState(_pHandler) == HAL_UART_STATE_READY) {
+				if(HAL_UART_GetState(_pHandler) & ~HAL_UART_STATE_BUSY_TX) {
 					operationState = WORK;
 				}
 				break;
 			}
 			case WORK: {
-				operationTimeout = millis()+2;
+				operationTimeout = millis()+200;
 				if(currentOperation.operationType == EoperationType::SEND) {
 					if(HAL_UART_Transmit_DMA(
 						_pHandler,
@@ -59,8 +59,13 @@ UART::UART(UART_HandleTypeDef *pHandler) {
 				break;
 			}
 			case FINISH: {
-				if(currentOperation.callback_f != nullptr) currentOperation.callback_f(currentOperation.pData,
-						currentOperation.Size);
+				if(currentOperation.callback_f != nullptr) {
+					currentOperation.callback_f(
+						currentOperation.pData,
+						currentOperation.Size
+					);
+				}
+				fpOnTransmit();
 				operationState = CLEAR;
 				break;
 			}
@@ -72,15 +77,12 @@ UART::UART(UART_HandleTypeDef *pHandler) {
 			}
 			default: {}
 		}
-
-
     }, 0);
 }
 
 
 void UART::rxInterrupt() {
-    rx_buffer[rx_data_index] = Received_u1;
-    rx_data_index++;
+    rx_buffer[rx_data_index++] = Received_u1;
     if(rx_data_index >= 256) {
 		rx_data_index = 0;
 	}
@@ -99,11 +101,11 @@ void UART::errorInterrupt() {
 	}
 }
 
-void UART::onReceiveHandler(std::function<void(uint8_t* data, uint16_t length)> onReceive) {fpOnReceive = onReceive;}
-void UART::onTransmitHandler(std::function<void()> onTransmit) {fpOnTransmit = onTransmit;}
+void UART::onReceiveHandler(dataCallback_f onReceive) {fpOnReceive = onReceive;}
+void UART::onTransmitHandler(voidCallback_f onTransmit) {fpOnTransmit = onTransmit;}
 
 
-void UART::send(uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
+void UART::transmit(uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
     operation operation;
 	operation.operationType = EoperationType::SEND;
 	operation.pData = (uint8_t*) malloc(Size);

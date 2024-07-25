@@ -18,6 +18,21 @@ void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c) {
 void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {
 	I2C::getInstance(hi2c)->errorInterrupt();
 }
+void I2C::txInterrupt() {
+	if(operationState == WAITING) {
+		operationState = FINISH;
+	}
+}
+void I2C::rxInterrupt() {
+	if(operationState == WAITING) {
+		operationState = FINISH;
+	}
+}
+void I2C::errorInterrupt() {
+	if (HAL_I2C_GetError(_pHandler) > HAL_I2C_ERROR_NONE) {
+		operationState = FINISH;
+	}
+}
 
 I2C::I2C(I2C_HandleTypeDef* pHandler) {
     _pHandler = pHandler;
@@ -40,7 +55,7 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 			case WORK: {
 				operationTimeout = millis()+2;
 
-				if(currentOperation.operationType == EoperationType::SEND) {
+				if(currentOperation.operationType == EoperationType::TRANSMIT) {
 					if(HAL_I2C_Master_Transmit_DMA(
 						_pHandler, 
 						currentOperation.DevAddress,
@@ -69,7 +84,7 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 						currentOperation.pData,
 						currentOperation.Size
 					) == HAL_OK) {
-						operationState = WAITING;//FINISH;///////////////
+						operationState = WAITING;
 					}
 				}
 				else if(currentOperation.operationType == EoperationType::MEM_WRITE) {
@@ -81,7 +96,7 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 						currentOperation.pData,
 						currentOperation.Size
 					) == HAL_OK) {
-						operationState = WAITING;//FINISH;//????????????????
+						operationState = WAITING;
 					}
 				}
 				break;
@@ -111,20 +126,16 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 	}, 0);
 }
 
-void I2C::txInterrupt() {
-	if(operationState == WAITING) {
-		operationState = FINISH;
-	}
-}
-void I2C::rxInterrupt() {
-	if(operationState == WAITING) {
-		operationState = FINISH;
-	}
-}
-void I2C::errorInterrupt() {
-	if (HAL_I2C_GetError(_pHandler) > HAL_I2C_ERROR_NONE) {
-		operationState = FINISH;
-	}
+void I2C::transmit(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
+	operation operation;
+	operation.operationType = EoperationType::TRANSMIT;
+	operation.DevAddress = DevAddress;
+	operation.pData = (uint8_t*) malloc(Size);
+	operation.free = true;
+	memcpy(operation.pData, pData, Size);
+	operation.Size = Size;
+	operation.callback_f = callbackFn;
+	operations.push(operation);
 }
 
 void I2C::receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
@@ -137,33 +148,25 @@ void I2C::receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallba
 	operation.free = false;
 	operations.push(operation);
 }
-void I2C::send(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
-	operation operation;
-	operation.operationType = EoperationType::SEND;
-	operation.DevAddress = DevAddress;
-	operation.pData = (uint8_t*) malloc(Size);
-	operation.free = true;
-	memcpy(operation.pData, pData, Size);
-	operation.Size = Size;
-	operation.callback_f = callbackFn;
-	operations.push(operation);
-}
-void I2C::readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
+
+void I2C::readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
 	operation operation;
 	operation.operationType = EoperationType::MEM_READ;
 	operation.DevAddress = DevAddress;
 	operation.MemAddress = MemAddress;
+	operation.MemAddSize = MemAddSize;
 	operation.pData = pData;
 	operation.Size = Size;
 	operation.callback_f = callbackFn;
 	operation.free = false;
 	operations.push(operation);
 }
-void I2C::writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
+void I2C::writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
 	operation operation;
 	operation.operationType = EoperationType::MEM_WRITE;
 	operation.DevAddress = DevAddress;
 	operation.MemAddress = MemAddress;
+	operation.MemAddSize = MemAddSize;
 	operation.pData = (uint8_t*) malloc(Size);
 	operation.free = true;
 	memcpy(operation.pData, pData, Size);
