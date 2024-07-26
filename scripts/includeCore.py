@@ -10,6 +10,8 @@ env.BuildSources(
 for item in env.GetProjectConfig().parse_multi_values(env.GetProjectOption("using", "")):
     if item == "FDCAN":
         env.Prepend(CPPDEFINES=["_JQB_USE_FDCAN"])
+    if item == "CAN":
+        env.Prepend(CPPDEFINES=["_JQB_USE_CAN"])
     if item == "USB_CDC":
         env.Prepend(CPPDEFINES=["_JQB_USE_USB_CDC"])
 

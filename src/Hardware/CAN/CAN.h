@@ -12,27 +12,29 @@ class CAN : public IBus{
 		CAN(CAN_HandleTypeDef *pHandler);
 		
 		void onPacket(uint16_t commNumber, dataCallback_f handler);
-		void send(uint32_t identifier, uint8_t *pData, uint16_t Size, uint32_t DataLength = CAN_DLC_BYTES_8);
+		void send(uint32_t identifier, uint8_t *pData, uint16_t Size, uint32_t DataLength);
 
+        void txInterrupt();
         void rxInterrupt();
+        void errorInterrupt();
 
 	private:
 		CAN_HandleTypeDef *_pInstance;
-		CAN_FilterTypeDef sFilterConfig;
+		// CAN_FilterTypeDef sFilterConfig;
 		
-		CAN_RxHeaderTypeDef pRxHeader;
-		CAN_TxHeaderTypeDef pTxHeader;
+		// CAN_RxHeaderTypeDef pRxHeader;
+		// CAN_TxHeaderTypeDef pTxHeader;
 
-		uint8_t pData[8] = {0,0,0,0,0,0,0,0};
-		bool hasPacket = false;
+		// uint8_t pData[8] = {0,0,0,0,0,0,0,0};
+		// bool hasPacket = false;
 
-		struct handlerStruct {
-			uint32_t commNumber;
-			dataCallback_f handler;
-			struct handlerStruct *next;
-		};
+		// struct handlerStruct {
+		// 	uint32_t commNumber;
+		// 	dataCallback_f handler;
+		// 	struct handlerStruct *next;
+		// };
 
-		struct handlerStruct *handlers;
+		// struct handlerStruct *handlers;
 };
 
 #endif
