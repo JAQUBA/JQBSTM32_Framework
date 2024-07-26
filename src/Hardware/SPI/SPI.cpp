@@ -1,8 +1,5 @@
 #include "SPI.h"
 
-#include "Application/Display/Display.h"
-extern Display display;
-
 SPI *_SPI_instances[SPI_MAX_INSTANCES];
 uint8_t _SPI_instancesNum = 0;
 
@@ -77,7 +74,6 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 				break;
 			}	
 			case WAITING: {
-				display.toggle(displayMap::U7);
 				if(millis() >= operationTimeout) {
 					operationState = FINISH;
 				}
@@ -95,7 +91,6 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 				}
 			}
 			case CLEAR: {
-				display.toggle(displayMap::S2);
 				if(currentOperation.isCSSet) HAL_GPIO_WritePin(currentOperation._CSPort, currentOperation._CSPin, GPIO_PIN_SET);
 				if(currentOperation.free) free(currentOperation.pData_tx);
 				operations.pop();
@@ -108,20 +103,17 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 }
 
 void SPI::txInterrupt() {
-	display.toggle(displayMap::U4);
 	if(operationState == WAITING) {
 		operationState = FINISH;
 	}
 }
 void SPI::rxInterrupt() {
-	display.toggle(displayMap::U5);
 	if(operationState == WAITING) {
 		operationState = FINISH;
 	}
 }
 
 void SPI::errorInterrupt() {
-	display.toggle(displayMap::U6);
 	if(HAL_SPI_GetError(_pHandler) > HAL_SPI_ERROR_NONE) {
     	operationState = FINISH;
 	}
