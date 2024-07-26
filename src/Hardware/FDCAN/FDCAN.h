@@ -9,8 +9,8 @@
 
 class FDCAN : public IBus{
 	public:
-		static FDCAN *getInstance(FDCAN_HandleTypeDef *pHandler);
-		FDCAN(FDCAN_HandleTypeDef *pHandler);
+		static FDCAN *getInstance(CAN_HandleTypeDef *pHandler);
+		FDCAN(CAN_HandleTypeDef *pHandler);
 		
 		void onPacket(uint16_t commNumber, dataCallback_f handler);
 		void send(uint32_t identifier, uint8_t *pData, uint16_t Size, uint32_t DataLength = FDCAN_DLC_BYTES_8);
@@ -18,11 +18,11 @@ class FDCAN : public IBus{
         void rxInterrupt();
 
 	private:
-		FDCAN_HandleTypeDef *_pInstance;
-		FDCAN_FilterTypeDef sFilterConfig;
+		CAN_HandleTypeDef *_pInstance;
+		CAN_FilterTypeDef sFilterConfig;
 		
-		FDCAN_RxHeaderTypeDef pRxHeader;
-		FDCAN_TxHeaderTypeDef pTxHeader;
+		CAN_RxHeaderTypeDef pRxHeader;
+		CAN_TxHeaderTypeDef pTxHeader;
 
 		uint8_t pData[8] = {0,0,0,0,0,0,0,0};
 		bool hasPacket = false;

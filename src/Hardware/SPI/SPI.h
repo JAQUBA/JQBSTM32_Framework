@@ -9,6 +9,8 @@
 #define SPI_MEMADD_SIZE_2_BYTE 2
 #define SPI_MEMADD_SIZE_3_BYTE 3
 
+//#define USE_HAL_SPI_REGISTER_CALLBACKS  1U;
+
 extern uint32_t err;//testy!
 
 class SPI : public IBus {
