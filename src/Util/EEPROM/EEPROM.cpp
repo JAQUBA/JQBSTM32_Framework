@@ -39,8 +39,8 @@ EEPROM::EEPROM(
 	_MemAddSize = MemAddSize;
     isSPI = true;
 
-	uint8_t txBuf[1] = {CMD_WREN};
-	// _pInstanceSPI->transmitReceive(_CSPort, _CSPin, txBuf, rxBuf, 1);
+	// uint8_t txBuf[1] = {CMD_WREN};
+	// _pInstanceSPI->transmit(_CSPort, _CSPin, txBuf, 1);
 
 }
 

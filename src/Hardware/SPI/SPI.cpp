@@ -1,5 +1,8 @@
 #include "SPI.h"
 
+#include "Application/Display/Display.h"
+extern Display display;
+
 SPI *_SPI_instances[SPI_MAX_INSTANCES];
 uint8_t _SPI_instancesNum = 0;
 
@@ -40,7 +43,7 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 				break;
 			}
 			case WORK: {
-				operationTimeout = millis()+3;
+				operationTimeout = millis()+2000;
 				if(currentOperation.operationType == EoperationType::TRANSMIT) {
                     HAL_GPIO_WritePin(currentOperation.GPIOx, currentOperation.GPIO_Pin, GPIO_PIN_RESET);
 					if(HAL_SPI_Transmit_DMA(
@@ -75,8 +78,9 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 				break;
 			}	
 			case WAITING: {
+				display.toggle(displayMap::U7);
 				if(millis() >= operationTimeout) {
-					operationState = CLEAR;
+					operationState = FINISH;
 				}
 				break;
 			}
@@ -87,11 +91,12 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 						currentOperation.pData_tx: currentOperation.pData_rx,
 						currentOperation.Size
 					);
-				}   
+				}
 				operationState = CLEAR;
 				break;
 			}
 			case CLEAR: {
+				display.toggle(displayMap::S2);
 				HAL_GPIO_WritePin(currentOperation.GPIOx, currentOperation.GPIO_Pin, GPIO_PIN_SET);
 				if(currentOperation.free) free(currentOperation.pData_tx);
 				operations.pop();
@@ -100,22 +105,25 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 			}
 			default: {}
 		}
-	}, 0); 
+	}, 50); 
 }
 
 void SPI::txInterrupt() {
-	if(operationState == WAITING) {
+	display.toggle(displayMap::U4);
+	// if(operationState == WAITING) {
 		operationState = FINISH;
-	}
+	// }
 }
 void SPI::rxInterrupt() {
+	display.toggle(displayMap::U5);
 	if(operationState == WAITING) {
 		operationState = FINISH;
 	}
 }
 
 void SPI::errorInterrupt() {
-	if (HAL_SPI_GetError(_pHandler) > HAL_SPI_ERROR_NONE) {
+	display.toggle(displayMap::U6);
+	if(HAL_SPI_GetError(_pHandler) > HAL_SPI_ERROR_NONE) {
     	operationState = FINISH;
 	}
 }
