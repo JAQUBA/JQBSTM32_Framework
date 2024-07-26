@@ -12,23 +12,25 @@ class SPI : public IBus {
         static SPI *getInstance(SPI_HandleTypeDef *pHandler);
 
         void transmit(
-            GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin,
+            GPIO_TypeDef* CSPort, uint16_t CSPin,
             uint8_t *pData, uint16_t Size,
             dataCallback_f callbackFn = nullptr
         );
         void receive(
-            GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin,
+            GPIO_TypeDef* CSPort, uint16_t CSPin,
             uint8_t *pData, uint16_t Size,
             dataCallback_f callbackFn = nullptr
         );
 
         void transmitReceive(
-            GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin,
-            uint8_t *pData_tx,
-            uint8_t *pData_rx,
-            uint16_t Size,
+            GPIO_TypeDef* CSPort, uint16_t CSPin,
+            uint8_t *pDataTx, uint8_t *pDataRx, uint16_t Size,
             dataCallback_f callbackFn = nullptr
         );
+        void transmitThenReceive(GPIO_TypeDef* CSPort, uint16_t CSPin,
+            uint8_t *pData_tx, uint16_t txSize,
+            uint8_t *pData_rx, uint16_t rxSize,
+            dataCallback_f callbackFn = nullptr);
 
         void txInterrupt();
         void rxInterrupt();
@@ -55,13 +57,14 @@ class SPI : public IBus {
         
         struct operation {
             EoperationType  operationType;
-            GPIO_TypeDef*   GPIOx;
-            uint16_t        GPIO_Pin;
+            GPIO_TypeDef*   _CSPort;
+            uint16_t        _CSPin;
             uint8_t         *pData_tx;
             uint8_t         *pData_rx;
             uint16_t        Size;
             dataCallback_f  callback_f;
             bool free = true;
+            bool isCSSet = true;
         } currentOperation;
         
         std::queue<operation> operations;

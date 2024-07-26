@@ -28,9 +28,8 @@ class RegisterBank {
         uint16_t readRegisters(uint16_t *buffer, uint16_t address, uint16_t size);
         
     private:
-        IExternalMemory    *_extMemInstance;
+        IExternalMemory    *_extMemInstance = nullptr;
         uint16_t            _extMemLocation;
-        bool                _extMemPreserve = false;
         
         uint16_t    _size;
         uint16_t    _start;

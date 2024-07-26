@@ -24,7 +24,6 @@ RegisterBank::RegisterBank(uint16_t start,
     _stop = _start + size;
 
     _extMemInstance = extMemInstance;
-    _extMemPreserve = true;
 
     _initialize();
 }
@@ -56,7 +55,7 @@ void RegisterBank::_initialize() {
     load();
 }
 void RegisterBank::load() {
-     if(_extMemPreserve) {
+     if(_extMemInstance) {
         _extMemInstance->readFromMemory(
             _extMemLocation,
             (uint8_t*) _registers,
@@ -65,7 +64,7 @@ void RegisterBank::load() {
      }
 }
 void RegisterBank::save() {
-    if(_extMemPreserve) {
+    if(_extMemInstance) {
         _extMemInstance->writeToMemory(
             _extMemLocation,
             (uint8_t*) _registers,
