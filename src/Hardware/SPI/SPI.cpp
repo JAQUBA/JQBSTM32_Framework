@@ -99,7 +99,7 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 			}
 			default: {}
 		}
-	}, 0); 
+	}); 
 }
 
 void SPI::txInterrupt() {

@@ -123,7 +123,7 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 			}
 			default: {}
 		}
-	}, 0);
+	});
 }
 
 void I2C::transmit(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {

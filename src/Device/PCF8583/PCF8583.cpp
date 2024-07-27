@@ -23,5 +23,4 @@ void PCF8583::writeToMemory(
 	uint16_t Size
 ) {
 	_pInstance->writeToMemory(_DevAddress, _BaseAddress + MemAddress, _MemAddSize, pData, Size);
-	
 }

@@ -77,7 +77,7 @@ UART::UART(UART_HandleTypeDef *pHandler) {
 			}
 			default: {}
 		}
-    }, 0);
+    });
 }
 
 
