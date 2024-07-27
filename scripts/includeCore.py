@@ -7,7 +7,7 @@ env.BuildSources(
     os.path.join("$PROJECT_DIR", "Core", "Src")
 )
 
-for item in env.GetProjectConfig().parse_multi_values(env.GetProjectOption("using", "")):
+for item in env.GetProjectConfig().parse_multi_values(env.GetProjectOption("custom_using", "")):
     if item == "FDCAN":
         env.Prepend(CPPDEFINES=["_JQB_USE_FDCAN"])
     if item == "CAN":
