@@ -1,4 +1,4 @@
-//#ifdef _JQB_USE_FDCAN
+#ifdef _JQB_USE_CAN
 #include "CAN.h"
 
 CAN *_CAN_instances[CAN_MAX_INSTANCES];
@@ -84,4 +84,4 @@ void CAN::onPacket(uint16_t commNumber, dataCallback_f handler) {
 		temp->next=r;
     }
 }
-//#endif
+#endif
