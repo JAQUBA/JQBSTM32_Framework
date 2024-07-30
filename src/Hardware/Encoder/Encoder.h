@@ -5,7 +5,7 @@
 
 using encoderCallback_f = std::function<void(void)>;
 
-#define ENCODER_MAX_INSTANCES 2
+#define ENCODER_MAX_INSTANCES 4
 
 class Encoder {
     public:
