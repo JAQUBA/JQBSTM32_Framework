@@ -80,9 +80,9 @@ RegisterBank *RegisterBank::find(uint16_t fullAddress) {
     }
     return NULL;
 }
-void RegisterBank::setValue(uint16_t regAddress, uint16_t value) {
+void RegisterBank::setValue(uint16_t regAddress, uint16_t value, bool instantSave) {
     _registers[regAddress] = value;
-    save();
+    if(instantSave) save();
 }
 uint16_t RegisterBank::getValue(uint16_t regAddress) {
     return _registers[regAddress];
@@ -90,9 +90,9 @@ uint16_t RegisterBank::getValue(uint16_t regAddress) {
 uint16_t *RegisterBank::getValuePtr(uint16_t regAddress) {
     return _registers + regAddress;
 }
-void RegisterBank::setRegister(uint16_t fullAddress, uint16_t value) {
+void RegisterBank::setRegister(uint16_t fullAddress, uint16_t value, bool instantSave) {
     _registers[fullAddress-_start] = value;
-    save();
+    if(instantSave) save();
 }
 uint16_t RegisterBank::getRegister(uint16_t fullAddress) {
     return _registers[fullAddress-_start];
