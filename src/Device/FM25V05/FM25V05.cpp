@@ -23,6 +23,7 @@ FM25V05::FM25V05(
 	_CSPort = GPIOx;
 	_CSPin = GPIO_Pin;
 	_BaseAddress = BaseAddress;
+	HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_SET);
 	uint8_t txBuf = CMD_WREN;
 	_pInstance->transmit(_CSPort, _CSPin, &txBuf, 1);
 }
@@ -46,13 +47,16 @@ void FM25V05::writeToMemory(
 	uint16_t Size
 ) {
 	uint8_t *txBuf = (uint8_t*) malloc(Size+3);
+
 	uint8_t header[] = {
 		CMD_WRITE, 
 		(uint8_t)((MemAddress & 0x0000FF00)>>8), 
-		(uint8_t)((MemAddress & 0x000000FF)),
-		*pData
+		(uint8_t)((MemAddress & 0x000000FF))
 	};
+
 	memcpy(txBuf, header, 3);
 	memcpy(txBuf+3, pData, Size);
-	_pInstance->transmit(_CSPort, _CSPin, txBuf, sizeof(txBuf));
+
+	_pInstance->transmit(_CSPort, _CSPin, txBuf, Size+3);
+	free(txBuf);
 }
