@@ -4,7 +4,9 @@
 #include "Interface/IBus.h"
 #include <unordered_map> 
 
+#ifndef CAN_MAX_INSTANCES
 #define CAN_MAX_INSTANCES 1
+#endif
 
 class CAN : public IBus{
 	public:

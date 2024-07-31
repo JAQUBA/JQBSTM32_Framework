@@ -4,7 +4,9 @@
 #include "../../Core.h"
 #include "Interface/IBus.h"
 
+#ifndef I2C_MAX_INSTANCES
 #define I2C_MAX_INSTANCES 2
+#endif
 
 class I2C : public IBus {
     public:

@@ -4,7 +4,9 @@
 #include "../../Core.h"
 #include "Interface/IBus.h"
 
+#ifndef UART_MAX_INSTANCES
 #define UART_MAX_INSTANCES 2
+#endif
 
 class UART : public IBus {
     public:

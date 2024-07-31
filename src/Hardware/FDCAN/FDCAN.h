@@ -5,7 +5,9 @@
 #include "Interface/IBus.h"
 #include <unordered_map> 
 
+#ifndef FDCAN_MAX_INSTANCES
 #define FDCAN_MAX_INSTANCES 1
+#endif
 
 class FDCAN : public IBus{
 	public:
