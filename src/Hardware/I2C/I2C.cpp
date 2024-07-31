@@ -109,8 +109,10 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 			}
 			case FINISH: {
 				if(currentOperation.callback_f != nullptr){
-				   currentOperation.callback_f(currentOperation.pData,
-				   currentOperation.Size);
+				   currentOperation.callback_f(
+						currentOperation.pData,
+						currentOperation.Size
+					);
 				}
 				operationState = CLEAR;
 				break;
@@ -121,7 +123,6 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 				operationState = IDLE;
 				break;
 			}
-			default: {}
 		}
 	});
 }
