@@ -20,10 +20,8 @@ class IExternalMemory {
             uint8_t *pData, 
             uint16_t Size
         ) = 0;
-        
-        uint16_t _MemAddSize; 
     protected:
-        IBus *_pInstance;
+        // IBus *_pInstance;
 };
 
 #endif
