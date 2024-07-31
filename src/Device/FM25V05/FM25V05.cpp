@@ -16,16 +16,13 @@
 FM25V05::FM25V05(
 	SPI *pInstance,
  	GPIO_TypeDef* GPIOx,
-	uint16_t GPIO_Pin,
-	uint32_t BaseAddress
+	uint16_t GPIO_Pin
 ) {
 	_pInstance = pInstance;
 	_CSPort = GPIOx;
 	_CSPin = GPIO_Pin;
-	_BaseAddress = BaseAddress;
 	HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_SET);
-	uint8_t txBuf = CMD_WREN;
-	_pInstance->transmit(_CSPort, _CSPin, &txBuf, 1);
+	
 }
 
 void FM25V05::readFromMemory(
@@ -56,6 +53,9 @@ void FM25V05::writeToMemory(
 
 	memcpy(txBuf, header, 3);
 	memcpy(txBuf+3, pData, Size);
+
+	uint8_t wren = CMD_WREN;
+	_pInstance->transmit(_CSPort, _CSPin, &wren, 1);
 
 	_pInstance->transmit(_CSPort, _CSPin, txBuf, Size+3);
 	free(txBuf);

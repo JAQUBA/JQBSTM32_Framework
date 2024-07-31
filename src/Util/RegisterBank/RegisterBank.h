@@ -1,7 +1,7 @@
 #ifndef __REGISTERS_H_
 #define __REGISTERS_H_
 #include "../../Core.h"
-#include "../../Interface/IExternalMemory.h"
+#include "../../Util/MemoryBlock/MemoryBlock.h"
 
 class RegisterBank {
     public:
@@ -10,7 +10,7 @@ class RegisterBank {
             
         RegisterBank(uint16_t regAddress,
             uint16_t size,
-            IExternalMemory *extMemInstance);
+            MemoryBlock *memoryBlock);
 
         uint16_t *getValuePtr(uint16_t regAddress);
         uint16_t *getRegisterPtr(uint16_t fullAddress);
@@ -31,8 +31,7 @@ class RegisterBank {
         void save();
         
     private:
-        IExternalMemory    *_extMemInstance = nullptr;
-        uint16_t            _extMemLocation;
+        MemoryBlock    *_memoryBlock = nullptr;
         
         uint16_t    _size;
         uint16_t    _start;

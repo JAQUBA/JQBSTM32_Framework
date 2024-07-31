@@ -9,8 +9,7 @@ class FM25V05 : public IExternalMemory {
     public:
         FM25V05(SPI *pInstance,
             GPIO_TypeDef* GPIOx,
-            uint16_t GPIO_Pin,
-            uint32_t BaseAddress
+            uint16_t GPIO_Pin
         );
 
         void readFromMemory(
@@ -27,7 +26,6 @@ class FM25V05 : public IExternalMemory {
 
         protected:
         SPI             *_pInstance;
-        uint32_t        _BaseAddress;
 
         GPIO_TypeDef    *_CSPort;
         uint16_t        _CSPin;

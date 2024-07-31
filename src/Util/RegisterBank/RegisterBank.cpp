@@ -17,13 +17,13 @@ RegisterBank::RegisterBank(uint16_t start,
 
 RegisterBank::RegisterBank(uint16_t start,
     uint16_t size,
-    IExternalMemory *extMemInstance) {
+    MemoryBlock *memoryBlock) {
         
     _size = size;
     _start = start;
     _stop = _start + size;
 
-    _extMemInstance = extMemInstance;
+    _memoryBlock = memoryBlock;
 
     _initialize();
 }
@@ -55,18 +55,16 @@ void RegisterBank::_initialize() {
     load();
 }
 void RegisterBank::load() {
-     if(_extMemInstance) {
-        _extMemInstance->readFromMemory(
-            _extMemLocation,
+     if(_memoryBlock) {
+        _memoryBlock->loadBlock(
             (uint8_t*) _registers,
             _size * sizeof(uint16_t)
         );
      }
 }
 void RegisterBank::save() {
-    if(_extMemInstance) {
-        _extMemInstance->writeToMemory(
-            _extMemLocation,
+    if(_memoryBlock) {
+        _memoryBlock->saveBlock(
             (uint8_t*) _registers,
             _size * sizeof(uint16_t)
         );
