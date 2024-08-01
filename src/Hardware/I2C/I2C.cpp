@@ -9,30 +9,13 @@ I2C *I2C::getInstance(I2C_HandleTypeDef *pHandler) {
     }
     return nullptr;
 }
-void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c) {
-	I2C::getInstance(hi2c)->rxInterrupt();
-}
-void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c) {
-	I2C::getInstance(hi2c)->txInterrupt();
-}
-void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {
-	I2C::getInstance(hi2c)->errorInterrupt();
-}
-void I2C::txInterrupt() {
-	if(operationState == WAITING) {
-		operationState = FINISH;
-	}
-}
-void I2C::rxInterrupt() {
-	if(operationState == WAITING) {
-		operationState = FINISH;
-	}
-}
-void I2C::errorInterrupt() {
-	if (HAL_I2C_GetError(_pHandler) > HAL_I2C_ERROR_NONE) {
-		operationState = FINISH;
-	}
-}
+void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c) {I2C::getInstance(hi2c)->rxInterrupt();}
+void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c) {I2C::getInstance(hi2c)->txInterrupt();}
+void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {I2C::getInstance(hi2c)->errorInterrupt();}
+
+void I2C::txInterrupt() {if(operationState == WAITING) {operationState = FINISH;}}
+void I2C::rxInterrupt() {if(operationState == WAITING) {operationState = FINISH;}}
+void I2C::errorInterrupt() {if (HAL_I2C_GetError(_pHandler) > HAL_I2C_ERROR_NONE) {operationState = FINISH;}}
 
 I2C::I2C(I2C_HandleTypeDef* pHandler) {
     _pHandler = pHandler;
@@ -43,18 +26,16 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 				if(!operations.empty()) {
 					currentOperation = operations.front();
 					operationState = CHECK_FREE;
-				}
-				break;
+				} else break;
 			}
 			case CHECK_FREE: {
 				if(HAL_I2C_GetState(_pHandler) == HAL_I2C_STATE_READY) {
 					operationState = WORK;
-				}
-				break;
+				} else break;
 			}
 			case WORK: {
-				operationTimeout = millis()+2;
-
+				operationTimeout = millis()+4;
+				operationState = WAITING;
 				if(currentOperation.operationType == EoperationType::TRANSMIT) {
 					if(HAL_I2C_Master_Transmit_DMA(
 						_pHandler, 
@@ -62,7 +43,6 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 						currentOperation.pData,
 						currentOperation.Size
 					) == HAL_OK) {
-						operationState = WAITING;
 					}
 				}
 				else if(currentOperation.operationType == EoperationType::RECEIVE) {
@@ -71,8 +51,7 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 						currentOperation.DevAddress,
 						currentOperation.pData,
 						currentOperation.Size
-					) == HAL_OK) {
-						operationState = WAITING; 
+					) == HAL_OK) { 
 					}
 				}
 				else if(currentOperation.operationType == EoperationType::MEM_READ) {
@@ -84,7 +63,6 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 						currentOperation.pData,
 						currentOperation.Size
 					) == HAL_OK) {
-						operationState = WAITING;
 					}
 				}
 				else if(currentOperation.operationType == EoperationType::MEM_WRITE) {
@@ -96,7 +74,6 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 						currentOperation.pData,
 						currentOperation.Size
 					) == HAL_OK) {
-						operationState = WAITING;
 					}
 				}
 				break;
@@ -104,8 +81,7 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 			case WAITING: {
 				if(millis() >= operationTimeout) {
 					operationState = FINISH;
-				}
-				break;
+				} else break;
 			}
 			case FINISH: {
 				if(currentOperation.callback_f != nullptr){
@@ -113,9 +89,9 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 						currentOperation.pData,
 						currentOperation.Size
 					);
+					operationState = CLEAR;
+					break;
 				}
-				operationState = CLEAR;
-				break;
 			}
 			case CLEAR: {
 				if(currentOperation.free) free(currentOperation.pData);
@@ -126,7 +102,6 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 		}
 	});
 }
-
 void I2C::transmit(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
 	operation operation;
 	operation.operationType = EoperationType::TRANSMIT;
@@ -138,7 +113,6 @@ void I2C::transmit(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallb
 	operation.callback_f = callbackFn;
 	operations.push(operation);
 }
-
 void I2C::receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
     operation operation;
 	operation.operationType = EoperationType::RECEIVE;
@@ -149,7 +123,6 @@ void I2C::receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallba
 	operation.free = false;
 	operations.push(operation);
 }
-
 void I2C::readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
 	operation operation;
 	operation.operationType = EoperationType::MEM_READ;
