@@ -1,32 +1,33 @@
 #include "Scheduler.h"
 
-void Scheduler::addTask(taskCallback_f functionPointer, uint32_t delay, bool single) {
-    taskStruct node;
+void Scheduler::addTask(const taskCallback_f &func, uint32_t delay, bool single) {
+    taskStruct task;
 
-    node.functionPointer = functionPointer;
-    node.delay = delay;
-    node._delay = delay;
-    node._single = single;
-    node._id = _taskNum++;
+    task.functionPointer = func;
+    task.delay = delay;
+    task._delay = delay;
+    task._single = single;
+    task._id = _taskNum++;
 
-    functions.push_back(node);
+    tasks.push_back(task);
 }
 
 void Scheduler::execute() {
-    for(taskStruct &node : functions) {
-        if(node._delay == 0) {
-            node.functionPointer(&node);
-            node._delay = node.delay;
-            if(node._single) {
-                functions.remove(node);
+    for (auto it = tasks.begin(); it != tasks.end(); ) {
+        if (it->delay == 0) {
+            it->functionPointer(&(*it));
+            it->delay = it->_delay;
+            if (it->_single) {
+                it = tasks.erase(it);
             }
         }
+        ++it;
     }
 }
 void Scheduler::poll1ms() {
-    for(taskStruct &node : functions) {
-        if(node._delay > 0) {
-            node._delay--;
+    for (auto &task : tasks) {
+        if (task.delay > 0) {
+            --task.delay;
         }
     }
 }

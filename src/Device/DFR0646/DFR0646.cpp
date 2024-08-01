@@ -21,16 +21,16 @@ DFR0646::DFR0646(I2C *pInstance, uint8_t DevAddress) {
 	uint8_t cmd;
 
 	cmd=CMD_HT16K33_OSCON;
-	_pInstance->send(_DevAddress, &cmd, 1);
+	_pInstance->transmit(_DevAddress, &cmd, 1);
 
 	cmd=CMD_HT16K33_ON;
-	_pInstance->send(_DevAddress, &cmd, 1);
+	_pInstance->transmit(_DevAddress, &cmd, 1);
 
 	cmd=CMD_HT16K33_DFR0646ON;
-	_pInstance->send(_DevAddress, &cmd, 1);
+	_pInstance->transmit(_DevAddress, &cmd, 1);
 
 	cmd=CMD_HT16K33_BRIGHTNESS | 15;
-	_pInstance->send(_DevAddress, &cmd, 1);
+	_pInstance->transmit(_DevAddress, &cmd, 1);
 }
 void DFR0646::printLed(char* wsk, uint8_t dot_point) {
 	uint8_t buf[16];
@@ -63,5 +63,5 @@ void DFR0646::printLed(char* wsk, uint8_t dot_point) {
 	buf[15] = TAB2[cacheData8-32];
 	if (bfb_iss(&dot_point, 0)) buf[15]=buf[15] | 128;
 
-	_pInstance->send(_DevAddress, buf, 16);
+	_pInstance->transmit(_DevAddress, buf, 16);
 }

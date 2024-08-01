@@ -11,9 +11,9 @@ enum StepperHandler {
     STEPPER_ON_LIMIT
 };
 
-class Stepper {
+class TMC2209 {
     public:
-        Stepper(GPIO_TypeDef* enablePort, uint16_t enablePin,
+        TMC2209(GPIO_TypeDef* enablePort, uint16_t enablePin,
             GPIO_TypeDef* stepPort, uint16_t stepPin,
             GPIO_TypeDef* directionPort, uint16_t directionPin,
             GPIO_TypeDef* MS1Port, uint16_t MS1Pin,

@@ -17,14 +17,13 @@ RegisterBank::RegisterBank(uint16_t start,
 
 RegisterBank::RegisterBank(uint16_t start,
     uint16_t size,
-    IExternalMemory *extMemInstance) {
+    MemoryBlock *memoryBlock) {
         
     _size = size;
     _start = start;
     _stop = _start + size;
 
-    _extMemInstance = extMemInstance;
-    _extMemPreserve = true;
+    _memoryBlock = memoryBlock;
 
     _initialize();
 }
@@ -56,12 +55,20 @@ void RegisterBank::_initialize() {
     load();
 }
 void RegisterBank::load() {
-     if(_extMemPreserve) _extMemInstance->readFromMemory(_extMemLocation,
-       _extMemInstance->_MemAddSize, (uint8_t*) _registers, _size*2);
+     if(_memoryBlock) {
+        _memoryBlock->loadBlock(
+            (uint8_t*) _registers,
+            _size * sizeof(uint16_t)
+        );
+     }
 }
 void RegisterBank::save() {
-    if(_extMemPreserve) _extMemInstance->writeToMemory(_extMemLocation,
-      _extMemInstance->_MemAddSize,(uint8_t*) _registers, _size*2);
+    if(_memoryBlock) {
+        _memoryBlock->saveBlock(
+            (uint8_t*) _registers,
+            _size * sizeof(uint16_t)
+        );
+    }
 }
 RegisterBank *RegisterBank::find(uint16_t fullAddress) {
     struct Register *temp = registers;
@@ -71,9 +78,9 @@ RegisterBank *RegisterBank::find(uint16_t fullAddress) {
     }
     return NULL;
 }
-void RegisterBank::setValue(uint16_t regAddress, uint16_t value) {
+void RegisterBank::setValue(uint16_t regAddress, uint16_t value, bool instantSave) {
     _registers[regAddress] = value;
-    save();
+    if(instantSave) save();
 }
 uint16_t RegisterBank::getValue(uint16_t regAddress) {
     return _registers[regAddress];
@@ -81,9 +88,9 @@ uint16_t RegisterBank::getValue(uint16_t regAddress) {
 uint16_t *RegisterBank::getValuePtr(uint16_t regAddress) {
     return _registers + regAddress;
 }
-void RegisterBank::setRegister(uint16_t fullAddress, uint16_t value) {
+void RegisterBank::setRegister(uint16_t fullAddress, uint16_t value, bool instantSave) {
     _registers[fullAddress-_start] = value;
-    save();
+    if(instantSave) save();
 }
 uint16_t RegisterBank::getRegister(uint16_t fullAddress) {
     return _registers[fullAddress-_start];
