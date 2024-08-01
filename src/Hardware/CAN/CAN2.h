@@ -5,27 +5,26 @@
 #include "Interface/IBus.h"
 #include <unordered_map> 
 
-#ifndef FDCAN_MAX_INSTANCES
-#define FDCAN_MAX_INSTANCES 1
-#endif
+#define CAN_MAX_INSTANCES 1
 
-class FDCAN : public IBus{
+class CAN : public IBus{
 	public:
-		static FDCAN *getInstance(FDCAN_HandleTypeDef *pHandler);
-		FDCAN(FDCAN_HandleTypeDef *pHandler);
+		static CAN *getInstance(CAN_HandleTypeDef *pHandler);
+		CAN(CAN_HandleTypeDef *pHandler);
 		
 		void onPacket(uint16_t commNumber, dataCallback_f handler);
-		void send(uint32_t identifier, uint8_t *pData, uint16_t Size, uint32_t DataLength = FDCAN_DLC_BYTES_8);
+		void send(uint32_t identifier, uint8_t *pData, uint16_t Size, uint32_t DataLength = 0);//FDCAN_DLC_BYTES_8);
 
         void rxInterrupt();
 
 	private:
-		FDCAN_HandleTypeDef *_pInstance;
-		FDCAN_FilterTypeDef sFilterConfig;
+		CAN_HandleTypeDef *_pInstance;
+		CAN_FilterTypeDef sFilterConfig;
 		
-		FDCAN_RxHeaderTypeDef pRxHeader;
-		FDCAN_TxHeaderTypeDef pTxHeader;
+		CAN_RxHeaderTypeDef pRxHeader;
+		CAN_TxHeaderTypeDef pTxHeader;
 
+		uint32_t canMailbox;
 		uint8_t pData[8] = {0,0,0,0,0,0,0,0};
 		bool hasPacket = false;
 

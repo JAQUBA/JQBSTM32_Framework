@@ -11,26 +11,22 @@
 using taskCallback_f = std::function<void(struct taskStruct *task)>;
 
 struct taskStruct {
-	std::function<void(taskStruct *task)> functionPointer;
+	taskCallback_f  functionPointer;
     volatile uint16_t _delay = 0;
 	volatile uint16_t delay = 0;
 	bool _single = false;
 
     uint16_t _id = 0;
-
-    bool operator==(const taskStruct &other) const {
-        return _id == other._id;
-    }
 };
 
 class Scheduler {
     public:
-        void addTask(taskCallback_f functionPointer, uint32_t delay, bool single = false);
+        void addTask(const taskCallback_f &func, uint32_t delay, bool single = false);
         void execute();
         void poll1ms();
     private:
         uint16_t _taskNum = 0;
-        std::list<taskStruct> functions;
+        std::list<taskStruct> tasks;
 
 };
 #endif
