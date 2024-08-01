@@ -26,7 +26,7 @@ void HardwareGPIO::setup(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t mode, 
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(GPIOx, &GPIO_InitStruct);
 }
-// void HardwareGPIO::setup(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t mode, uint32_t pullup, uint32_t alternate) {
+ void HardwareGPIO::setup(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t mode, uint32_t pullup, uint32_t alternate) {
 //     GPIO_InitTypeDef GPIO_InitStruct  = {0};
 //     GPIO_InitStruct.Pin = GPIO_Pin;
 //     GPIO_InitStruct.Mode = mode;
@@ -34,7 +34,7 @@ void HardwareGPIO::setup(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t mode, 
 //     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
 //     GPIO_InitStruct.Alternate = alternate;
 //     HAL_GPIO_Init(GPIOx, &GPIO_InitStruct);
-// }
+ }
 
 void HardwareGPIO::set(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, GPIO_PinState PinState) {
     HAL_GPIO_WritePin(GPIOx, GPIO_Pin, PinState);

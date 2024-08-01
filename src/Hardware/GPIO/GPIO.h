@@ -16,7 +16,6 @@ class HardwareGPIO {
     void toggle(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
     GPIO_PinState readInput(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
     GPIO_PinState readOutput(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
-
 };
 
 extern HardwareGPIO GPIO;
