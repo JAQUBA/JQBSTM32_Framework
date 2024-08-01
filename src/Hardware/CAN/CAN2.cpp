@@ -1,5 +1,5 @@
-#ifdef _JQB_USE_CAN
-#include "CAN.h"
+#ifdef _JQB_USE_CAN2
+#include "CAN2.h"
 
 CAN *_CAN_instances[CAN_MAX_INSTANCES];
 uint8_t _CAN_instancesNum;
