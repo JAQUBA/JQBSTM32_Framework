@@ -28,7 +28,7 @@ class Encoder {
             START_IT = 1,
             START_DMA = 2
         };
-        Encoder(TIM_HandleTypeDef *pHandler, StartType startType = START_IT);
+        Encoder(TIM_HandleTypeDef *pHandler, StartType startType = START_IT, uint32_t channel = TIM_CHANNEL_ALL);
 
         /**
          * @brief Gets the instance of the Encoder.
