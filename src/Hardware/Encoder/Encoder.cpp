@@ -15,13 +15,23 @@ void Encoder::timInterrupt() {
 	if(fnCallback) fnCallback();
 }
 
-Encoder::Encoder(TIM_HandleTypeDef *pHandler) {
+Encoder::Encoder(TIM_HandleTypeDef *pHandler, StartType startType) {
 	_pHandler = pHandler;
 	_Encoder_instances[_Encoder_instancesNum++] = this;
-    init();
-}
-void Encoder::init() {
-	HAL_TIM_Encoder_Start_IT(_pHandler, TIM_CHANNEL_ALL);
+    switch (startType) {
+        case START_POLL: {
+            HAL_TIM_Encoder_Start(_pHandler, TIM_CHANNEL_ALL);
+            break;
+        }
+        case START_IT: {
+            HAL_TIM_Encoder_Start_IT(_pHandler, TIM_CHANNEL_ALL);
+            break;
+        }
+        case START_DMA: {
+            // HAL_TIM_Encoder_Start_DMA(_pHandler, TIM_CHANNEL_ALL, &_value, 1);
+            break;
+        }
+    }
 }
 
 bool Encoder::getDirection() {

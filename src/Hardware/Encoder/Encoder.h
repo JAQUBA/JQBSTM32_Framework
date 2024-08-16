@@ -23,7 +23,12 @@ class Encoder {
          * @brief Constructor for Encoder class.
          * @param pHandler Pointer to TIM_HandleTypeDef structure.
          */
-        Encoder(TIM_HandleTypeDef *pHandler);
+        enum StartType {
+            START_POLL = 0,
+            START_IT = 1,
+            START_DMA = 2
+        };
+        Encoder(TIM_HandleTypeDef *pHandler, StartType startType = START_IT);
 
         /**
          * @brief Gets the instance of the Encoder.
@@ -31,12 +36,7 @@ class Encoder {
          * @return Pointer to Encoder instance.
          */
         static Encoder *getInstance(TIM_HandleTypeDef *pHandler);
-
-        /**
-         * @brief Initializes the encoder.
-         */
-        void init();
-        
+  
         /**
          * @brief Gets the direction of the encoder.
          * @return True if direction is forward, false otherwise.

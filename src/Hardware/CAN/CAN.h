@@ -22,21 +22,22 @@ class CAN : public IBus{
 
 	private:
 		CAN_HandleTypeDef *_pInstance;
-		// CAN_FilterTypeDef sFilterConfig;
+		CAN_FilterTypeDef sFilterConfig;
 		
-		// CAN_RxHeaderTypeDef pRxHeader;
-		// CAN_TxHeaderTypeDef pTxHeader;
+		CAN_RxHeaderTypeDef pRxHeader;
+		CAN_TxHeaderTypeDef pTxHeader;
 
-		// uint8_t pData[8] = {0,0,0,0,0,0,0,0};
-		// bool hasPacket = false;
+		uint32_t canMailbox;
+		uint8_t pData[8] = {0,0,0,0,0,0,0,0};
+		bool hasPacket = false;
 
-		// struct handlerStruct {
-		// 	uint32_t commNumber;
-		// 	dataCallback_f handler;
-		// 	struct handlerStruct *next;
-		// };
+		struct handlerStruct {
+			uint32_t commNumber;
+			dataCallback_f handler;
+			struct handlerStruct *next;
+		};
 
-		// struct handlerStruct *handlers;
+		struct handlerStruct *handlers;
 };
 
 #endif
