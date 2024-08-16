@@ -11,10 +11,13 @@ using encoderCallback_f = std::function<void(void)>;
 
 class Encoder {
     public:
-        Encoder(TIM_HandleTypeDef *pHandler);
+        enum StartType {
+            START_POLL = 0,
+            START_IT = 1,
+            START_DMA = 2
+        };
+        Encoder(TIM_HandleTypeDef *pHandler, StartType startType = START_IT);
         static Encoder *getInstance(TIM_HandleTypeDef *pHandler);
-
-        void init();
         
         bool getDirection();
 
@@ -33,7 +36,7 @@ class Encoder {
         int32_t _min = 0;
         int32_t _max = -1;
         
-        encoderCallback_f fnCallback;
+        encoderCallback_f fnCallback = nullptr;
 };
 
 #endif
