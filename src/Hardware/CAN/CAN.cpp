@@ -1,6 +1,5 @@
-//#ifdef _JQB_USE_CAN
+#ifdef _JQB_USE_CAN
 #include "CAN.h"
-// #include "can.h"
 
 CAN *_CAN_instances[CAN_MAX_INSTANCES];
 uint8_t _CAN_instancesNum;
@@ -44,14 +43,11 @@ CAN::CAN(CAN_HandleTypeDef *pHandler) {
        
     addTaskMain(taskCallback {
         if(!hasPacket) return;
-        struct handlerStruct *temp = handlers;
         uint32_t commNumber = pRxHeader.IDE;
-        while (temp != NULL) {
-            if(temp->commNumber == commNumber) {
-                // temp->handler(pData, sizeof(pData));
-                break;
+        for(auto &handler : handlers) {
+            if(handler.commNumber == commNumber) {
+                handler.handler(pData, pRxHeader.DLC);
             }
-            temp = temp->next;
         }
         hasPacket = false;
     });
@@ -71,21 +67,10 @@ void CAN::send(uint32_t identifier, uint8_t *pData, uint16_t Size, uint32_t Data
     pTxHeader.DLC = DataLength;
     HAL_CAN_AddTxMessage(_pInstance, &pTxHeader, pData, &canMailbox);
 }
-void CAN::onPacket(uint16_t commNumber, dataCallback_f handler) {
-    struct handlerStruct *temp = handlers, *r;
-    if(handlers==NULL) {
-        temp = (struct handlerStruct *)malloc(sizeof(struct handlerStruct));
-		temp->handler=handler;
-		temp->commNumber=commNumber;
-		temp->next=NULL;
-		handlers=temp;
-    } else {
-        while(temp->next != NULL) temp = temp->next;
-		r = (struct handlerStruct*)malloc(sizeof(struct handlerStruct));
-		r->handler=handler;
-		r->commNumber=commNumber;
-		r->next=NULL;
-		temp->next=r;
-    }
+void CAN::onPacket(uint16_t commNumber, dataCallback_f cHandler) {
+    handler handler;
+    handler.commNumber = commNumber;
+    handler.handler = cHandler;
+    handlers.push_back(handler);
 }
-//#endif
+#endif
