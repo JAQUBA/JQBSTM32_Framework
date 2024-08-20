@@ -1,4 +1,4 @@
-#ifdef _JQB_USE_CAN
+//#ifdef _JQB_USE_CAN
 #include "CAN.h"
 // #include "can.h"
 
@@ -13,7 +13,7 @@ CAN *CAN::getInstance(CAN_HandleTypeDef *_instance) {
 
 void HAL_CAN_TxCpltCallback(CAN_HandleTypeDef* pHandler) {CAN::getInstance(pHandler)->txInterrupt();}
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *pHandler) {CAN::getInstance(pHandler)->rxInterrupt();}
-// void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* pHandler) {CAN::getInstance(pHandler)->rxInterrupt();}
+//void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* pHandler) {CAN::getInstance(pHandler)->rxInterrupt();}
 void HAL_CAN_ErrorCallback(CAN_HandleTypeDef *pHandler) {CAN::getInstance(pHandler)->errorInterrupt();}
 
 CAN::CAN(CAN_HandleTypeDef *pHandler) {
@@ -48,7 +48,7 @@ CAN::CAN(CAN_HandleTypeDef *pHandler) {
         uint32_t commNumber = pRxHeader.IDE;
         while (temp != NULL) {
             if(temp->commNumber == commNumber) {
-                temp->handler(pData, sizeof(pData));
+                // temp->handler(pData, sizeof(pData));
                 break;
             }
             temp = temp->next;
@@ -88,4 +88,4 @@ void CAN::onPacket(uint16_t commNumber, dataCallback_f handler) {
 		temp->next=r;
     }
 }
-#endif
+//#endif
