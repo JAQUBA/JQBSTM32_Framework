@@ -12,7 +12,6 @@ CAN *CAN::getInstance(CAN_HandleTypeDef *_instance) {
 
 void HAL_CAN_TxCpltCallback(CAN_HandleTypeDef* pHandler) {CAN::getInstance(pHandler)->txInterrupt();}
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *pHandler) {CAN::getInstance(pHandler)->rxInterrupt();}
-//void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* pHandler) {CAN::getInstance(pHandler)->rxInterrupt();}
 void HAL_CAN_ErrorCallback(CAN_HandleTypeDef *pHandler) {CAN::getInstance(pHandler)->errorInterrupt();}
 
 CAN::CAN(CAN_HandleTypeDef *pHandler) {
@@ -43,17 +42,18 @@ CAN::CAN(CAN_HandleTypeDef *pHandler) {
        
     addTaskMain(taskCallback {
         if(!hasPacket) return;
-        uint32_t commNumber = pRxHeader.IDE;
+        uint32_t commNumber = pRxHeader.ExtId;
         for(auto &handler : handlers) {
             if(handler.commNumber == commNumber) {
                 handler.handler(pData, pRxHeader.DLC);
+                return;
             }
         }
         hasPacket = false;
     });
 }
 void CAN::rxInterrupt() {
-    if (HAL_CAN_GetRxMessage(_pInstance, CAN_RX_FIFO0, &pRxHeader, pData) != HAL_OK) return; 
+    if (HAL_CAN_GetRxMessage(_pInstance, CAN_RX_FIFO0, &pRxHeader, pData) != HAL_OK) return;
     hasPacket = true;
 }
 void CAN::txInterrupt() {
