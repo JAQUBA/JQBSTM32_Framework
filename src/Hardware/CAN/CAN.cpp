@@ -1,4 +1,4 @@
-#ifdef _JQB_USE_CAN
+//#ifdef _JQB_USE_CAN
 #include "CAN.h"
 
 CAN *_CAN_instances[CAN_MAX_INSTANCES];
@@ -29,7 +29,7 @@ CAN::CAN(CAN_HandleTypeDef *pHandler) {
     sFilterConfig.FilterActivation = ENABLE;
     sFilterConfig.SlaveStartFilterBank = 14;
 
-    pTxHeader.IDE = CAN_ID_STD;
+    pTxHeader.IDE = CAN_ID_EXT;
     pTxHeader.RTR = CAN_RTR_DATA;
     pTxHeader.StdId = 0x030;
     pTxHeader.ExtId = 0x02;
@@ -62,8 +62,9 @@ void CAN::txInterrupt() {
 void CAN::errorInterrupt() {
 
 }
-void CAN::send(uint32_t identifier, uint8_t *pData, uint32_t DataLength) {
+void CAN::send(uint32_t identifier, uint32_t rtr_mode, uint8_t *pData, uint32_t DataLength) {
     pTxHeader.ExtId = identifier;
+    pTxHeader.RTR = rtr_mode;
     pTxHeader.DLC = DataLength;
     HAL_CAN_AddTxMessage(_pInstance, &pTxHeader, pData, &canMailbox);
 }
@@ -73,4 +74,4 @@ void CAN::onPacket(uint16_t commNumber, dataCallback_f cHandler) {
     handler.handler = cHandler;
     handlers.push_back(handler);
 }
-#endif
+//#endif
