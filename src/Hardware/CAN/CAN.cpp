@@ -62,7 +62,7 @@ void CAN::txInterrupt() {
 void CAN::errorInterrupt() {
 
 }
-void CAN::send(uint32_t identifier, uint8_t *pData, uint16_t Size, uint32_t DataLength) {
+void CAN::send(uint32_t identifier, uint8_t *pData, uint32_t DataLength) {
     pTxHeader.ExtId = identifier;
     pTxHeader.DLC = DataLength;
     HAL_CAN_AddTxMessage(_pInstance, &pTxHeader, pData, &canMailbox);
