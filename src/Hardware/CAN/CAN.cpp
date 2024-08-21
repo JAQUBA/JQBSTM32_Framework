@@ -1,4 +1,4 @@
-//#ifdef _JQB_USE_CAN
+#ifdef _JQB_USE_CAN
 #include "CAN.h"
 
 CAN *_CAN_instances[CAN_MAX_INSTANCES];
@@ -62,7 +62,8 @@ void CAN::txInterrupt() {
 void CAN::errorInterrupt() {
 
 }
-void CAN::send(uint32_t identifier, uint32_t rtr_mode, uint8_t *pData, uint32_t DataLength) {
+void CAN::send(uint32_t identifier, uint8_t *pData,
+        uint32_t DataLength, uint32_t rtr_mode) {
     pTxHeader.ExtId = identifier;
     pTxHeader.RTR = rtr_mode;
     pTxHeader.DLC = DataLength;
@@ -74,4 +75,4 @@ void CAN::onPacket(uint16_t commNumber, dataCallback_f cHandler) {
     handler.handler = cHandler;
     handlers.push_back(handler);
 }
-//#endif
+#endif

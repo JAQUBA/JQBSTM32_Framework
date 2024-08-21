@@ -14,8 +14,8 @@ class CAN : public IBus{
 		CAN(CAN_HandleTypeDef *pHandler);
 		
 		void onPacket(uint16_t commNumber, dataCallback_f cHandler);
-		void send(uint32_t identifier, uint32_t rtr_mode, uint8_t *pData, uint32_t DataLength = 8U);
-
+		void send(uint32_t identifier, uint8_t *pData,
+		 		uint32_t DataLength = 8U, uint32_t rtr_mode = CAN_RTR_DATA);
         void txInterrupt();
         void rxInterrupt();
         void errorInterrupt();
