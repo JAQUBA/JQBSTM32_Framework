@@ -32,7 +32,6 @@ Core::Core() {
 	HAL_Init();
 	SystemClock_Config();
 	init();
-	HAL_TIM_Base_Start_IT(&TASK_TIMER);
 #ifdef DWT
 	DWT_COUNTER_ENABLE();
 #endif
@@ -41,24 +40,21 @@ Core _core;
 
 int main() {
 	setup();
-
 	while (1) {
 		mainTasks.execute();
 		loop();
 	}
 }
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-	if (htim == &TASK_TIMER) {
-		interruptTasks.poll1ms();
-		interruptTasks.execute();
-		mainTasks.poll1ms();
-		ulMillis++;
-	}
+void HAL_IncTick(void) {
+	uwTick += (uint32_t)uwTickFreq;
+	interruptTasks.poll1ms();
+	interruptTasks.execute();
+	mainTasks.poll1ms();
+	ulMillis++;
 }
 long map(long x, long in_min, long in_max, long out_min, long out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
-
 __weak void init() {}
 __weak void setup() {}
 __weak void loop() {}
