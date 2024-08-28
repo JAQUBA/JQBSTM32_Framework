@@ -39,14 +39,12 @@ FDCAN::FDCAN(FDCAN_HandleTypeDef *pHandler) {
 
     addTaskMain(taskCallback {
         if(!hasPacket) return;
-        struct handlerStruct *temp = handlers;
         uint32_t commNumber = pRxHeader.Identifier;
-        while (temp != NULL) {
-            if(temp->commNumber == commNumber) {
-                temp->handler(pData, sizeof(pData));
-                break;
+        for(auto &handler : handlers) {
+            if(handler.commNumber == commNumber) {
+                handler.handler(pData, sizeof(pData));
+                return;
             }
-            temp = temp->next;
         }
         hasPacket = false;
     });
@@ -61,21 +59,10 @@ void FDCAN::send(uint32_t identifier, uint8_t *pData, uint16_t Size, uint32_t Da
     HAL_FDCAN_AddMessageToTxFifoQ(_pInstance, &pTxHeader, pData);
 }
 
-void FDCAN::onPacket(uint16_t commNumber, dataCallback_f handler) {
-    struct handlerStruct *temp = handlers, *r;
-    if(handlers==NULL) {
-        temp = (struct handlerStruct *)malloc(sizeof(struct handlerStruct));
-		temp->handler=handler;
-		temp->commNumber=commNumber;
-		temp->next=NULL;
-		handlers=temp;
-    } else {
-        while(temp->next != NULL) temp = temp->next;
-		r = (struct handlerStruct*)malloc(sizeof(struct handlerStruct));
-		r->handler=handler;
-		r->commNumber=commNumber;
-		r->next=NULL;
-		temp->next=r;
-    }
+void FDCAN::onPacket(uint16_t commNumber, dataCallback_f cHandler) {
+    handler handler;
+    handler.commNumber = commNumber;
+    handler.handler = cHandler;
+    handlers.push_back(handler);
 }
 #endif
