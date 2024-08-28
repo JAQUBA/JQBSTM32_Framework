@@ -4,6 +4,7 @@
 
 enum ModbusFunction {
     FUNC_3,
+    FUNC_4,
     FUNC_6,
     FUNC_10
 };

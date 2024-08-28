@@ -1,6 +1,5 @@
 #ifdef _JQB_USE_CAN
 #include "CAN.h"
-// #include "can.h"
 
 CAN *_CAN_instances[CAN_MAX_INSTANCES];
 uint8_t _CAN_instancesNum;
@@ -13,7 +12,6 @@ CAN *CAN::getInstance(CAN_HandleTypeDef *_instance) {
 
 void HAL_CAN_TxCpltCallback(CAN_HandleTypeDef* pHandler) {CAN::getInstance(pHandler)->txInterrupt();}
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *pHandler) {CAN::getInstance(pHandler)->rxInterrupt();}
-// void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* pHandler) {CAN::getInstance(pHandler)->rxInterrupt();}
 void HAL_CAN_ErrorCallback(CAN_HandleTypeDef *pHandler) {CAN::getInstance(pHandler)->errorInterrupt();}
 
 CAN::CAN(CAN_HandleTypeDef *pHandler) {
@@ -31,7 +29,7 @@ CAN::CAN(CAN_HandleTypeDef *pHandler) {
     sFilterConfig.FilterActivation = ENABLE;
     sFilterConfig.SlaveStartFilterBank = 14;
 
-    pTxHeader.IDE = CAN_ID_STD;
+    pTxHeader.IDE = CAN_ID_EXT;
     pTxHeader.RTR = CAN_RTR_DATA;
     pTxHeader.StdId = 0x030;
     pTxHeader.ExtId = 0x02;
@@ -44,20 +42,18 @@ CAN::CAN(CAN_HandleTypeDef *pHandler) {
        
     addTaskMain(taskCallback {
         if(!hasPacket) return;
-        struct handlerStruct *temp = handlers;
-        uint32_t commNumber = pRxHeader.IDE;
-        while (temp != NULL) {
-            if(temp->commNumber == commNumber) {
-                temp->handler(pData, sizeof(pData));
-                break;
+        uint32_t commNumber = pRxHeader.ExtId;
+        for(auto &handler : handlers) {
+            if(handler.commNumber == commNumber) {
+                handler.handler(pData, pRxHeader.DLC);
+                return;
             }
-            temp = temp->next;
         }
         hasPacket = false;
     });
 }
 void CAN::rxInterrupt() {
-    if (HAL_CAN_GetRxMessage(_pInstance, CAN_RX_FIFO0, &pRxHeader, pData) != HAL_OK) return; 
+    if (HAL_CAN_GetRxMessage(_pInstance, CAN_RX_FIFO0, &pRxHeader, pData) != HAL_OK) return;
     hasPacket = true;
 }
 void CAN::txInterrupt() {
@@ -66,26 +62,17 @@ void CAN::txInterrupt() {
 void CAN::errorInterrupt() {
 
 }
-void CAN::send(uint32_t identifier, uint8_t *pData, uint16_t Size, uint32_t DataLength) {
+void CAN::send(uint32_t identifier, uint8_t *pData,
+        uint32_t DataLength, uint32_t rtr_mode) {
     pTxHeader.ExtId = identifier;
+    pTxHeader.RTR = rtr_mode;
     pTxHeader.DLC = DataLength;
     HAL_CAN_AddTxMessage(_pInstance, &pTxHeader, pData, &canMailbox);
 }
-void CAN::onPacket(uint16_t commNumber, dataCallback_f handler) {
-    struct handlerStruct *temp = handlers, *r;
-    if(handlers==NULL) {
-        temp = (struct handlerStruct *)malloc(sizeof(struct handlerStruct));
-		temp->handler=handler;
-		temp->commNumber=commNumber;
-		temp->next=NULL;
-		handlers=temp;
-    } else {
-        while(temp->next != NULL) temp = temp->next;
-		r = (struct handlerStruct*)malloc(sizeof(struct handlerStruct));
-		r->handler=handler;
-		r->commNumber=commNumber;
-		r->next=NULL;
-		temp->next=r;
-    }
+void CAN::onPacket(uint16_t commNumber, dataCallback_f cHandler) {
+    handler handler;
+    handler.commNumber = commNumber;
+    handler.handler = cHandler;
+    handlers.push_back(handler);
 }
 #endif

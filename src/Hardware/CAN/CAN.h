@@ -13,9 +13,9 @@ class CAN : public IBus{
 		static CAN *getInstance(CAN_HandleTypeDef *pHandler);
 		CAN(CAN_HandleTypeDef *pHandler);
 		
-		void onPacket(uint16_t commNumber, dataCallback_f handler);
-		void send(uint32_t identifier, uint8_t *pData, uint16_t Size, uint32_t DataLength);
-
+		void onPacket(uint16_t commNumber, dataCallback_f cHandler);
+		void send(uint32_t identifier, uint8_t *pData,
+		 		uint32_t DataLength = 8U, uint32_t rtr_mode = CAN_RTR_DATA);
         void txInterrupt();
         void rxInterrupt();
         void errorInterrupt();
@@ -31,13 +31,11 @@ class CAN : public IBus{
 		uint8_t pData[8] = {0,0,0,0,0,0,0,0};
 		bool hasPacket = false;
 
-		struct handlerStruct {
+		struct handler {
 			uint32_t commNumber;
 			dataCallback_f handler;
-			struct handlerStruct *next;
 		};
-
-		struct handlerStruct *handlers;
+		std::list<struct handler> handlers;
 };
 
 #endif

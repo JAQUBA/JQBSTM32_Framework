@@ -19,7 +19,7 @@ UART::UART(UART_HandleTypeDef *pHandler) {
     HAL_UART_Receive_IT(_pHandler, &Received_u1, 1);
 
     addTaskMain(taskCallback {
-        if(received && millis() > lastReceivedByte + 20) {
+        if(received && millis() > lastReceivedByte + 1) {
             if(fpOnReceive) fpOnReceive(rx_buffer, rx_data_index);
             rx_data_index = 0;
             received = false;
@@ -94,7 +94,7 @@ void UART::txInterrupt() {
     if(operationState == WAITING) {
 		operationState = FINISH;
 	}
-}
+}  
 void UART::errorInterrupt() {
 	if (HAL_UART_GetError(_pHandler) & HAL_UART_ERROR_DMA) {
 		operationState = FINISH;
