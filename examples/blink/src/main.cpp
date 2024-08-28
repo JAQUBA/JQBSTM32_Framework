@@ -5,7 +5,6 @@
 #define LED GPIOC, GPIO_PIN_13
 
 void init() {
-    MX_TIM4_Init();
     GPIO.setup(LED, GPIO_MODE_AF_PP);
 }
 void setup() {
