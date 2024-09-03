@@ -31,9 +31,9 @@ class FDCAN : public IBus {
 	/**
 	 * @brief Registers a callback for a specific communication number.
 	 * @param commNumber Communication number.
-	 * @param handler Callback function to handle the data.
+	 * @param cHandler Callback function to handle the data.
 	 */
-	void onPacket(uint16_t commNumber, dataCallback_f handler);
+	void onPacket(uint16_t commNumber, dataCallback_f cHandler);
 
 	/**
 	 * @brief Sends data over FDCAN.
@@ -50,23 +50,23 @@ class FDCAN : public IBus {
 	void rxInterrupt();
 
     private:
-	FDCAN_HandleTypeDef *_pInstance; /**< Pointer to FDCAN_HandleTypeDef structure. */
-	FDCAN_FilterTypeDef sFilterConfig; /**< Filter configuration structure. */
-	
-	FDCAN_RxHeaderTypeDef pRxHeader; /**< Receive header structure. */
-	FDCAN_TxHeaderTypeDef pTxHeader; /**< Transmit header structure. */
+		FDCAN_HandleTypeDef *_pInstance; /**< Pointer to FDCAN_HandleTypeDef structure. */
+		FDCAN_FilterTypeDef sFilterConfig; /**< Filter configuration structure. */
+		
+		FDCAN_RxHeaderTypeDef pRxHeader; /**< Receive header structure. */
+		FDCAN_TxHeaderTypeDef pTxHeader; /**< Transmit header structure. */
 
-	uint8_t pData[8] = {0,0,0,0,0,0,0,0}; /**< Data buffer. */
-	bool hasPacket = false; /**< Flag indicating if a packet has been received. */
+		uint8_t pData[8] = {0,0,0,0,0,0,0,0}; /**< Data buffer. */
+		bool hasPacket = false; /**< Flag indicating if a packet has been received. */
 
-	/**
-	 * @struct handlerStruct
-	 * @brief Structure to hold handler information.
-	 */
-	struct handlerStruct {
-	    uint32_t commNumber; /**< Communication number. */
-	    dataCallback_f handler; /**< Callback function. */
-	    struct handlerStruct *next; /**< Pointer to the next handler structure. */
-	};
+		/**
+		 * @struct handlerStruct
+		 * @brief Structure to hold handler information.
+		 */
+		struct handler {
+			uint32_t commNumber;
+			dataCallback_f handler;
+		};
+		std::list<struct handler> handlers;
 };
 #endif

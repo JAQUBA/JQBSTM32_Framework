@@ -26,7 +26,6 @@ SED1520::SED1520(I2C* i2c) {
 	addBuffer(SED1520_COLUMN_ADDRESS, COMMAND, ALL);
     addBuffer(SED1520_SED1520_START_LINE, COMMAND, ALL);
 	clear();
-	flush();
 }
 void SED1520::clear() {
 	_current_column = 0;
