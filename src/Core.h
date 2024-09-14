@@ -19,8 +19,8 @@ class Core {
         Core();
 };
 
-void addTaskMain(taskCallback_f functionPointer, uint32_t delay = 0, bool single = false);
-void addTaskInterrupt(taskCallback_f functionPointer, uint32_t delay = 0, bool single = false);
+taskStruct addTaskMain(taskCallback_f functionPointer, uint32_t delay = 0, bool single = false);
+taskStruct addTaskInterrupt(taskCallback_f functionPointer, uint32_t delay = 0, bool single = false);
 
 #ifdef __cplusplus
 extern "C" {

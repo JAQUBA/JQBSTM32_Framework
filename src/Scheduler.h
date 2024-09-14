@@ -21,7 +21,7 @@ struct taskStruct {
 
 class Scheduler {
     public:
-        void addTask(const taskCallback_f &func, uint32_t delay, bool single = false);
+        taskStruct addTask(const taskCallback_f &func, uint32_t delay, bool single = false);
         void execute();
         void poll1ms();
     private:

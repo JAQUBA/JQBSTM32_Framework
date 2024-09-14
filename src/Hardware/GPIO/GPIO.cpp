@@ -41,12 +41,11 @@ void HardwareGPIO::attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidC
 }
 void HardwareGPIO::_interruptCallback(uint16_t GPIO_Pin) {
     for (auto interrupt : interrupts) {
-        if (HAL_GPIO_ReadPin(interrupt.GPIOx, interrupt.GPIO_Pin) == GPIO_PIN_SET) {
+        if (interrupt.GPIO_Pin == GPIO_Pin) {
             interrupt.callback();
         }
     }
 }
-
 
 void HardwareGPIO::setup(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t mode) {
     GPIO_InitTypeDef GPIO_InitStruct  = {0};

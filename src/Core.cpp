@@ -3,8 +3,8 @@
 Scheduler mainTasks;
 Scheduler interruptTasks;
 
-void addTaskInterrupt(taskCallback_f functionPointer, uint32_t delay, bool single) {interruptTasks.addTask(functionPointer, delay, single);}
-void addTaskMain(taskCallback_f functionPointer, uint32_t delay, bool single) {mainTasks.addTask(functionPointer, delay, single);}
+taskStruct addTaskInterrupt(taskCallback_f functionPointer, uint32_t delay, bool single) {return interruptTasks.addTask(functionPointer, delay, single);}
+taskStruct addTaskMain(taskCallback_f functionPointer, uint32_t delay, bool single) {return mainTasks.addTask(functionPointer, delay, single);}
 
 #ifdef DWT
 uint8_t DWT_COUNTER_ENABLE(void) {

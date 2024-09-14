@@ -1,6 +1,6 @@
 #include "Scheduler.h"
 
-void Scheduler::addTask(const taskCallback_f &func, uint32_t delay, bool single) {
+taskStruct Scheduler::addTask(const taskCallback_f &func, uint32_t delay, bool single) {
     taskStruct task;
 
     task.functionPointer = func;
@@ -10,6 +10,7 @@ void Scheduler::addTask(const taskCallback_f &func, uint32_t delay, bool single)
     task._id = _taskNum++;
 
     tasks.push_back(task);
+    return task;
 }
 
 void Scheduler::execute() {
