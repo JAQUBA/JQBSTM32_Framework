@@ -10,22 +10,11 @@ HardwareGPIO::HardwareGPIO() {
     __HAL_RCC_GPIOC_CLK_ENABLE();
 }
 
-void HardwareGPIO::attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidCallback_f callback, InterruptMode mode) {
+void HardwareGPIO::attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidCallback_f callback, uint32_t mode) {
     GPIO_InitTypeDef GPIO_InitStruct  = {0};
 
     GPIO_InitStruct.Pin = GPIO_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-    switch (mode) {
-    case RISING:
-        GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-        break;
-    case FALLING:
-        GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-        break; 
-    case RISING_FALLING:
-        GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-        break;
-    }
+    GPIO_InitStruct.Mode = mode;
     GPIO_InitStruct.Pull = GPIO_PULLUP;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(GPIOx, &GPIO_InitStruct);
