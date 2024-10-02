@@ -76,5 +76,5 @@ GPIO_PinState HardwareGPIO::readInput(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
 GPIO_PinState HardwareGPIO::readOutput(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
     assert_param(IS_GPIO_PIN(GPIO_Pin));
     if ((GPIOx->ODR & GPIO_Pin) != 0x00u) return GPIO_PIN_SET;
-    else return GPIO_PIN_RESET;
+    return GPIO_PIN_RESET;
 }

@@ -10,10 +10,7 @@ Encoder *Encoder::getInstance(TIM_HandleTypeDef *_pHandler) {
     return nullptr;
 }
 
-void Encoder::timInterrupt() {
-	_value+=getDirection()?1:-1;
-	if(fnCallback) fnCallback();
-}
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim) {Encoder::getInstance(htim)->timInterrupt();}
 
 Encoder::Encoder(TIM_HandleTypeDef *pHandler, StartType startType, uint32_t channel) {
 	_pHandler = pHandler;
@@ -32,6 +29,11 @@ Encoder::Encoder(TIM_HandleTypeDef *pHandler, StartType startType, uint32_t chan
             break;
         }
     }
+}
+
+void Encoder::timInterrupt() {
+	_value+=getDirection()?1:-1;
+	if(fnCallback) fnCallback();
 }
 
 bool Encoder::getDirection() {
@@ -64,6 +66,7 @@ void Encoder::setLimits(int32_t min, int32_t max) {
     _min = min;
     _max = max;
 }
+
 
 
 void Encoder::attachInterrupt(encoderCallback_f callback) {
