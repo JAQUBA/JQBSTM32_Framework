@@ -53,6 +53,8 @@ void TMC2209::step(int16_t steps) {
         if(steps > 0) forward();
         else back();
     }
+
+    if(_handlers[STEP]) _handlers[STEP]();
 }
 void TMC2209::forward() {
     if(++_steps >= _limit) {
@@ -106,4 +108,16 @@ void TMC2209::setLimit(uint32_t limit) {
 }
 void TMC2209::setHandler(StepperHandler handler, void (*fnHandler)(void)) {
     _handlers[handler] = fnHandler;
+}
+void TMC2209::onLimit(void (*fnHandler)(void)) {
+    _handlers[STEPPER_ON_LIMIT] = fnHandler;
+}
+
+uint32_t TMC2209::getLimit() {
+    return _limit;
+}
+
+void TMC2209::onStep(uint32_t steps, void (*fnHandler)(void)) {
+    _handlers[STEP] = fnHandler;
+    _onStepLimit = steps;
 }

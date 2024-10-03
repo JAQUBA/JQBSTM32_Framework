@@ -17,6 +17,16 @@ class HardwareGPIO {
     GPIO_PinState readInput(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
     GPIO_PinState readOutput(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
 
+    void attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidCallback_f callback, uint32_t mode);
+    void _interruptCallback(uint16_t GPIO_Pin);
+
+    private:
+      struct interrupt {
+        GPIO_TypeDef* GPIOx;
+        uint16_t GPIO_Pin;
+        voidCallback_f callback;
+      };
+      std::list<interrupt> interrupts;
 };
 
 extern HardwareGPIO GPIO;

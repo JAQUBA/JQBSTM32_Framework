@@ -8,7 +8,8 @@ enum StepperDirection {
     STEPPER_LEFT = GPIO_PIN_RESET
 };
 enum StepperHandler {
-    STEPPER_ON_LIMIT
+    STEPPER_ON_LIMIT,
+    STEP
 };
 
 class TMC2209 {
@@ -36,6 +37,15 @@ class TMC2209 {
         void setLimit(uint32_t limit);
         void setHandler(StepperHandler handler, void (*fnHandler)(void));
 
+        
+
+        void onLimit(void (*fnHandler)(void));
+
+        uint32_t getLimit();
+
+
+        void onStep(uint32_t steps, void (*fnHandler)(void));
+
 
         uint32_t _limit;
         uint32_t _steps;
@@ -48,7 +58,9 @@ class TMC2209 {
         GPIO_TypeDef* _zeroPort; uint16_t _zeroPin;
         StepperDirection _direction;
         
-        void (* _handlers [1])() = {};
+        void (* _handlers [2])() = {};
+
+        uint32_t _onStepLimit;
 };
 
 #endif
