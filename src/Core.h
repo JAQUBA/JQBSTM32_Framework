@@ -9,18 +9,15 @@
 #include <queue>
 #include "main.h"
 #include "fl_bit.h"
-#include "Scheduler.h"
-
-using taskCallback_f = std::function<void(struct taskStruct *task)>;
-using voidCallback_f = std::function<void(void)>;
+#include "Scheduler.hpp"
 
 class Core {
     public:
         Core();
 };
 
-taskStruct addTaskMain(taskCallback_f functionPointer, uint32_t delay = 0, bool single = false);
-taskStruct addTaskInterrupt(taskCallback_f functionPointer, uint32_t delay = 0, bool single = false);
+taskStruct addTaskMain(taskCallback_f functionPointer, uint32_t delay = 0, bool single = false, Scheduler::taskTime time = Scheduler::taskTime::MUL_1MS);
+taskStruct addTaskInterrupt(taskCallback_f functionPointer, uint32_t delay = 0, bool single = false, Scheduler::taskTime time = Scheduler::taskTime::MUL_1MS);
 
 #ifdef __cplusplus
 extern "C" {

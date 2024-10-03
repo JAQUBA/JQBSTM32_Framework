@@ -1,7 +1,9 @@
-#include "Scheduler.h"
+#include "Scheduler.hpp"
 
-taskStruct Scheduler::addTask(const taskCallback_f &func, uint32_t delay, bool single) {
+taskStruct Scheduler::addTask(const taskCallback_f &func, uint32_t delay, bool single, taskTime time) {
     taskStruct task;
+
+    delay *= time;
 
     task.functionPointer = func;
     task.delay = delay;
@@ -25,7 +27,7 @@ void Scheduler::execute() {
         ++it;
     }
 }
-void Scheduler::poll1ms() {
+void Scheduler::poll() {
     for (auto &task : tasks) {
         if (task.delay > 0) {
             --task.delay;

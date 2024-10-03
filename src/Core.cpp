@@ -3,8 +3,8 @@
 Scheduler mainTasks;
 Scheduler interruptTasks;
 
-taskStruct addTaskInterrupt(taskCallback_f functionPointer, uint32_t delay, bool single) {return interruptTasks.addTask(functionPointer, delay, single);}
-taskStruct addTaskMain(taskCallback_f functionPointer, uint32_t delay, bool single) {return mainTasks.addTask(functionPointer, delay, single);}
+taskStruct addTaskInterrupt(taskCallback_f functionPointer, uint32_t delay, bool single, Scheduler::taskTime time) {return interruptTasks.addTask(functionPointer, delay, single, time);}
+taskStruct addTaskMain(taskCallback_f functionPointer, uint32_t delay, bool single, Scheduler::taskTime time) {return mainTasks.addTask(functionPointer, delay, single, time);}
 
 #ifdef DWT
 uint8_t DWT_COUNTER_ENABLE(void) {
@@ -39,18 +39,23 @@ Core::Core() {
 Core _core;
 
 int main() {
+	SysTick_Config(HAL_RCC_GetHCLKFreq() / 10000UL);
+	addTaskInterrupt(taskCallback {
+		uwTick += (uint32_t)uwTickFreq;
+		ulMillis++;
+	}, 1);
+
 	setup();
+
 	while (1) {
 		mainTasks.execute();
 		loop();
 	}
 }
 void HAL_IncTick(void) {
-	uwTick += (uint32_t)uwTickFreq;
-	interruptTasks.poll1ms();
+	interruptTasks.poll();
 	interruptTasks.execute();
-	mainTasks.poll1ms();
-	ulMillis++;
+	mainTasks.poll();
 }
 long map(long x, long in_min, long in_max, long out_min, long out_max) {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
