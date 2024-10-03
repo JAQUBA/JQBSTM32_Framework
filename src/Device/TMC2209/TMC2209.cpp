@@ -57,21 +57,19 @@ void TMC2209::step(int16_t steps) {
     if(_handlers[STEP]) _handlers[STEP]();
 }
 void TMC2209::forward() {
-    if(++_steps >= _limit) {
+    if(++_steps == _limit) {
         _steps = 0;
         if(_handlers[STEPPER_ON_LIMIT]) _handlers[STEPPER_ON_LIMIT]();
         reverse();
     }
-    GPIO.set(_directionPort, _directionPin, (GPIO_PinState) _direction);
     GPIO.toggle(_stepPort, _stepPin);
 }
 void TMC2209::back() {
-    if(_steps-- == 0) {
-        _steps = _limit+1;
+    if(--_steps == 0) {
+        _steps = _limit;
         if(_handlers[STEPPER_ON_LIMIT]) _handlers[STEPPER_ON_LIMIT]();
         reverse();
     }
-    GPIO.set(_directionPort, _directionPin, (GPIO_PinState) !_direction);
     GPIO.toggle(_stepPort, _stepPin);
 }
 
@@ -85,12 +83,12 @@ void TMC2209::reverse() {
 
     GPIO.toggle(_directionPort, _directionPin);
 }
-void TMC2209::direction(StepperDirection direction) {
+void TMC2209::direction(Direction direction) {
     _direction = direction;
     GPIO.set(_directionPort, _directionPin, (GPIO_PinState) direction);
 }
-StepperDirection TMC2209::getDirection() {
-    return _direction;//(StepperDirection) GPIO.get(_directionPort, _directionPin);
+TMC2209::Direction TMC2209::getDirection() {
+    return _direction;
 }
 
 void TMC2209::togglePower() {
@@ -106,7 +104,7 @@ void TMC2209::disable() {
 void TMC2209::setLimit(uint32_t limit) {
     _limit = limit;
 }
-void TMC2209::setHandler(StepperHandler handler, void (*fnHandler)(void)) {
+void TMC2209::setHandler(Handler handler, void (*fnHandler)(void)) {
     _handlers[handler] = fnHandler;
 }
 void TMC2209::onLimit(void (*fnHandler)(void)) {
