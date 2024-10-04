@@ -40,8 +40,9 @@ class Analog {
          */
         void configureChannel(uint16_t *offset, uint16_t *divider);
 
-    private:
         static uint16_t rawADC[8]; /**< Tablica surowych wartości ADC. */
+    private:
+        
         uint8_t _channelNumber; /**< Numer kanału ADC. */
         uint16_t *_offset; /**< Wskaźnik do offsetu. */
         uint16_t *_divider; /**< Wskaźnik do dzielnika. */

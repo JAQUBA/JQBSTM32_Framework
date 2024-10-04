@@ -2,6 +2,7 @@
 #define _ANALOGAC_H
 
 #include "Core.h"
+#include "../../Hardware/Analog/Analog.h"
 
 class AnalogAC {
 	public:
@@ -12,6 +13,8 @@ class AnalogAC {
 	private:
 		uint8_t _channelNumber1;
 		uint8_t _channelNumber2;
+		uint16_t *_offset; /**< Wskaźnik do offsetu. */
+        uint16_t *_divider; /**< Wskaźnik do dzielnika. */
 };
 
 #endif

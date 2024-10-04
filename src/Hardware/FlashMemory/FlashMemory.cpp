@@ -1,5 +1,4 @@
 #include "FlashMemory.h"
-#include "stm32g0xx_hal.h"
 
 // Konstruktor
 FlashMemory::FlashMemory() {}
