@@ -10,7 +10,7 @@
 
 class UART : public IBus {
     public:
-        UART(UART_HandleTypeDef *pHandler);
+        UART(UART_HandleTypeDef *pHandler, GPIO_TypeDef *dirPort = NULL, uint16_t dirPin = 0);
         static UART *getInstance(UART_HandleTypeDef *pHandler);
 
         void rxInterrupt();
@@ -29,6 +29,9 @@ class UART : public IBus {
 
         dataCallback_f fpOnReceive;
         voidCallback_f fpOnTransmit;
+
+        GPIO_TypeDef *_dirPort;
+        uint16_t _dirPin;
 
         uint8_t Received_u1;
         
