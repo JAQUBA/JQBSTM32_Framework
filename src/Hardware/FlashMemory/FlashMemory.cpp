@@ -1,45 +1,62 @@
 #include "FlashMemory.h"
 
-// Konstruktor
-FlashMemory::FlashMemory() {}
-
-// Funkcja do zapisu danych do pamięci flash
 void FlashMemory::writeToMemory(uint32_t MemAddress, uint8_t *pData, uint16_t Size) {
-    HAL_FLASH_Unlock(); // Odblokowanie pamięci flash
+    HAL_FLASH_Unlock();
 
-    // Kasowanie strony pamięci flash, na której będą zapisane dane
     FLASH_EraseInitTypeDef EraseInitStruct;
-    uint32_t PageError = 0;
-    uint32_t page = (MemAddress - FLASH_BASE) / flashPageSize; // Obliczenie numeru strony
 
-    // FLASH_PAGE_NB; // Liczba stron pamięci flash
-
-    EraseInitStruct.NbPages = 1; // Liczba stron do wymazania
+#ifdef STM32F1
     EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;
-    EraseInitStruct.Page = page; // Numer strony do wymazania
-    EraseInitStruct.Banks = FLASH_BANK_1; // STM32G071 ma tylko jeden bank flash
+    EraseInitStruct.PageAddress = 0x08000000;
+    EraseInitStruct.NbPages = 1;
 
+#elif defined(STM32F4)
+    EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
+    EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
+    EraseInitStruct.Sector = FLASH_SECTOR_2;
+    EraseInitStruct.NbSectors = 1;
+
+#elif defined(STM32G0)
+    EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;
+    EraseInitStruct.Banks = FLASH_BANK_1;
+    EraseInitStruct.Page = (MemAddress - FLASH_BASE) / FLASH_PAGE_SIZE;;
+    EraseInitStruct.NbPages = 1;
+
+#elif defined(STM32H7)
+    EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
+    EraseInitStruct.Banks = FLASH_BANK_1;
+    EraseInitStruct.Sector = FLASH_SECTOR_2;
+    EraseInitStruct.NbSectors = 1;
+    EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_4;
+    
+// Dodaj inne rodziny STM32, jeśli potrzebne
+#else
+    #error "Nieznana rodzina STM32"
+#endif
+
+    // EraseInitStruct.NbPages = 1;
+    // EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;
+    // EraseInitStruct.PageAddress = page;
+    // EraseInitStruct.Banks = FLASH_BANK_1;
+    uint32_t PageError = 0;
     if (HAL_FLASHEx_Erase(&EraseInitStruct, &PageError) != HAL_OK) {
         HAL_FLASH_Lock();
-        return; // Wyjście w przypadku błędu
+        return;
     }
 
-    // Zapis danych do pamięci flash, 64-bitowymi słowami (Double Word)
     for (uint16_t i = 0; i < Size; i += 8) {
         uint64_t data = 0;
-        memcpy(&data, &pData[i], (Size - i >= 8) ? 8 : Size - i); // Kopiowanie danych 64-bitowych
+        memcpy(&data, &pData[i], (Size - i >= 8) ? 8 : Size - i);
         if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, MemAddress + i, data) != HAL_OK) {
             HAL_FLASH_Lock();
-            return; // Wyjście w przypadku błędu
+            return;
         }
     }
-
-    HAL_FLASH_Lock(); // Zablokowanie pamięci flash po zakończeniu operacji
+    HAL_FLASH_Lock();
 }
 
-// Funkcja do odczytu danych z pamięci flash
 void FlashMemory::readFromMemory(uint32_t MemAddress, uint8_t *pData, uint16_t Size) {
     for (uint16_t i = 0; i < Size; i++) {
-        pData[i] = *reinterpret_cast<uint8_t*>(MemAddress + i); // Odczyt danych bajt po bajcie
+        pData[i] = *reinterpret_cast<uint8_t*>(MemAddress + i);
     }
 }
