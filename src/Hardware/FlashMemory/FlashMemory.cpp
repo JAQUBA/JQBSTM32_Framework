@@ -4,46 +4,13 @@ void FlashMemory::writeToMemory(uint32_t MemAddress, uint8_t *pData, uint16_t Si
     HAL_FLASH_Unlock();
 
     FLASH_EraseInitTypeDef EraseInitStruct;
+    EraseInitStruct = GenerateFlashEraseStruct(MemAddress);
 
-#ifdef STM32F1
-    EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;
-    EraseInitStruct.PageAddress = 0x08000000;
-    EraseInitStruct.NbPages = 1;
-
-#elif defined(STM32F4)
-    EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
-    EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3;
-    EraseInitStruct.Sector = FLASH_SECTOR_2;
-    EraseInitStruct.NbSectors = 1;
-
-#elif defined(STM32G0)
-    EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;
-    EraseInitStruct.Banks = FLASH_BANK_1;
-    EraseInitStruct.Page = (MemAddress - FLASH_BASE) / FLASH_PAGE_SIZE;;
-    EraseInitStruct.NbPages = 1;
-
-#elif defined(STM32H7)
-    EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;
-    EraseInitStruct.Banks = FLASH_BANK_1;
-    EraseInitStruct.Sector = FLASH_SECTOR_2;
-    EraseInitStruct.NbSectors = 1;
-    EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_4;
-    
-// Dodaj inne rodziny STM32, jeśli potrzebne
-#else
-    #error "Nieznana rodzina STM32"
-#endif
-
-    // EraseInitStruct.NbPages = 1;
-    // EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;
-    // EraseInitStruct.PageAddress = page;
-    // EraseInitStruct.Banks = FLASH_BANK_1;
     uint32_t PageError = 0;
     if (HAL_FLASHEx_Erase(&EraseInitStruct, &PageError) != HAL_OK) {
         HAL_FLASH_Lock();
         return;
     }
-
     for (uint16_t i = 0; i < Size; i += 8) {
         uint64_t data = 0;
         memcpy(&data, &pData[i], (Size - i >= 8) ? 8 : Size - i);
@@ -58,5 +25,53 @@ void FlashMemory::writeToMemory(uint32_t MemAddress, uint8_t *pData, uint16_t Si
 void FlashMemory::readFromMemory(uint32_t MemAddress, uint8_t *pData, uint16_t Size) {
     for (uint16_t i = 0; i < Size; i++) {
         pData[i] = *reinterpret_cast<uint8_t*>(MemAddress + i);
+    }
+}
+
+
+FLASH_EraseInitTypeDef FlashMemory::GenerateFlashEraseStruct(uint32_t Address) {
+    FLASH_EraseInitTypeDef EraseInitStruct;
+
+    #if defined(STM32F1)
+        // Dla STM32F1
+        EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;    // Typ operacji (strony)
+        EraseInitStruct.PageAddress = Address;                // Adres strony
+        EraseInitStruct.NbPages = 1;                          // Liczba stron do wymazania
+
+    #elif defined(STM32F4)
+        // Dla STM32F4
+        EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;  // Typ operacji (sektory)
+        EraseInitStruct.Sector = GetFlashSector(Address);     // Obliczenie sektora na podstawie adresu
+        EraseInitStruct.NbSectors = 1;                        // Liczba sektorów do wymazania
+        EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3; // Zakres napięcia
+
+    #elif defined(STM32H4)
+        // Dla STM32H4
+        EraseInitStruct.TypeErase = FLASH_TYPEERASE_MASS;     // Typ operacji (cała pamięć)
+        // Można dodać inne pola specyficzne dla H4, jeśli istnieją
+
+    #elif defined(STM32G0)
+        // Dla STM32G0
+        EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;    // Typ operacji (strony)
+        EraseInitStruct.Page = (Address - FLASH_BASE) / FLASH_PAGE_SIZE; // Numer strony
+        EraseInitStruct.NbPages = 1;                         // Liczba stron do wymazania
+
+    #else
+        // Domyślny przypadek, jeśli typ procesora nie jest obsługiwany
+        #error "Nieobsługiwany typ procesora!"
+    #endif
+
+    return EraseInitStruct;
+}
+uint32_t FlashMemory::GetFlashSector(uint32_t Address) {
+    if (Address < 0x08010000) {
+        // Sektory 0–3 (16 KB każdy)
+        return (Address - 0x08000000) / 0x4000;
+    } else if (Address < 0x08020000) {
+        // Sektor 4 (64 KB)
+        return FLASH_SECTOR_4;
+    } else {
+        // Sektory 5–7 (128 KB każdy)
+        return FLASH_SECTOR_5 + ((Address - 0x08020000) / 0x20000);
     }
 }
