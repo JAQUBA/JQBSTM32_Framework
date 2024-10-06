@@ -63,7 +63,9 @@ FLASH_EraseInitTypeDef FlashMemory::GenerateFlashEraseStruct(uint32_t Address) {
 
     return EraseInitStruct;
 }
+#ifdef STM32F4
 uint32_t FlashMemory::GetFlashSector(uint32_t Address) {
+    
     if (Address < 0x08010000) {
         // Sektory 0–3 (16 KB każdy)
         return (Address - 0x08000000) / 0x4000;
@@ -75,3 +77,4 @@ uint32_t FlashMemory::GetFlashSector(uint32_t Address) {
         return FLASH_SECTOR_5 + ((Address - 0x08020000) / 0x20000);
     }
 }
+#endif
