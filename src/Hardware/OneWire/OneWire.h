@@ -3,22 +3,25 @@
 
 #include "Core.h"
 
-class OneWire {
+#include "Interface/IBus.h"
+
+class OneWire : public IBus {
     public:
         OneWire(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
-        void reset();
-        void writeBit(uint8_t bit);
-        uint8_t readBit();
-        void writeByte(uint8_t byte);
-        uint8_t readByte();
 
+        void transmit(
+            uint8_t *pData, uint16_t Size,
+            dataCallback_f callbackFn = nullptr
+        );
+        void receive(
+            uint8_t *pData, uint16_t Size,
+            dataCallback_f callbackFn = nullptr
+        );
+        void write(uint8_t data);
+        uint8_t read();
     private:
         GPIO_TypeDef* GPIOx;
         uint16_t GPIO_Pin;
-
-        void setPinOutput();
-        void setPinInput();
-        void delayMicroseconds(uint32_t us);
 };
 
 #endif // ONEWIRE_H
