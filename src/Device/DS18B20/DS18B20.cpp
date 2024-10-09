@@ -3,6 +3,6 @@
 DS18B20::DS18B20(OneWire *oneWire) {
     this->oneWire = oneWire;
 }
-void DS18B20::getTemperature(uint64_t romCode) {
+uint16_t DS18B20::getTemperature(uint64_t romCode) {
     
 }
