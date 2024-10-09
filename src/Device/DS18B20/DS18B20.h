@@ -7,7 +7,7 @@
 class DS18B20 {
     public:
         DS18B20(OneWire *oneWire);
-        void readTemperature();
+        void getTemperature(uint64_t romCode);
     private:
         OneWire *oneWire;
 };
