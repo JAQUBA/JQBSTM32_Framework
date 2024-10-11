@@ -8,6 +8,10 @@ class FlashMemory : public IExternalMemory{
     public:
         void writeToMemory(uint32_t MemAddress, uint8_t *pData, uint16_t Size);
         void readFromMemory(uint32_t MemAddress, uint8_t *pData, uint16_t Size);
+
+        uint64_t read(uint32_t MemAddress);
+        void write(uint32_t MemAddress, uint64_t Data);
+        
     private:
         FLASH_EraseInitTypeDef GenerateFlashEraseStruct(uint32_t Address);
         #ifdef STM32F4

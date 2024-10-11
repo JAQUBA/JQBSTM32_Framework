@@ -28,6 +28,28 @@ void FlashMemory::readFromMemory(uint32_t MemAddress, uint8_t *pData, uint16_t S
     }
 }
 
+uint64_t FlashMemory::read(uint32_t MemAddress) {
+    return *reinterpret_cast<uint64_t*>(MemAddress);
+}
+
+void FlashMemory::write(uint32_t MemAddress, uint64_t Data) {
+    HAL_FLASH_Unlock();
+
+    FLASH_EraseInitTypeDef EraseInitStruct;
+    EraseInitStruct = GenerateFlashEraseStruct(MemAddress);
+
+    uint32_t PageError = 0;
+    if (HAL_FLASHEx_Erase(&EraseInitStruct, &PageError) != HAL_OK) {
+        HAL_FLASH_Lock();
+        return;
+    }
+    if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, MemAddress, Data) != HAL_OK) {
+        HAL_FLASH_Lock();
+        return;
+    }
+    HAL_FLASH_Lock();
+}
+
 
 FLASH_EraseInitTypeDef FlashMemory::GenerateFlashEraseStruct(uint32_t Address) {
     FLASH_EraseInitTypeDef EraseInitStruct;
