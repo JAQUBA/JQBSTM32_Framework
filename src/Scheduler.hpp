@@ -6,6 +6,7 @@
 #include <list>
 
 #define taskCallback [&](taskStruct *task)
+#define voidCallback [&](void)
 #define TASK(x) void x(taskStruct *task)
 
 using taskCallback_f = std::function<void(struct taskStruct *task)>;
