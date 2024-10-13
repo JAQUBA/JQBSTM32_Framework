@@ -3,9 +3,9 @@
 Timer::Timer(TIM_HandleTypeDef *htim) {
     _htim = htim;
 }
-void Timer::setup(uint32_t period) {
-    _htim->Init.Prescaler = 10000 - 1;
-    _htim->Init.Period = period - 1;
+void Timer::period(uint32_t period) {
+}
+void Timer::delay_us(uint32_t period) {
 }
 void Timer::attachInterrupt(voidCallback_f callback) {
 
