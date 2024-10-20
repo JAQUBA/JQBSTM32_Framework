@@ -5,7 +5,8 @@
 
 class Timer {
     public:
-        Timer(TIM_TypeDef *timerBase, uint8_t prescaler, uint8_t period);
+        Timer(TIM_HandleTypeDef *htim);
+        void attachInterrupt(voidCallback_f callback);
     private:
         TIM_HandleTypeDef htim;
 };

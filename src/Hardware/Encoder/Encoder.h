@@ -3,12 +3,6 @@
 
 #include "../../Core.h"
 
-/**
- * @typedef encoderCallback_f
- * @brief Typedef for encoder callback function.
- */
-using encoderCallback_f = std::function<void(void)>;
-
 #ifndef ENCODER_MAX_INSTANCES
 #define ENCODER_MAX_INSTANCES 2
 #endif
@@ -66,7 +60,7 @@ class Encoder {
          * @brief Attaches an interrupt callback function.
          * @param callback Function to be called on interrupt.
          */
-        void attachInterrupt(encoderCallback_f callback);
+        void attachInterrupt(voidCallback_f callback);
 
         /**
          * @brief Handles the timer interrupt.
@@ -80,7 +74,7 @@ class Encoder {
         int32_t _min = 0; /**< Minimum encoder value. */
         int32_t _max = -1; /**< Maximum encoder value. */
         
-        encoderCallback_f fnCallback; /**< Callback function for encoder interrupt. */
+        voidCallback_f fnCallback; /**< Callback function for encoder interrupt. */
 };
 
 #endif

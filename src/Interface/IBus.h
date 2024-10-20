@@ -3,8 +3,6 @@
 
 #include <functional>
 
-using dataCallback_f = std::function<void(uint8_t *pData, uint16_t Size)>;
-
 #define MEM_ADR_INVALID 0
 
 class IBus {

@@ -4,8 +4,8 @@ DS18B20::DS18B20(OneWire *oneWire) {
     this->oneWire = oneWire;
 }
 uint16_t DS18B20::getTemperature(uint64_t romCode) {
-    uint8_t data[10];
-    uint16_t recv;
+    uint8_t data[11];
+    uint8_t recv[2] = {0, 0};
 
     oneWire->reset();
     data[0] = 0x55;
@@ -15,9 +15,9 @@ uint16_t DS18B20::getTemperature(uint64_t romCode) {
     data[10] = 0xbe;
     oneWire->transmitThenReceive(
         data, 10,
-        (uint8_t*) recv, 2
+        recv, 2
     );
 
     
-    return recv;
+    return (recv[1] << 8) | recv[0];
 }

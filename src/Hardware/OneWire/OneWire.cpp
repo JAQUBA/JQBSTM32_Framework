@@ -52,7 +52,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
 }
 
 
-#define delay_us(x) timer->delay_us(x)
+#define delay_us(x) delay(x)
 
 void OneWire::work() {
     switch(currentOperation.operationType) {

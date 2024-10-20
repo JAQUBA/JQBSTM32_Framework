@@ -69,7 +69,7 @@ void Encoder::setLimits(int32_t min, int32_t max) {
 
 
 
-void Encoder::attachInterrupt(encoderCallback_f callback) {
+void Encoder::attachInterrupt(voidCallback_f callback) {
 	if (fnCallback) {
 		fnCallback = callback;
 	} else {
