@@ -1,7 +1,7 @@
 #ifndef __IEXTERNALMEMORY_H
 #define __IEXTERNALMEMORY_H
 
-#include "../Interface/IBus.h"
+//#include "../Interface/IBus.h"
 
 #define ADDRESS_SIZE_8BIT            (0x00000001U)
 #define ADDRESS_SIZE_16BIT           (0x00000002U)
