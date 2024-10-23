@@ -30,7 +30,8 @@ class SPI : public IBus {
         );
         void transmitReceive(
             GPIO_TypeDef* CSPort, uint16_t CSPin,
-            uint8_t *pDataTx, uint8_t *pDataRx, uint16_t Size,
+            uint8_t *pDataTx, uint8_t *pDataRx,
+            uint16_t Size,
             dataCallback_f callbackFn = nullptr
         );
 
