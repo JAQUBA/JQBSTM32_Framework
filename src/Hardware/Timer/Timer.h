@@ -5,6 +5,10 @@
 
 class Timer {
     public:
+
+        static void interrupt(TIM_HandleTypeDef *pHandler);
+
+
         Timer(TIM_HandleTypeDef *htim);
         void attachInterrupt(voidCallback_f callback);
     private:
