@@ -22,10 +22,21 @@ class OneWire : public IBus {
         void transmitThenReceive(
             uint8_t *pData_tx, uint16_t txSize,
             uint8_t *pData_rx, uint16_t rxSize,
-            bool adres = true,//z adresacją ROM
             bool reset = false,//wymuszenie resetu
             dataCallback_f callbackFn = nullptr
         );
+
+        void sesja(
+            uint8_t ROMcomm,
+            uint8_t *adres,
+            uint8_t FUNcomm,
+            uint8_t *buffer,
+            uint8_t size = 0,
+            bool    reset = false,
+            //bool    read = false,
+            dataCallback_f callbackFn = nullptr
+        );
+
         uint16_t queueSize();
 
     private:

@@ -220,7 +220,7 @@ void OneWire::transmit(
     memcpy(operation.pData, pData, Size);
     operation.Size = Size;
     operation.free = true;
-    operation.callback_f = callbackFn;
+    operation.callback_f = NULL;//callbackFn;
     operations.push(operation);
 }
 
@@ -240,7 +240,6 @@ void OneWire::receive(
 void OneWire::transmitThenReceive(
     uint8_t *pData_tx, uint16_t txSize,
     uint8_t *pData_rx, uint16_t rxSize,
-    bool adres,
     bool reset,
     dataCallback_f callbackFn
 ){
@@ -253,6 +252,56 @@ void OneWire::transmitThenReceive(
     operations.push(operation);
     receive(pData_rx, rxSize, callbackFn);
 }
+
+void OneWire::sesja(
+    uint8_t ROMcomm,
+    uint8_t *adres,
+    uint8_t FUNcomm,
+    uint8_t *buffer,
+    uint8_t size,
+    bool    reset,
+    //bool    read,
+    dataCallback_f callbackFn
+){
+    uint8_t txSize;
+
+    operation operation;
+    operation.operationType = EoperationType::TRANSMIT;
+
+    if (adres==0){
+
+        txSize = 2;
+        if (size>0) txSize += size;
+        operation.pData = (uint8_t*) malloc(txSize);
+
+        *(operation.pData+0) = ROMcomm;
+        *(operation.pData+1) = FUNcomm;
+
+        if (size>0) memcpy(operation.pData+2, buffer, size);
+
+    } else {
+        txSize=10;
+        if (size>0) txSize += size;
+        operation.pData = (uint8_t*) malloc(txSize);
+
+        *(operation.pData+0) = ROMcomm;
+        memcpy(operation.pData+1, adres, 8);
+        *(operation.pData+9) = FUNcomm;
+
+        if (size>0) memcpy(operation.pData+10, buffer, size);
+    }
+
+    operation.Size = txSize;
+    operation.free = true;
+    operations.push(operation);
+   
+
+
+   // if (read) receive(pData_rx, rxSize, callbackFn);
+
+
+}                
+
 uint16_t OneWire::queueSize() {
     return operations.size();
 }
