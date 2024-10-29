@@ -6,55 +6,14 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
     this->GPIO_Pin = GPIO_Pin;
 
     timer->attachInterrupt(voidCallback {
-
-        /*
-        switch(operationState) {
-            case IDLE: {
-                if(!operations.empty()) {
-                    currentOperation = operations.front();
-                    operationState = CHECK_FREE;
-                }
-                break;
-            }
-            case CHECK_FREE: {
-                if(OW_GET_PIN == GPIO_PIN_SET) {
-                    operationState = WORK;
-                } else {
-                    operationState = WAITING;
-                }
-            }
-            case WORK: {
-                operationTimeout = millis()+4;
-                work();
-                break;
-            }
-            case WAITING: {
-                if(millis() >= operationTimeout) {
-                    operationState = FINISH;
-                }
-                break;
-            }
-            case FINISH: {
-                if(currentOperation.callback_f != nullptr) {
-                    currentOperation.callback_f(
-                        currentOperation.pData,
-                        currentOperation.Size
-                    );
-                    operationState = CLEAR;
-                    break;
-                }
-            }
-            case CLEAR: {
-                operations.pop();
-                operationState = IDLE;
-                break;
-            }
-        }*/
-
+    
         switch (ow_tim_progress)
         {
+            case OW_TIMER_PROGRESS_END:
+            break;
+
             case OW_TIMER_PROGRESS_RESET://<<<<<<<<<<<<<<<<<<<<<<<
-                HAL_GPIO_WritePin(DS_GPIO_Port, DS_Pin, GPIO_PIN_RESET);
+                HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_RESET);
                 ow_tim_delay = 50;//500uS
                 ow_tim_progress = OW_TIMER_PROGRESS_RESET_WAIT_END_LOW;
             break;
@@ -62,7 +21,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
             case OW_TIMER_PROGRESS_RESET_WAIT_END_LOW:
                 if (OW_TIM_ELAPSED)
                 {
-                    HAL_GPIO_WritePin(DS_GPIO_Port, DS_Pin, GPIO_PIN_SET);
+                    HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_SET);
                     ow_tim_delay=12;
                     ow_tim_progress=OW_TIMER_PROGRESS_RESET_WAIT_END_HIGH;
                 }
@@ -71,7 +30,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
             case OW_TIMER_PROGRESS_RESET_WAIT_END_HIGH:
                 if (OW_TIM_ELAPSED)
                 {
-                    ow_tim_bit = HAL_GPIO_ReadPin(DS_GPIO_Port, DS_Pin);
+                    ow_tim_bit = HAL_GPIO_ReadPin(GPIOx, GPIO_Pin);
                     ow_tim_delay=48;
                     ow_tim_progress=OW_TIMER_PROGRESS_RESET_WAIT_READ_STATUS;
                 }
@@ -86,7 +45,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
             break;
 
             case OW_TIMER_PROCESS_WRITE://<<<<<<<<<<<<<<<<<<<<<<
-                HAL_GPIO_WritePin(DS_GPIO_Port, DS_Pin, GPIO_PIN_RESET);
+                HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_RESET);
                 if (ow_tim_bit>0)
                 {
                     ow_tim_delay=1;
@@ -102,7 +61,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
             case OW_TIMER_PROCESS_WRITE_WAIT_END_HIGH:
                 if (OW_TIM_ELAPSED)
                 {
-                    HAL_GPIO_WritePin(DS_GPIO_Port, DS_Pin, GPIO_PIN_SET);
+                    HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_SET);
                     ow_tim_delay=8;
                     ow_tim_progress=OW_TIMER_PROCESS_WRITE_WAIT_STATUS;
                 }
@@ -111,7 +70,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
             case OW_TIMER_PROCESS_WRITE_WAIT_END_LOW:
                 if (OW_TIM_ELAPSED)
                 {
-                    HAL_GPIO_WritePin(DS_GPIO_Port, DS_Pin, GPIO_PIN_SET);
+                    HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_SET);
                     ow_tim_delay=1;
                     ow_tim_progress=OW_TIMER_PROCESS_WRITE_WAIT_STATUS;
                 }
@@ -127,7 +86,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
 
             case OW_TIMER_PROGRESS_READ://<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                 ow_tim_bit = 0;
-                HAL_GPIO_WritePin(DS_GPIO_Port, DS_Pin, GPIO_PIN_RESET);
+                HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_RESET);
                 ow_tim_delay=1;
                 ow_tim_progress=OW_TIMER_PROGRESS_READ_WAIT;
             break;
@@ -135,7 +94,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
             case OW_TIMER_PROGRESS_READ_WAIT:
                 if (OW_TIM_ELAPSED)
                 {
-                    HAL_GPIO_WritePin(DS_GPIO_Port, DS_Pin, GPIO_PIN_SET);
+                    HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_SET);
                     ow_tim_delay=1;
                     ow_tim_progress=OW_TIMER_PROGRESS_READ_GET;
                 }
@@ -144,7 +103,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
             case OW_TIMER_PROGRESS_READ_GET:
                 if (OW_TIM_ELAPSED)
                 {
-                    ow_tim_bit = HAL_GPIO_ReadPin(DS_GPIO_Port, DS_Pin);
+                    ow_tim_bit = HAL_GPIO_ReadPin(GPIOx, GPIO_Pin);
                     ow_tim_delay=4;
                     ow_tim_progress=OW_TIMER_PROGRESS_READ_END;
                 }
@@ -236,69 +195,14 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
                     ow_progress = OW_PROGRESS_READ_NEXT_BIT;
                 }
             break;
+
+
         }
     }, 0);
 }
 
-//#define delay_us(x) delay(x)
-
 void OneWire::work() {
-    /*switch(currentOperation.operationType) {
-        case EoperationType::RESET: {
-            switch(currentWork.state) {
-                case OW_HIGH: {
-                    OW_L;
-                    delay_us(480);
-                    currentWork.state = OW_LOW;
-                    break;
-                }
-                case OW_LOW: {
-                    OW_H;
-                    delay_us(70);
-                    currentWork.state = workState::OW_HIGH;
-                    operationState = FINISH;
-                    break;
-                }
-            }
-            break;
-        }
-        case EoperationType::TRANSMIT: {
-            switch(currentWork.state) {
-                case OW_HIGH: {
-                    OW_L;
-                    delay_us(1);
-                    currentWork.state = OW_LOW;
-                    break;
-                }
-                case OW_LOW: {
-                    OW_H;
-                    delay_us(1);
-                    currentWork.state = OW_HIGH;
-                    operationState = FINISH;
-                    break;
-                }
-            }
-            break;
-        }
-        case EoperationType::RECEIVE: {
-            switch(currentWork.state) {
-                case OW_HIGH: {
-                    OW_L;
-                    delay_us(1);
-                    currentWork.state = OW_LOW;
-                    break;
-                }
-                case OW_LOW: {
-                    OW_H;
-                    delay_us(1);
-                    currentWork.state = OW_HIGH;
-                    operationState = FINISH;
-                    break;
-                }
-            }
-            break;
-        }
-    }*/
+    
 }
 
 void OneWire::reset() {
