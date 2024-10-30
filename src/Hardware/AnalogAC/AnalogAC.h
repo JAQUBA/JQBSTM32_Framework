@@ -1,9 +1,8 @@
+#include "../../Core.h"
+#ifdef HAL_ADC_MODULE_ENABLED
+
 #ifndef __ANALOGAC_H_
 #define __ANALOGAC_H_
-
-#include "Core.h"
-#ifdef HAL_ADC_MODULE_ENABLED
-#include "../../Hardware/Analog/Analog.h"
 
 class AnalogAC {
 	public:

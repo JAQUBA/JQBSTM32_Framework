@@ -1,7 +1,9 @@
+#include "../../Core.h"
+#ifdef HAL_PCD_MODULE_ENABLED
+
 #ifndef __USB_CDC_H_
 #define __USB_CDC_H_
 
-#include "../../Core.h"
 #include "Interface/IBus.h"
 
 class USB_CDC : public IBus {
@@ -38,4 +40,5 @@ class USB_CDC : public IBus {
         
         std::queue<operation> operations;
 };
+#endif
 #endif

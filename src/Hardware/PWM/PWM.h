@@ -1,8 +1,9 @@
+#include "../../Core.h"
+#ifdef HAL_TIM_MODULE_ENABLED
+
 #ifndef __PWM_H_
 #define __PWM_H_
 
-#include "../../Core.h"
-#ifdef HAL_TIM_MODULE_ENABLED
 #include "../Timer/Timer.h"
 
 class PWM : public Timer {

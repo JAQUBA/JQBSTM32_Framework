@@ -1,13 +1,14 @@
-#ifndef __I2C_H_
-#define __I2C_H_
-
 #include "../../Core.h"
 #ifdef HAL_I2C_MODULE_ENABLED
-#include "Interface/IBus.h"
+
+#ifndef __I2C_H_
+#define __I2C_H_
 
 #ifndef I2C_MAX_INSTANCES
 #define I2C_MAX_INSTANCES 2
 #endif
+
+#include "../../Interfaces/IBus.h"
 
 class I2C : public IBus {
     public:

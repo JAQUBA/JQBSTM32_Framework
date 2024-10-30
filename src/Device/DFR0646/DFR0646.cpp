@@ -1,4 +1,6 @@
 #include "DFR0646.h"
+#ifdef __DFR0646_H_
+
 #include "fl_bit.h"
 
 #define CMD_HT16K33_ON          0x01  /**< Turn ON  */
@@ -65,3 +67,4 @@ void DFR0646::printLed(char* wsk, uint8_t dot_point) {
 
 	_pInstance->transmit(_DevAddress, buf, 16);
 }
+#endif

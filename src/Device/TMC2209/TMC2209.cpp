@@ -1,5 +1,5 @@
 #include "TMC2209.h"
-#include "Hardware/GPIO/GPIO.h"
+#ifdef __TMC2209_H_
 
 TMC2209::TMC2209(
         GPIO_TypeDef* enablePort, uint16_t enablePin,
@@ -119,3 +119,4 @@ void TMC2209::onStep(uint32_t steps, void (*fnHandler)(void)) {
     _handlers[STEP] = fnHandler;
     _onStepLimit = steps;
 }
+#endif

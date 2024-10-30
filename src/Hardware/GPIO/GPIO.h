@@ -1,8 +1,8 @@
-#ifndef __GPIO_H_
-#define __GPIO_H_
-
 #include "../../Core.h"
 #ifdef HAL_GPIO_MODULE_ENABLED
+
+#ifndef __GPIO_H_
+#define __GPIO_H_
 
 #define HIGH GPIO_PIN_SET
 #define LOW GPIO_PIN_RESET

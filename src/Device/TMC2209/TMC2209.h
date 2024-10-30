@@ -1,9 +1,8 @@
+#include "../../Hardware/GPIO/GPIO.h"
+#ifdef __GPIO_H_
+
 #ifndef __TMC2209_H_
 #define __TMC2209_H_
-
-#include "Core.h"
-
-
 
 class TMC2209 {
     public:
@@ -68,4 +67,5 @@ class TMC2209 {
         uint32_t _onStepLimit;
 };
 
+#endif
 #endif

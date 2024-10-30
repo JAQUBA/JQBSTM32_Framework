@@ -1,13 +1,14 @@
-#ifndef __SPI_H_
-#define __SPI_H_
-
 #include "../../Core.h"
 #ifdef HAL_SPI_MODULE_ENABLED
-#include "Interface/IBus.h"
+
+#ifndef __SPI_H_
+#define __SPI_H_
 
 #ifndef SPI_MAX_INSTANCES
 #define SPI_MAX_INSTANCES 2
 #endif
+
+#include "Interface/IBus.h"
 
 class SPI : public IBus {
     public:

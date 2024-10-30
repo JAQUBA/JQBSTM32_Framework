@@ -1,4 +1,5 @@
 #include "OneWire.h"
+#ifdef __ONEWIRE_H_
 
 OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
     this->timer = timer;
@@ -353,3 +354,4 @@ void OneWire::transmitThenReceive(
 uint16_t OneWire::queueSize() {
     return operations.size();
 }
+#endif

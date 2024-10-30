@@ -1,15 +1,15 @@
-#ifndef __CAN_H_
-#define __CAN_H_
 #include "../../Core.h"
-
 #ifdef HAL_CAN_MODULE_ENABLED
 
-#include "Interface/IBus.h"
-#include <unordered_map> 
+#ifndef __CAN_H_
+#define __CAN_H_
 
 #ifndef CAN_MAX_INSTANCES
 #define CAN_MAX_INSTANCES 1
 #endif
+
+#include "Interface/IBus.h"
+#include <unordered_map> 
 
 class CAN : public IBus{
 	public:

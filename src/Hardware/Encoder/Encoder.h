@@ -1,8 +1,9 @@
+#include "../../Core.h"
+#ifdef HAL_TIM_MODULE_ENABLED
+
 #ifndef __ENCODER_H_
 #define __ENCODER_H_
 
-#include "../../Core.h"
-#ifdef HAL_TIM_MODULE_ENABLED
 #include "../Timer/Timer.h"
 
 /**

@@ -1,13 +1,14 @@
-#ifndef __UART_H_
-#define __UART_H_
-
 #include "../../Core.h"
 #ifdef HAL_UART_MODULE_ENABLED
-#include "Interface/IBus.h"
+
+#ifndef __UART_H_
+#define __UART_H_
 
 #ifndef UART_MAX_INSTANCES
 #define UART_MAX_INSTANCES 2
 #endif
+
+#include "Interface/IBus.h"
 
 class UART : public IBus {
     public:

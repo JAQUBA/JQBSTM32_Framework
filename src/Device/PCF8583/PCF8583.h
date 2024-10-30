@@ -1,7 +1,9 @@
+#include "../../Hardware/I2C/I2C.h"
+#ifdef __I2C_H_
+
 #ifndef __PCF8583_H_
 #define __PCF8583_H_
-#include "../../Core.h"
-#include "../../Hardware/I2C/I2C.h"
+
 #include "../../Interface/IExternalMemory.h"
 
 class PCF8583 : public IExternalMemory {
@@ -28,4 +30,5 @@ class PCF8583 : public IExternalMemory {
         uint32_t        _BaseAddress;
         uint16_t        _MemAddSize = ADDRESS_SIZE_8BIT;
 };
+#endif
 #endif

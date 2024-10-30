@@ -1,14 +1,15 @@
-#ifndef __FDCAN_H_
-#define __FDCAN_H_
-
 #include "../../Core.h"
 #ifdef HAL_FDCAN_MODULE_ENABLED
-#include "Interface/IBus.h"
-#include <unordered_map> 
+
+#ifndef __FDCAN_H_
+#define __FDCAN_H_
 
 #ifndef FDCAN_MAX_INSTANCES
 #define FDCAN_MAX_INSTANCES 1
 #endif
+
+#include "../../Interface/IBus.h"
+#include <unordered_map> 
 
 /**
  * @class FDCAN

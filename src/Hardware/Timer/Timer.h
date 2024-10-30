@@ -1,10 +1,10 @@
+#include "../../Core.h"
+#ifdef HAL_TIM_MODULE_ENABLED
+
 #ifndef __TIMER_H_
 #define __TIMER_H_
 
-#include "Core.h"
-#ifdef HAL_TIM_MODULE_ENABLED
 #include "TimerCount.h"
-
 #ifndef TIMER_MAX_INSTANCES
 #define TIMER_MAX_INSTANCES TIMERS_AVAILABLE
 #endif

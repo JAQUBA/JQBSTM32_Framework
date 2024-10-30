@@ -1,4 +1,5 @@
 #include "DS18B20.h"
+#ifdef __DS18B20_H_
 
 DS18B20::DS18B20(OneWire *oneWire) {
     this->oneWire = oneWire;
@@ -21,3 +22,4 @@ uint16_t DS18B20::getTemperature(uint64_t romCode) {
     
     return (recv[1] << 8) | recv[0];
 }
+#endif // __DS18B20_H__
