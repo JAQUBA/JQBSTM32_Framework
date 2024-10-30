@@ -8,7 +8,7 @@
 #define CAN_MAX_INSTANCES 1
 #endif
 
-#include "Interface/IBus.h"
+#include "../../Interface/IBus.h"
 #include <unordered_map> 
 
 class CAN : public IBus{

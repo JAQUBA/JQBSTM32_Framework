@@ -4,7 +4,7 @@
 #ifndef __USB_CDC_H_
 #define __USB_CDC_H_
 
-#include "Interface/IBus.h"
+#include "../../Interface/IBus.h"
 
 class USB_CDC : public IBus {
     public:

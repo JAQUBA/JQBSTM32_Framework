@@ -8,7 +8,7 @@
 #define I2C_MAX_INSTANCES 2
 #endif
 
-#include "../../Interfaces/IBus.h"
+#include "../../Interface/IBus.h"
 
 class I2C : public IBus {
     public:

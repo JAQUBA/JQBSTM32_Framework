@@ -1,10 +1,10 @@
-#include "../../Hardware/Timer/Timer.h"
+#include "../Timer/Timer.h"
 #ifdef __TIMER_H_
 
 #ifndef __ONEWIRE_H_
 #define __ONEWIRE_H_
 
-#include "Interface/IBus.h"
+#include "../../Interface/IBus.h"
 
 #define OW_GET_PIN HAL_GPIO_ReadPin(GPIOx, GPIO_Pin)
 #define OW_L HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_RESET)

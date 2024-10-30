@@ -8,7 +8,7 @@
 #define UART_MAX_INSTANCES 2
 #endif
 
-#include "Interface/IBus.h"
+#include "../../Interface/IBus.h"
 
 class UART : public IBus {
     public:
