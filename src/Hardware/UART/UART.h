@@ -2,6 +2,7 @@
 #define __UART_H_
 
 #include "../../Core.h"
+#ifdef HAL_UART_MODULE_ENABLED
 #include "Interface/IBus.h"
 
 #ifndef UART_MAX_INSTANCES
@@ -55,4 +56,5 @@ class UART : public IBus {
         std::queue<operation> operations;
 };
 
+#endif
 #endif

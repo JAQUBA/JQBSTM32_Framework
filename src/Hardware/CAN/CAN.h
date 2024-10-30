@@ -1,6 +1,9 @@
 #ifndef _CAN_H
 #define _CAN_H
 #include "../../Core.h"
+
+#ifdef HAL_CAN_MODULE_ENABLED
+
 #include "Interface/IBus.h"
 #include <unordered_map> 
 
@@ -38,4 +41,5 @@ class CAN : public IBus{
 		std::list<struct handler> handlers;
 };
 
+#endif
 #endif

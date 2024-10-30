@@ -3,6 +3,8 @@
 
 #include "../../Core.h"
 
+#ifdef HAL_ADC_MODULE_ENABLED
+
 /**
  * @class Analog
  * @brief Klasa do obsługi analogowych wejść.
@@ -48,4 +50,5 @@ class Analog {
         uint16_t *_divider; /**< Wskaźnik do dzielnika. */
 };
 
+#endif
 #endif

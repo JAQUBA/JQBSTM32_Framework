@@ -1,4 +1,6 @@
 #include "AnalogAC.h"
+#ifdef HAL_ADC_MODULE_ENABLED
+
 #include "math.h"
 
 AnalogAC::AnalogAC(uint8_t channelNumber1, uint8_t channelNumber2) : _channelNumber1(channelNumber1), _channelNumber2(channelNumber2) {}
@@ -17,3 +19,4 @@ void AnalogAC::configureChannel(uint16_t *offset, uint16_t *divider) {
     _offset = offset;
     _divider = divider;
 }
+#endif

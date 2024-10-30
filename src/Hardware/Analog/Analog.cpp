@@ -1,4 +1,5 @@
 #include "Analog.h"
+#ifdef HAL_ADC_MODULE_ENABLED
 
 uint16_t Analog::rawADC[8];
 
@@ -24,3 +25,4 @@ uint16_t Analog::getRaw() {
 
     return rawADC[_channelNumber];
 }
+#endif

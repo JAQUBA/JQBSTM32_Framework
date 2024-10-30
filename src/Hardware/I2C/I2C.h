@@ -2,6 +2,7 @@
 #define __I2C_H_
 
 #include "../../Core.h"
+#ifdef HAL_I2C_MODULE_ENABLED
 #include "Interface/IBus.h"
 
 #ifndef I2C_MAX_INSTANCES
@@ -146,4 +147,5 @@ class I2C : public IBus {
 
         std::queue<operation> operations;
 };
+#endif
 #endif

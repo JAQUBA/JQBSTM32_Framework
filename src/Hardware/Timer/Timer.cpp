@@ -1,4 +1,5 @@
 #include "Timer.h"
+#ifdef HAL_TIM_MODULE_ENABLED
 
 Timer *_Timer_instances[TIMER_MAX_INSTANCES];
 uint8_t _Timer_instancesNum = 0;
@@ -61,3 +62,4 @@ void HAL_TIM_ErrorCallback(TIM_HandleTypeDef *htim) {
     Timer *timer = Timer::getInstance(htim);
     if(timer) timer->handleInterrupt(Timer::ErrorCallback);
 }
+#endif

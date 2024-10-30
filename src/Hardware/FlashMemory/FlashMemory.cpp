@@ -1,4 +1,5 @@
 #include "FlashMemory.h"
+#ifdef HAL_FLASH_MODULE_ENABLED
 
 void FlashMemory::writeToMemory(uint32_t MemAddress, uint8_t *pData, uint16_t Size) {
     HAL_FLASH_Unlock();
@@ -99,4 +100,5 @@ uint32_t FlashMemory::GetFlashSector(uint32_t Address) {
         return FLASH_SECTOR_5 + ((Address - 0x08020000) / 0x20000);
     }
 }
+#endif
 #endif

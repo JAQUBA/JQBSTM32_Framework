@@ -2,6 +2,7 @@
 #define __ENCODER_H_
 
 #include "../../Core.h"
+#ifdef HAL_TIM_MODULE_ENABLED
 #include "../Timer/Timer.h"
 
 /**
@@ -60,4 +61,5 @@ class Encoder : public Timer {
         voidCallback_f fnCallback; /**< Callback function for encoder interrupt. */
 };
 
+#endif
 #endif

@@ -1,5 +1,5 @@
 #include "Encoder.h"
-
+#ifdef HAL_TIM_MODULE_ENABLED
 
 Encoder::Encoder(TIM_HandleTypeDef *pHandler, uint32_t channel, StartType startType): Timer(pHandler) {
     switch (startType) {
@@ -66,3 +66,4 @@ void Encoder::attachInterrupt(voidCallback_f callback) {
 		}
 	}
 }
+#endif

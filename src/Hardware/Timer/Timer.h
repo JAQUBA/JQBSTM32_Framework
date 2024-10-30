@@ -2,6 +2,7 @@
 #define _TIMER_H
 
 #include "Core.h"
+#ifdef HAL_TIM_MODULE_ENABLED
 #include "TimerCount.h"
 
 #ifndef TIMER_MAX_INSTANCES
@@ -34,3 +35,4 @@ class Timer {
 };
 
 #endif // _TIMER_H
+#endif

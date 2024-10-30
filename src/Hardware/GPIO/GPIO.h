@@ -2,6 +2,7 @@
 #define __GPIO_H_
 
 #include "../../Core.h"
+#ifdef HAL_GPIO_MODULE_ENABLED
 
 #define HIGH GPIO_PIN_SET
 #define LOW GPIO_PIN_RESET
@@ -29,4 +30,5 @@ class HardwareGPIO {
 
 extern HardwareGPIO GPIO;
 
+#endif
 #endif

@@ -2,6 +2,7 @@
 #define _ANALOGAC_H
 
 #include "Core.h"
+#ifdef HAL_ADC_MODULE_ENABLED
 #include "../../Hardware/Analog/Analog.h"
 
 class AnalogAC {
@@ -17,4 +18,5 @@ class AnalogAC {
         uint16_t *_divider; /**< Wskaźnik do dzielnika. */
 };
 
+#endif
 #endif

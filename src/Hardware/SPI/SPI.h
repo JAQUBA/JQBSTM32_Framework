@@ -2,6 +2,7 @@
 #define __SPI_H
 
 #include "../../Core.h"
+#ifdef HAL_SPI_MODULE_ENABLED
 #include "Interface/IBus.h"
 
 #ifndef SPI_MAX_INSTANCES
@@ -73,4 +74,5 @@ class SPI : public IBus {
         
         std::queue<operation> operations;
 };
+#endif
 #endif

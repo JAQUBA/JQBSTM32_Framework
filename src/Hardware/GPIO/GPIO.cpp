@@ -1,4 +1,5 @@
 #include "GPIO.h"
+#ifdef HAL_GPIO_MODULE_ENABLED
 
 HardwareGPIO GPIO;
 
@@ -46,3 +47,4 @@ GPIO_PinState HardwareGPIO::readOutput(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
     if ((GPIOx->ODR & GPIO_Pin) != 0x00u) return GPIO_PIN_SET;
     return GPIO_PIN_RESET;
 }
+#endif

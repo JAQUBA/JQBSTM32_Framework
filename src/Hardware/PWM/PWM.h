@@ -2,6 +2,7 @@
 #define __PWM_H_
 
 #include "../../Core.h"
+#ifdef HAL_TIM_MODULE_ENABLED
 #include "../Timer/Timer.h"
 
 class PWM : public Timer {
@@ -14,4 +15,5 @@ class PWM : public Timer {
         uint32_t _value;
 };
 
+#endif
 #endif
