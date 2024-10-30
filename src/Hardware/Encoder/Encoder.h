@@ -2,16 +2,13 @@
 #define __ENCODER_H_
 
 #include "../../Core.h"
-
-#ifndef ENCODER_MAX_INSTANCES
-#define ENCODER_MAX_INSTANCES 2
-#endif
+#include "../Timer/Timer.h"
 
 /**
  * @class Encoder
  * @brief Class for handling encoder operations.
  */
-class Encoder {
+class Encoder : public Timer {
     public:
         /**
          * @brief Constructor for Encoder class.
@@ -22,15 +19,8 @@ class Encoder {
             START_IT = 1,
             START_DMA = 2
         };
-        Encoder(TIM_HandleTypeDef *pHandler, StartType startType = START_IT, uint32_t channel = TIM_CHANNEL_ALL);
+        Encoder(TIM_HandleTypeDef *pHandler, uint32_t channel = TIM_CHANNEL_ALL, StartType startType = START_IT);
 
-        /**
-         * @brief Gets the instance of the Encoder.
-         * @param pHandler Pointer to TIM_HandleTypeDef structure.
-         * @return Pointer to Encoder instance.
-         */
-        static Encoder *getInstance(TIM_HandleTypeDef *pHandler);
-  
         /**
          * @brief Gets the direction of the encoder.
          * @return True if direction is forward, false otherwise.
@@ -62,14 +52,7 @@ class Encoder {
          */
         void attachInterrupt(voidCallback_f callback);
 
-        /**
-         * @brief Handles the timer interrupt.
-         */
-        void timInterrupt();
-
     private:
-        TIM_HandleTypeDef *_pHandler; /**< Pointer to TIM_HandleTypeDef structure. */
-
         int32_t _value; /**< Current encoder value. */
         int32_t _min = 0; /**< Minimum encoder value. */
         int32_t _max = -1; /**< Maximum encoder value. */

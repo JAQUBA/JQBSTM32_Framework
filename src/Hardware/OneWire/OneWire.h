@@ -79,11 +79,11 @@ class OneWire : public IBus {
 
 #define OW_TIM_ELAPSED	ow_tim_delay==0
 
-        static uint8_t  ow_tim_bit_index;
-        static uint8_t  ow_tim_bit;
-        static uint8_t  ow_tim_delay;
-        static uint8_t  ow_tim_progress;
-        static uint8_t  ow_tim_ready;
+        uint8_t  ow_tim_bit_index;
+        uint8_t  ow_tim_bit;
+        uint8_t  ow_tim_delay;
+        uint8_t  ow_tim_progress;
+        uint8_t  ow_tim_ready;
 
         uint8_t  ow_progress;
         uint8_t  ow_byte_size;

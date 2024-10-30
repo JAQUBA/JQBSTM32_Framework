@@ -2,14 +2,14 @@
 #define __PWM_H_
 
 #include "../../Core.h"
+#include "../Timer/Timer.h"
 
-class PWM {
+class PWM : public Timer {
     public:
-        PWM(TIM_HandleTypeDef *instance, uint32_t channel);
+        PWM(TIM_HandleTypeDef *pHandler, uint32_t channel);
         void set(uint32_t value);
         uint32_t get();
     private:
-        TIM_HandleTypeDef *_pHandler;
         uint32_t _channel;
         uint32_t _value;
 };
