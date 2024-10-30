@@ -1,5 +1,5 @@
 #include "Analog.h"
-#ifdef HAL_ADC_MODULE_ENABLED
+#ifdef __ANALOG_H_
 
 uint16_t Analog::rawADC[8];
 

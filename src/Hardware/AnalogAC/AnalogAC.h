@@ -4,6 +4,8 @@
 #ifndef __ANALOGAC_H_
 #define __ANALOGAC_H_
 
+#include "../Analog/Analog.h"
+
 class AnalogAC {
 	public:
 		AnalogAC(uint8_t channelNumber1, uint8_t channelNumber2);

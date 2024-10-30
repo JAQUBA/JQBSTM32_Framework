@@ -1,5 +1,5 @@
 #include "AnalogAC.h"
-#ifdef HAL_ADC_MODULE_ENABLED
+#ifdef __ANALOGAC_H_
 
 #include "math.h"
 
