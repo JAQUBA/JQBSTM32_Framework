@@ -1,5 +1,5 @@
-#ifndef _CAN_H
-#define _CAN_H
+#ifndef __CAN_H_
+#define __CAN_H_
 #include "../../Core.h"
 
 #ifdef HAL_CAN_MODULE_ENABLED

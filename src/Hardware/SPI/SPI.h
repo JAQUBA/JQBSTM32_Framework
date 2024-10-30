@@ -1,5 +1,5 @@
-#ifndef __SPI_H
-#define __SPI_H
+#ifndef __SPI_H_
+#define __SPI_H_
 
 #include "../../Core.h"
 #ifdef HAL_SPI_MODULE_ENABLED

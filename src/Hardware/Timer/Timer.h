@@ -1,5 +1,5 @@
-#ifndef _TIMER_H
-#define _TIMER_H
+#ifndef __TIMER_H_
+#define __TIMER_H_
 
 #include "Core.h"
 #ifdef HAL_TIM_MODULE_ENABLED

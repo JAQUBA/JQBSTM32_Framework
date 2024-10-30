@@ -1,5 +1,5 @@
-#ifndef FLASH_MEMORY_H
-#define FLASH_MEMORY_H
+#ifndef __FLASH_MEMORY_H_
+#define __FLASH_MEMORY_H_
 
 #include "Core.h"
 #ifdef HAL_FLASH_MODULE_ENABLED

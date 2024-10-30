@@ -1,5 +1,5 @@
-#ifndef APP_DFR0646_H
-#define APP_DFR0646_H
+#ifndef __DFR0646_H_
+#define __DFR0646_H_
 
 #include "../../Hardware/I2C/I2C.h"
 

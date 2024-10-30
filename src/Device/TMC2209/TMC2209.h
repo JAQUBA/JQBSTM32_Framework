@@ -1,5 +1,5 @@
-#ifndef STEPPER_H_
-#define STEPPER_H_
+#ifndef __TMC2209_H_
+#define __TMC2209_H_
 
 #include "Core.h"
 

@@ -1,5 +1,5 @@
-#ifndef SED1520_H_
-#define SED1520_H_
+#ifndef __SED1520_H_
+#define __SED1520_H_
 
 #include "Hardware/I2C/I2C.h"
 #include "Fonts/font6x8.h"

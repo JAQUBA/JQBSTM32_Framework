@@ -1,5 +1,5 @@
-#ifndef _FM25V05_H_
-#define _FM25V05_H_
+#ifndef __FM25V05_H_
+#define __FM25V05_H_
 
 #include "Core.h"
 #include "../../Interface/IExternalMemory.h"

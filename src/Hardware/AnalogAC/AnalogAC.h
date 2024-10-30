@@ -1,5 +1,5 @@
-#ifndef _ANALOGAC_H
-#define _ANALOGAC_H
+#ifndef __ANALOGAC_H_
+#define __ANALOGAC_H_
 
 #include "Core.h"
 #ifdef HAL_ADC_MODULE_ENABLED
