@@ -36,6 +36,7 @@ class Analog {
         void configureChannel(uint16_t *offset, uint16_t *multiplier);
 
         static uint16_t rawADC[8]; /**< Tablica surowych wartości ADC. */
+        static uint32_t avgADC[8]; /**< Tablica surowych wartości ADC. */
     private:
         
         uint8_t _channelNumber; /**< Numer kanału ADC. */
