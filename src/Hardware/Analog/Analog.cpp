@@ -9,20 +9,13 @@ void Analog::init(ADC_HandleTypeDef *pHandler) {
 Analog::Analog(uint8_t channelNumber) {
     _channelNumber = channelNumber;
 }
-void Analog::configureChannel(uint16_t *offset, uint16_t *divider) {
+void Analog::configureChannel(uint16_t *offset, uint16_t *multiplier) {
     _offset = offset;
-    _divider = divider;
+    _multiplier = multiplier;
 }
 uint16_t Analog::getValue() {
-    //return (uint16_t)(((rawADC[_channelNumber] * ((*_divider)*2)) >> 12) - (*_offset) );
-    //return rawADC[_channelNumber];
-    return (uint16_t)(((rawADC[_channelNumber] * ((*_divider))) >> 14) - (*_offset) );
-}
-uint16_t Analog::getRaw() {
-    // uint32_t vdda_voltage = __HAL_ADC_CALC_VREFANALOG_VOLTAGE(rawADC[7], ADC_RESOLUTION_12B);
-    // uint32_t measurement_voltage = __HAL_ADC_CALC_DATA_TO_VOLTAGE(vdda_voltage, rawADC[_channelNumber], ADC_RESOLUTION_12B);
-    // return measurement_voltage;
-
-    return rawADC[_channelNumber];
+    int16_t val =(uint16_t)(((rawADC[_channelNumber] * (*_multiplier)) >> 10) - (*_offset));
+    if(val < 0) val = 0;
+    return val;
 }
 #endif

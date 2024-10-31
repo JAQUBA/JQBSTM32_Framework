@@ -23,12 +23,6 @@ class Analog {
         Analog(uint8_t channelNumber);
 
         /**
-         * @brief Pobiera surową wartość ADC.
-         * @return Surowa wartość ADC.
-         */
-        uint16_t getRaw();
-
-        /**
          * @brief Pobiera przetworzoną wartość ADC.
          * @return Przetworzona wartość ADC.
          */
@@ -39,14 +33,14 @@ class Analog {
          * @param offset Wskaźnik do offsetu.
          * @param divider Wskaźnik do dzielnika.
          */
-        void configureChannel(uint16_t *offset, uint16_t *divider);
+        void configureChannel(uint16_t *offset, uint16_t *multiplier);
 
         static uint16_t rawADC[8]; /**< Tablica surowych wartości ADC. */
     private:
         
         uint8_t _channelNumber; /**< Numer kanału ADC. */
         uint16_t *_offset; /**< Wskaźnik do offsetu. */
-        uint16_t *_divider; /**< Wskaźnik do dzielnika. */
+        uint16_t *_multiplier; /**< Wskaźnik do dzielnika. */
 };
 
 #endif
