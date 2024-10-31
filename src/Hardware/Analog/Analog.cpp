@@ -1,44 +1,55 @@
 #include "Analog.h"
 #ifdef __ANALOG_H_
 
-#include "Hardware/UART/UART.h"
-extern UART rs232;
+Analog *_Analog_instances[ANALOG_MAX_INSTANCES];
+uint8_t _Analog_instancesNum = 0;
 
-uint16_t Analog::rawADC[8];
-uint32_t Analog::avgADC[8];
-uint16_t wynik = 0;
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {Analog::getInstance(hadc)->convCpltCallback();}
 
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
-    for(uint8_t i = 0; i < hadc->Init.NbrOfConversion; i++) {
-        Analog::avgADC[i] += Analog::rawADC[i];
+Analog* Analog::getInstance(ADC_HandleTypeDef *pHandler) {
+    for (size_t i = 0; i < _Analog_instancesNum; i++) {
+        if(_Analog_instances[i]->_pHandler->Instance == pHandler->Instance) return _Analog_instances[i];
     }
-    wynik++;
+    return nullptr;
 }
 
-void Analog::init(ADC_HandleTypeDef *pHandler) {
-    HAL_ADC_Start_DMA(pHandler, (uint32_t*)rawADC, pHandler->Init.NbrOfConversion);
-    
-    addTaskInterrupt(taskCallback {
-        char buffer[32];
-        sprintf(buffer, "%d %d <-> %d\r\n", wynik, (Analog::avgADC[4]/wynik), (Analog::avgADC[5]/wynik));
-        rs232.transmit((uint8_t*)buffer, strlen(buffer));
-        wynik=0;
-        for(uint8_t i = 0; i < 8; i++) {
-            Analog::avgADC[i] = 0;
-        }
-    }, 1000); // 1s
+Analog::Analog(ADC_HandleTypeDef *pHandler) : _pHandler(pHandler), bufferSize(pHandler->Init.NbrOfConversion) {
+    _Analog_instances[_Analog_instancesNum++] = this;
+
+
+    adcBuffer = new uint32_t[bufferSize]();
+    offsets = new uint16_t[bufferSize];
+    multipliers = new uint16_t[bufferSize];
+
+    if (HAL_ADC_Start_DMA(pHandler, adcBuffer, bufferSize) != HAL_OK) {
+        Error_Handler();
+    }
 }
-Analog::Analog(uint8_t channelNumber) {
-    _channelNumber = channelNumber;
+void Analog::configureChannel(uint8_t channel, uint16_t *offset, uint16_t *multiplier) {
+    if (channel < bufferSize) {
+        offsets[channel] = *offset;
+        multipliers[channel] = *multiplier;
+    }
 }
-void Analog::configureChannel(uint16_t *offset, uint16_t *multiplier) {
-    _offset = offset;
-    _multiplier = multiplier;
+uint16_t Analog::getValue(uint8_t channel) {
+    if (channel < bufferSize) {
+        HAL_ADC_Start(_pHandler);
+        HAL_ADC_PollForConversion(_pHandler, 100);
+        return HAL_ADC_GetValue(_pHandler);
+    }
+    return 0;
 }
-uint16_t Analog::getValue() {
-    int16_t val =(uint16_t)(((rawADC[_channelNumber] * (*_multiplier)) >> 10) - (*_offset));
-    if(val < 0) val = 0;
-    return val;
+Analog::~Analog() {
+    delete[] offsets;
+    delete[] multipliers;
 }
+void Analog::convCpltCallback() {
+    for (size_t i = 0; i < bufferSize; i++) {
+        adcBuffer[i] = (adcBuffer[i] * multipliers[i]) + offsets[i];
+    }
+}
+
+
+
 
 #endif

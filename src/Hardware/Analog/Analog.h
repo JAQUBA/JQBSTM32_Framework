@@ -4,44 +4,28 @@
 #ifndef __ANALOG_H_
 #define __ANALOG_H_
 
-/**
- * @class Analog
- * @brief Klasa do obsługi analogowych wejść.
- */
+#ifndef ANALOG_MAX_INSTANCES
+#define ANALOG_MAX_INSTANCES 1
+#endif
+
 class Analog {
     public:
-        /**
-         * @brief Inicjalizuje ADC.
-         * @param pHandler Wskaźnik do struktury ADC_HandleTypeDef.
-         */
-        static void init(ADC_HandleTypeDef *pHandler);
+        static Analog* getInstance(ADC_HandleTypeDef *pHandler);
+        Analog(ADC_HandleTypeDef *pHandler);
+        ~Analog();
+        uint16_t getValue(uint8_t channel);
+        void configureChannel(uint8_t channel, uint16_t *offset, uint16_t *multiplier);
 
-        /**
-         * @brief Konstruktor klasy Analog.
-         * @param channelNumber Numer kanału ADC.
-         */
-        Analog(uint8_t channelNumber);
-
-        /**
-         * @brief Pobiera przetworzoną wartość ADC.
-         * @return Przetworzona wartość ADC.
-         */
-        uint16_t getValue();
-
-        /**
-         * @brief Konfiguruje kanał ADC.
-         * @param offset Wskaźnik do offsetu.
-         * @param divider Wskaźnik do dzielnika.
-         */
-        void configureChannel(uint16_t *offset, uint16_t *multiplier);
-
-        static uint16_t rawADC[8]; /**< Tablica surowych wartości ADC. */
-        static uint32_t avgADC[8]; /**< Tablica surowych wartości ADC. */
+        void convCpltCallback();
     private:
+        ADC_HandleTypeDef *_pHandler;
+        uint32_t bufferSize;
+        uint32_t* adcBuffer;
+        uint16_t *offsets;
+        uint16_t *multipliers;
+
         
-        uint8_t _channelNumber; /**< Numer kanału ADC. */
-        uint16_t *_offset; /**< Wskaźnik do offsetu. */
-        uint16_t *_multiplier; /**< Wskaźnik do dzielnika. */
+
 };
 
 #endif
