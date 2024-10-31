@@ -1,22 +1,14 @@
-#include "../Timer/Timer.h"
-#ifdef __TIMER_H_
+#ifndef ONEWIRE_H
+#define ONEWIRE_H
 
-#ifndef __ONEWIRE_H_
-#define __ONEWIRE_H_
+#include "Core.h"
 
-#include "../../Interface/IBus.h"
-
-#define OW_GET_PIN HAL_GPIO_ReadPin(GPIOx, GPIO_Pin)
-#define OW_L HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_RESET)
-#define OW_H HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_SET)
+#include "Interface/IBus.h"
+#include "Hardware/Timer/Timer.h"
 
 class OneWire : public IBus {
     public:
         OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
-
-
-
-
         void reset();
         void transmit(
             uint8_t *pData, uint16_t Size,
@@ -30,14 +22,20 @@ class OneWire : public IBus {
         void transmitThenReceive(
             uint8_t *pData_tx, uint16_t txSize,
             uint8_t *pData_rx, uint16_t rxSize,
-            bool adres = true,//z adresacją ROM
             bool reset = false,//wymuszenie resetu
             dataCallback_f callbackFn = nullptr
         );
 
-
-
-
+        void sesja(
+            uint8_t ROMcomm,
+            uint8_t *adres,
+            uint8_t FUNcomm,
+            uint8_t *buffer,
+            uint8_t size = 0,
+            bool    reset = false,
+            //bool    read = false,
+            dataCallback_f callbackFn = nullptr
+        );
 
         uint16_t queueSize();
 
@@ -45,44 +43,30 @@ class OneWire : public IBus {
         Timer* timer;
         GPIO_TypeDef* GPIOx;
         uint16_t GPIO_Pin;
-/*
-#define OW_PROGRESS_END						0
 
-#define OW_PROGRESS_RESET					10//>>>11 --->
-#define OW_PROGRESS_RESET_WAIT_TIMER_END	11//>>>0
+    enum {
+        OW_TIMER_PROGRESS_END,
+        OW_TIMER_PROGRESS_RESET,
+        OW_TIMER_PROGRESS_RESET_WAIT_END_LOW,
+        OW_TIMER_PROGRESS_RESET_WAIT_END_HIGH,
+        OW_TIMER_PROGRESS_RESET_WAIT_READ_STATUS,
 
-#define OW_PROGRESS_WRITE					20//>>>21
-#define OW_PROGRESS_WRITE_NEXT_BIT			21//>>>22 or 0 --->
-#define OW_PROGRESS_WRITE_WAIT_TIMER_END	22//>>>22
+        OW_TIMER_PROCESS_WRITE,
+        OW_TIMER_PROCESS_WRITE_WAIT_END_HIGH,
+        OW_TIMER_PROCESS_WRITE_WAIT_END_LOW,
+        OW_TIMER_PROCESS_WRITE_WAIT_STATUS,
 
-#define OW_PROGRESS_READ					30//>>>31
-#define OW_PROGRESS_READ_NEXT_BIT			31//>>>32 or 0 --->
-#define OW_PROGRESS_READ_WAIT_TIMER_END		32//>>22
-*/
-//progress irq timer
+        OW_TIMER_PROGRESS_READ,
+        OW_TIMER_PROGRESS_READ_WAIT,
+        OW_TIMER_PROGRESS_READ_GET,
+        OW_TIMER_PROGRESS_READ_END
+    } ow_tim_progress = OW_TIMER_PROGRESS_END;
 
-#define OW_TIMER_PROGRESS_END						0
-#define OW_TIMER_PROGRESS_RESET						10
-#define OW_TIMER_PROGRESS_RESET_WAIT_END_LOW		11
-#define OW_TIMER_PROGRESS_RESET_WAIT_END_HIGH		12
-#define OW_TIMER_PROGRESS_RESET_WAIT_READ_STATUS	13
-
-#define OW_TIMER_PROCESS_WRITE						20
-#define OW_TIMER_PROCESS_WRITE_WAIT_END_HIGH		21
-#define OW_TIMER_PROCESS_WRITE_WAIT_END_LOW			22
-#define OW_TIMER_PROCESS_WRITE_WAIT_STATUS			23
-
-#define OW_TIMER_PROGRESS_READ						30
-#define OW_TIMER_PROGRESS_READ_WAIT					31
-#define OW_TIMER_PROGRESS_READ_GET					32
-#define OW_TIMER_PROGRESS_READ_END					33
-
-#define OW_TIM_ELAPSED	ow_tim_delay==0
+    #define OW_TIM_ELAPSED	ow_tim_delay==0
 
         uint8_t  ow_tim_bit_index;
         uint8_t  ow_tim_bit;
         uint8_t  ow_tim_delay;
-        uint8_t  ow_tim_progress;
         uint8_t  ow_tim_ready;
 
         uint8_t  ow_progress;
@@ -147,5 +131,4 @@ class OneWire : public IBus {
     void work();
 };
 
-#endif
-#endif
+#endif // ONEWIRE_H
