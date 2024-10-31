@@ -1,5 +1,5 @@
-#ifndef ONEWIRE_H
-#define ONEWIRE_H
+#ifndef __ONEWIRE_H_
+#define __ONEWIRE_H_
 
 #include "Core.h"
 
