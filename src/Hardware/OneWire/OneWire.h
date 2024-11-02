@@ -2,13 +2,21 @@
 #define ONEWIRE_H
 
 #include "Core.h"
+#include "main.h"
 
 #include "Interface/IBus.h"
 #include "Hardware/Timer/Timer.h"
 
+#include "time.h"
+
 class OneWire : public IBus {
     public:
         OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
+      
+        void TimInterrupt();
+
+        static OneWire *getInstance(TIM_HandleTypeDef *pHandler);
+
         void reset();
         void transmit(
             uint8_t *pData, uint16_t Size,
