@@ -10,16 +10,19 @@ Timer *Timer::getInstance(TIM_HandleTypeDef *pHandler) {
     }
     return nullptr;
 }
+void Timer::setPeriod(uint32_t period) {
+    _pHandler->Instance->ARR = period;
+}
 Timer::Timer(TIM_HandleTypeDef *pHandler): _pHandler(pHandler) {
     _Timer_instances[_Timer_instancesNum++] = this;
     HAL_TIM_Base_Start_IT(_pHandler);
 }
-void Timer::attachInterrupt(InterruptType interruptType, voidCallback_f callback) {
+void Timer::attachInterrupt(InterruptType interruptType, timerCallback_f callback) {
     _callbacks.push_back(std::make_pair(interruptType, callback));
 }
 void Timer::handleInterrupt(InterruptType interruptType) {
     for (const auto& entry : _callbacks) {
-        if (entry.first == interruptType) entry.second();
+        if (entry.first == interruptType) entry.second(this);
     }
 }
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {

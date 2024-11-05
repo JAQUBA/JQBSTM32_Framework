@@ -5,7 +5,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
     this->GPIOx = GPIOx;
     this->GPIO_Pin = GPIO_Pin;
 
-    timer->attachInterrupt(Timer::PeriodElapsedCallback, voidCallback {
+    timer->attachInterrupt(Timer::PeriodElapsedCallback, timerCallback {
     
         switch (ow_tim_progress)
         {
@@ -15,6 +15,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
             case OW_TIMER_PROGRESS_RESET://<<<<<<<<<<<<<<<<<<<<<<<
                 HAL_GPIO_WritePin(GPIOx, GPIO_Pin, GPIO_PIN_RESET);
                 ow_tim_delay = 50;//500uS
+                timer->setPeriod(50);
                 ow_tim_progress = OW_TIMER_PROGRESS_RESET_WAIT_END_LOW;
             break;
 
