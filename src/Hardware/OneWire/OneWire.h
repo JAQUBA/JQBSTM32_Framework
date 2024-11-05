@@ -52,63 +52,24 @@ class OneWire : public IBus {
         GPIO_TypeDef* GPIOx;
         uint16_t GPIO_Pin;
 
-    enum {
-        OW_TIMER_PROGRESS_END,
-        OW_TIMER_PROGRESS_RESET,
-        OW_TIMER_PROGRESS_RESET_WAIT_END_LOW,
-        OW_TIMER_PROGRESS_RESET_WAIT_END_HIGH,
-        OW_TIMER_PROGRESS_RESET_WAIT_READ_STATUS,
-
-        OW_TIMER_PROCESS_WRITE,
-        OW_TIMER_PROCESS_WRITE_WAIT_END_HIGH,
-        OW_TIMER_PROCESS_WRITE_WAIT_END_LOW,
-        OW_TIMER_PROCESS_WRITE_WAIT_STATUS,
-
-        OW_TIMER_PROGRESS_READ,
-        OW_TIMER_PROGRESS_READ_WAIT,
-        OW_TIMER_PROGRESS_READ_GET,
-        OW_TIMER_PROGRESS_READ_END
-    } ow_tim_progress = OW_TIMER_PROGRESS_END;
-
-    #define OW_TIM_ELAPSED	ow_tim_delay==0
-
-        uint8_t  ow_tim_bit_index;
-        uint8_t  ow_tim_bit;
-        uint8_t  ow_tim_delay;
-        uint8_t  ow_tim_ready;
-
-        uint8_t  ow_progress;
-        uint8_t  ow_byte_size;
-        uint8_t  ow_byte_index;
-        uint8_t  ow_byte;
-
         uint32_t operationTimeout;
 
+ 
+
     enum {
-        IDLE,
-        CHECK_FREE,
-        WORK,
-        WAITING,
-        CLEAR,
-        FINISH,
-        OW_PROGRESS_END,
-        OW_PROGRESS_RESET,				    //>>>11 --->
-        OW_PROGRESS_RESET_WAIT_TIMER_END,	//>>>0
+            IDLE,
+            CHECK_FREE,
+            WORK,
+            WAITING,
+            CLEAR,
+            FINISH
+        } operationState = IDLE;
 
-        OW_PROGRESS_WRITE,					//>>>21
-        OW_PROGRESS_WRITE_NEXT_BIT,			//>>>22 or 0 --->
-        OW_PROGRESS_WRITE_WAIT_TIMER_END,	//>>>22
-
-        OW_PROGRESS_READ,					//>>>31
-        OW_PROGRESS_READ_NEXT_BIT,			//>>>32 or 0 --->
-        OW_PROGRESS_READ_WAIT_TIMER_END	    //>>22
-    } operationState = IDLE;
-
-    enum EoperationType {
-        RESET,
-        RECEIVE,
-        TRANSMIT
-    };
+   enum EoperationType {
+            RESET,
+            RECEIVE,
+            TRANSMIT
+        };
         
     struct operation {
         EoperationType  operationType;
