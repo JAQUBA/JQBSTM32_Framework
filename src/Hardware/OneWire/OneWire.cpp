@@ -196,12 +196,13 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
               
                 if (ow_tim_ready)// <---T
                 {
-                    	ow_tim_ready=FALSE;
+                   	ow_tim_ready=FALSE;
                     ow_progress=OW_PROGRESS_END;//>>>
                 }
             break;
 
             case OW_PROGRESS_WRITE://<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                ow_byte_index = 0;
                 ow_tim_bit_index = 0;
                 ow_progress=OW_PROGRESS_WRITE_NEXT_BIT;
             break;
@@ -239,6 +240,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
 
             case OW_PROGRESS_READ://<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
                 ow_byte = 0;
+                ow_byte_index = 0;
                 ow_tim_bit_index = 0;
                 ow_progress=OW_PROGRESS_READ_NEXT_BIT;
             break;
@@ -358,7 +360,7 @@ void OneWire::transmit(
     memcpy(operation.pData, pData, Size);
     operation.Size = Size;
     operation.free = true;
-    ow_byte_index = 0;
+    //ow_byte_index = 0;
     operation.callback_f = callbackFn;
     operations.push(operation);
 }
@@ -372,7 +374,7 @@ void OneWire::receive(
     operation.pData = pData;
     operation.Size = Size;
     operation.free = false;
-    ow_byte_index = 0;
+    //ow_byte_index = 0;
     operation.callback_f = callbackFn;
     operations.push(operation);
 }
@@ -392,7 +394,7 @@ void OneWire::transmitThenReceive(
     memcpy(operation.pData, pData_tx, txSize);
     operation.Size = txSize;
     operation.free = true;
-    ow_byte_index = 0;
+    //ow_byte_index = 0;
     operations.push(operation);
     receive(pData_rx, rxSize, callbackFn);
 }
@@ -401,44 +403,39 @@ void OneWire::sesja(
     uint8_t ROMcomm,
     uint8_t *adres,
     uint8_t FUNcomm,
-    uint8_t *buffer,
-    uint8_t size,
-    bool    res,
+    uint8_t *pData_tx, uint8_t txSize,
+    uint8_t *pData_rx, uint8_t rxSize,
+    bool     res,
     dataCallback_f callbackFn
 ){
-    uint8_t txSize;
-
+    uint8_t Size;
     operation operation;
+
     reset();
+
     operation.operationType = EoperationType::TRANSMIT;
-
     if (adres==NULL){
-
-        txSize = 2;
-        if (size>0) txSize += size;
-        operation.pData = (uint8_t*) malloc(txSize);
-
+        Size = 2;
+        if (txSize>0) Size += txSize;
+        operation.pData = (uint8_t*) malloc(Size);
         *(operation.pData+0) = ROMcomm;
         *(operation.pData+1) = FUNcomm;
-
-        if (size>0) memcpy(operation.pData+2, buffer, size);
-
+        if (txSize>0) memcpy(operation.pData+Size, pData_tx, txSize);
     } else {
-        txSize=10;
-        if (size>0) txSize += size;
-        operation.pData = (uint8_t*) malloc(txSize);
-
+        Size=10;
+        if (txSize>0) Size += txSize;
+        operation.pData = (uint8_t*) malloc(Size);
         *(operation.pData+0) = ROMcomm;
         memcpy(operation.pData+1, adres, 8);
         *(operation.pData+9) = FUNcomm;
-
-        if (size>0) memcpy(operation.pData+10, buffer, size);
+        if (txSize>0) memcpy(operation.pData+Size, pData_tx, txSize);
     }
-
-    operation.Size = txSize;
-    ow_byte_index = 0;
+    operation.Size = Size;
+    //ow_byte_index = 0;
     operation.free = true;
-    operations.push(operation);
+    operations.push(operation);//transmit
+
+    if (rxSize>0) receive(pData_rx, rxSize, callbackFn);
 
     if (res) reset();
   

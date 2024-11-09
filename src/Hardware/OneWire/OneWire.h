@@ -30,7 +30,7 @@ class OneWire : public IBus {
         void transmitThenReceive(
             uint8_t *pData_tx, uint16_t txSize,
             uint8_t *pData_rx, uint16_t rxSize,
-            bool reset = false,//wymuszenie resetu
+            bool res = false,//wymuszenie resetu
             dataCallback_f callbackFn = nullptr
         );
 
@@ -38,10 +38,11 @@ class OneWire : public IBus {
             uint8_t ROMcomm,
             uint8_t *adres,
             uint8_t FUNcomm,
-            uint8_t *buffer,
-            uint8_t size = 0,
-            bool    reset = false,
-            //bool    read = false,
+            uint8_t *pData_tx = NULL,
+            uint8_t txSize = 0,
+            uint8_t *pData_rx = NULL,
+            uint8_t rxSize  = 0,
+            bool    res = false,
             dataCallback_f callbackFn = nullptr
         );
 
