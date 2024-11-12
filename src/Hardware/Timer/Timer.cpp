@@ -25,10 +25,10 @@ void Timer::handleInterrupt(InterruptType interruptType) {
         if (entry.first == interruptType) entry.second();
     }
 }
-//void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-//    Timer *timer = Timer::getInstance(htim);
-//    if(timer) timer->handleInterrupt(Timer::PeriodElapsedCallback);
-//}
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+   Timer *timer = Timer::getInstance(htim);
+   if(timer) timer->handleInterrupt(Timer::PeriodElapsedCallback);
+}
 void HAL_TIM_PeriodElapsedHalfCpltCallback(TIM_HandleTypeDef *htim) {
     Timer *timer = Timer::getInstance(htim);
     if(timer) timer->handleInterrupt(Timer::PeriodElapsedHalfCpltCallback);
