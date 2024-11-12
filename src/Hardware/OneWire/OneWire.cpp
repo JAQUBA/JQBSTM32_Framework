@@ -5,7 +5,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
     this->GPIOx = GPIOx;
     this->GPIO_Pin = GPIO_Pin;
 
-    timer->attachInterrupt(Timer::PeriodElapsedCallback, timerCallback {
+    timer->attachInterrupt(Timer::PeriodElapsedCallback, voidCallback {
     
         switch (ow_tim_progress)
         {
