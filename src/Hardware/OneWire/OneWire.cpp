@@ -168,9 +168,9 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
 
     _OneWire_instance = this;
 
-    timer->attachInterrupt(voidCallback {
+    // timer->attachInterrupt(voidCallback {
 
-    });
+    // });
 
     addTaskMain(taskCallback {
         
