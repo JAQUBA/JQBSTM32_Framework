@@ -28,7 +28,6 @@ static OneWire *_OneWire_instance;
     static uint8_t  ow_tim_delay;
     static uint8_t  ow_tim_ready;
     static uint8_t  ow_tim_progress;
-
  
     #define        OW_PROGRESS_END 0
     #define        OW_PROGRESS_RESET 10
@@ -44,7 +43,6 @@ static OneWire *_OneWire_instance;
     static uint8_t  ow_byte_index;
     static uint8_t  ow_byte;
     bool            ow_presents;
-
 
 void OneWire::TimInterrupt() {
 
@@ -175,6 +173,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
     });
 
     addTaskMain(taskCallback {
+        
         switch (ow_progress)
         {
             case OW_PROGRESS_END:
@@ -330,13 +329,10 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
 				operations.pop();
 				operationState = IDLE;
             break;
+            
 		}
     }, 0);
 }
-
-//void OneWire::work() {
-    
-//}
 
 void OneWire::reset() {
     operation operation;
