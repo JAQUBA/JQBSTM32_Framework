@@ -1,7 +1,9 @@
-#ifndef FLASH_MEMORY_H
-#define FLASH_MEMORY_H
+#include "../../Core.h"
+#ifdef HAL_FLASH_MODULE_ENABLED
 
-#include "Core.h"
+#ifndef __FLASHMEMORY_H_
+#define __FLASHMEMORY_H_
+
 #include "../../Interface/IExternalMemory.h"
 
 class FlashMemory : public IExternalMemory{
@@ -19,4 +21,5 @@ class FlashMemory : public IExternalMemory{
         #endif
 };
 
-#endif // FLASH_MEMORY_H
+#endif
+#endif

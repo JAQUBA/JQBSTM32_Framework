@@ -1,4 +1,5 @@
 #include "PCF8583.h"
+#ifdef __PCF8583_H_
 
 PCF8583::PCF8583(
 	I2C *pInstance,
@@ -24,3 +25,4 @@ void PCF8583::writeToMemory(
 ) {
 	_pInstance->writeToMemory(_DevAddress, _BaseAddress + MemAddress, _MemAddSize, pData, Size);
 }
+#endif

@@ -1,7 +1,9 @@
+#include "../../Hardware/I2C/I2C.h"
+#ifdef __I2C_H_
+
 #ifndef __EEP24C04_H_
 #define __EEP24C04_H_
-#include "../../Core.h"
-#include "../../Hardware/I2C/I2C.h"
+
 #include "../../Interface/IExternalMemory.h"
 
 class EEP24C04 : public IExternalMemory {
@@ -28,4 +30,5 @@ class EEP24C04 : public IExternalMemory {
         uint32_t        _BaseAddress;
         uint16_t        _MemAddSize = ADDRESS_SIZE_8BIT;
 };
+#endif
 #endif

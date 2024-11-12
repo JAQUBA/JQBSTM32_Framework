@@ -1,7 +1,8 @@
-#ifndef SED1520_H_
-#define SED1520_H_
+#include "../../Hardware/I2C/I2C.h"
+#ifdef __I2C_H_
+#ifndef __SED1520_H_
+#define __SED1520_H_
 
-#include "Hardware/I2C/I2C.h"
 #include "Fonts/font6x8.h"
 
 class SED1520 {
@@ -25,4 +26,5 @@ class SED1520 {
         std::list<uint8_t> dataQueue;
 };
 
+#endif
 #endif

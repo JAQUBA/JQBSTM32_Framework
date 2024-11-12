@@ -1,4 +1,5 @@
 #include "FlashMemory.h"
+#ifdef HAL_FLASH_MODULE_ENABLED
 
 void FlashMemory::writeToMemory(uint32_t MemAddress, uint8_t *pData, uint16_t Size) {
     HAL_FLASH_Unlock();
@@ -76,7 +77,20 @@ FLASH_EraseInitTypeDef FlashMemory::GenerateFlashEraseStruct(uint32_t Address) {
         // Dla STM32G0
         EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;    // Typ operacji (strony)
         EraseInitStruct.Page = (Address - FLASH_BASE) / FLASH_PAGE_SIZE; // Numer strony
-        EraseInitStruct.NbPages = 1;                         // Liczba stron do wymazania
+        EraseInitStruct.NbPages = 1;                          // Liczba stron do wymazania
+
+    #elif defined(STM32G4)
+        // Dla STM32G4
+        EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;    // Typ operacji (strony)
+        EraseInitStruct.Page = (Address - FLASH_BASE) / FLASH_PAGE_SIZE; // Numer strony
+        EraseInitStruct.NbPages = 1;                          // Liczba stron do wymazania
+
+    #elif defined(STM32L4)
+        // Dla STM32L4
+        EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;    // Typ operacji (strony)
+        EraseInitStruct.Page = (Address - FLASH_BASE) / FLASH_PAGE_SIZE; // Numer strony
+        EraseInitStruct.NbPages = 1;                          // Liczba stron do skasowania
+        EraseInitStruct.Banks = FLASH_BANK_1;                 // Ustawienie banku, jeśli jest potrzebne
 
     #else
         // Domyślny przypadek, jeśli typ procesora nie jest obsługiwany
@@ -85,6 +99,7 @@ FLASH_EraseInitTypeDef FlashMemory::GenerateFlashEraseStruct(uint32_t Address) {
 
     return EraseInitStruct;
 }
+
 #ifdef STM32F4
 uint32_t FlashMemory::GetFlashSector(uint32_t Address) {
     
@@ -99,4 +114,5 @@ uint32_t FlashMemory::GetFlashSector(uint32_t Address) {
         return FLASH_SECTOR_5 + ((Address - 0x08020000) / 0x20000);
     }
 }
+#endif
 #endif

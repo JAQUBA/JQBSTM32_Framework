@@ -1,8 +1,8 @@
-#ifndef __DS18B20_H__
-#define __DS18B20_H__
+#include "../../Hardware/OneWire/OneWire.h"
+#ifdef __ONEWIRE_H_
 
-#include "Core.h"
-#include "Hardware/OneWire/OneWire.h"
+#ifndef __DS18B20_H_
+#define __DS18B20_H_
 
 class DS18B20 {
     public:
@@ -13,3 +13,4 @@ class DS18B20 {
 };
 
 #endif // __DS18B20_H__
+#endif // __ONEWIRE_H__

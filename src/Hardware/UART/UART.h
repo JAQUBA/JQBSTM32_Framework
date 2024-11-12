@@ -1,12 +1,14 @@
+#include "../../Core.h"
+#ifdef HAL_UART_MODULE_ENABLED
+
 #ifndef __UART_H_
 #define __UART_H_
-
-#include "../../Core.h"
-#include "Interface/IBus.h"
 
 #ifndef UART_MAX_INSTANCES
 #define UART_MAX_INSTANCES 2
 #endif
+
+#include "../../Interface/IBus.h"
 
 class UART : public IBus {
     public:
@@ -55,4 +57,5 @@ class UART : public IBus {
         std::queue<operation> operations;
 };
 
+#endif
 #endif

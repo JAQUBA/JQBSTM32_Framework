@@ -1,9 +1,10 @@
-#ifndef _FM25V05_H_
-#define _FM25V05_H_
-
-#include "Core.h"
-#include "../../Interface/IExternalMemory.h"
 #include "../../Hardware/SPI/SPI.h"
+#ifdef __SPI_H_
+
+#ifndef __FM25V05_H_
+#define __FM25V05_H_
+
+#include "../../Interface/IExternalMemory.h"
 
 class FM25V05 : public IExternalMemory {
     public:
@@ -31,4 +32,5 @@ class FM25V05 : public IExternalMemory {
         uint16_t        _CSPin;
     
 };
+#endif
 #endif

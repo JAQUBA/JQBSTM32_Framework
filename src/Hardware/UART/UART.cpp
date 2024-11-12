@@ -1,4 +1,6 @@
 #include "UART.h"
+#ifdef HAL_UART_MODULE_ENABLED
+
 UART *_UART_instances[UART_MAX_INSTANCES];
 uint8_t _UART_instancesNum;
 
@@ -118,3 +120,4 @@ void UART::transmit(uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
 	operation.callback_f = callbackFn;
 	operations.push(operation);
 }
+#endif

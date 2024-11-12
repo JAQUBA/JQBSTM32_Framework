@@ -1,6 +1,5 @@
-#ifdef _JQB_USE_FDCAN
 #include "FDCAN.h"
-
+#ifdef HAL_FDCAN_MODULE_ENABLED
 
 FDCAN *_FDCAN_instances[FDCAN_MAX_INSTANCES];
 uint8_t _FDCAN_instancesNum;
