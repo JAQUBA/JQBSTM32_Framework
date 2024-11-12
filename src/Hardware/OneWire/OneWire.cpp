@@ -1,6 +1,4 @@
 #include "OneWire.h"
-#include "Core.h"
-#include "main.h"
 
 static OneWire *_OneWire_instance;
 
@@ -34,25 +32,22 @@ static OneWire *_OneWire_instance;
  
     #define        OW_PROGRESS_END 0
     #define        OW_PROGRESS_RESET 10
-     #define       OW_PROGRESS_RESET_WAIT_TIMER_END 11
+    #define        OW_PROGRESS_RESET_WAIT_TIMER_END 11
     #define        OW_PROGRESS_WRITE 20
     #define        OW_PROGRESS_WRITE_NEXT_BIT 21
     #define        OW_PROGRESS_WRITE_WAIT_TIMER_END  22
     #define        OW_PROGRESS_READ  30
     #define        OW_PROGRESS_READ_NEXT_BIT 31
     #define        OW_PROGRESS_READ_WAIT_TIMER_END 32
-    
-
-
+   
     static uint8_t  ow_progress;
-    //static uint8_t  ow_byte_size;
     static uint8_t  ow_byte_index;
     static uint8_t  ow_byte;
-
-    bool     ow_presents;
+    bool            ow_presents;
 
 
 void OneWire::TimInterrupt() {
+
     switch (ow_tim_progress)
     {
         case OW_TIMER_PROGRESS_END:
@@ -60,7 +55,7 @@ void OneWire::TimInterrupt() {
 
         case OW_TIMER_PROGRESS_RESET://<<<<<<<<<<<<<<<<<<<<<<<
             HAL_GPIO_WritePin(DS_GPIO_Port, DS_Pin, GPIO_PIN_RESET);
-            ow_tim_delay = 48;
+            ow_tim_delay = 49;
             ow_tim_progress = OW_TIMER_PROGRESS_RESET_WAIT_END_LOW;
         break;
 
@@ -99,7 +94,7 @@ void OneWire::TimInterrupt() {
             }
             else
             {
-                ow_tim_delay=8;
+                ow_tim_delay=3;//4;//8;
                 ow_tim_progress=OW_TIMER_PROCESS_WRITE_WAIT_END_LOW;
             }
         break;
@@ -108,7 +103,7 @@ void OneWire::TimInterrupt() {
             if (OW_TIM_ELAPSED)
             {
                 HAL_GPIO_WritePin(DS_GPIO_Port, DS_Pin, GPIO_PIN_SET);
-                ow_tim_delay=8;
+                ow_tim_delay=3;//5;//8;
                 ow_tim_progress=OW_TIMER_PROCESS_WRITE_WAIT_STATUS;
             }
         break;
@@ -117,13 +112,13 @@ void OneWire::TimInterrupt() {
             if (OW_TIM_ELAPSED)
             {
                 HAL_GPIO_WritePin(DS_GPIO_Port, DS_Pin, GPIO_PIN_SET);
-                ow_tim_delay=1;
+                ow_tim_delay=1;//2;
                 ow_tim_progress=OW_TIMER_PROCESS_WRITE_WAIT_STATUS;
             }
         break;
 
         case OW_TIMER_PROCESS_WRITE_WAIT_STATUS:
-            if (OW_TIM_ELAPSED)
+           if (OW_TIM_ELAPSED)
             {
                 ow_tim_ready=TRUE;
                 ow_tim_progress = OW_TIMER_PROGRESS_END;
@@ -133,26 +128,26 @@ void OneWire::TimInterrupt() {
         case OW_TIMER_PROGRESS_READ://<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
             ow_tim_bit = 0;
             HAL_GPIO_WritePin(DS_GPIO_Port, DS_Pin, GPIO_PIN_RESET);
-           // ow_tim_delay=1;
+            ow_tim_delay=1;
             ow_tim_progress=OW_TIMER_PROGRESS_READ_WAIT;
         break;
 
         case OW_TIMER_PROGRESS_READ_WAIT:
-            //if (OW_TIM_ELAPSED)
-           // {
+            if (OW_TIM_ELAPSED)
+            {
                 HAL_GPIO_WritePin(DS_GPIO_Port, DS_Pin, GPIO_PIN_SET);
                 ow_tim_delay=1;
                 ow_tim_progress=OW_TIMER_PROGRESS_READ_GET;
-          //  }
+            }
         break;
 
         case OW_TIMER_PROGRESS_READ_GET:
-           // if (OW_TIM_ELAPSED)
-           // {
+            if (OW_TIM_ELAPSED)
+            {
                 ow_tim_bit = HAL_GPIO_ReadPin(DS_GPIO_Port, DS_Pin);
-                ow_tim_delay=1;
+                ow_tim_delay=1;//2;
                 ow_tim_progress=OW_TIMER_PROGRESS_READ_END;
-          //  }
+            }
         break;
 
         case OW_TIMER_PROGRESS_READ_END:
@@ -166,14 +161,14 @@ void OneWire::TimInterrupt() {
     if (ow_tim_delay>0) {ow_tim_delay--;}
 }
 
-OneWire *OneWire::getInstance(TIM_HandleTypeDef *pHandler) { return _OneWire_instance; }
-
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {OneWire::getInstance(htim)->TimInterrupt();}
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {_OneWire_instance->TimInterrupt();}
 
 OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
     this->timer = timer;
     this->GPIOx = GPIOx;
     this->GPIO_Pin = GPIO_Pin;
+
+    _OneWire_instance = this;
 
     timer->attachInterrupt(voidCallback {
 
@@ -259,12 +254,12 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
                     ow_byte_index++;
                     if (ow_byte_index<currentOperation.Size) {
                         ow_byte = 0;
+                        //ow_byte_index = 0;
                         ow_tim_bit_index = 0;
                     }
                     else {
                         ow_progress = OW_PROGRESS_END;//>>>
                     }
-                   // ow_progress = OW_PROGRESS_END;//>>>
                 }
             break;
 
@@ -339,9 +334,9 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
     }, 0);
 }
 
-void OneWire::work() {
+//void OneWire::work() {
     
-}
+//}
 
 void OneWire::reset() {
     operation operation;
@@ -360,7 +355,6 @@ void OneWire::transmit(
     memcpy(operation.pData, pData, Size);
     operation.Size = Size;
     operation.free = true;
-    //ow_byte_index = 0;
     operation.callback_f = callbackFn;
     operations.push(operation);
 }
@@ -374,7 +368,6 @@ void OneWire::receive(
     operation.pData = pData;
     operation.Size = Size;
     operation.free = false;
-    //ow_byte_index = 0;
     operation.callback_f = callbackFn;
     operations.push(operation);
 }
@@ -394,8 +387,7 @@ void OneWire::transmitThenReceive(
     memcpy(operation.pData, pData_tx, txSize);
     operation.Size = txSize;
     operation.free = true;
-    //ow_byte_index = 0;
-    operations.push(operation);
+    operations.push(operation);//transmit
     receive(pData_rx, rxSize, callbackFn);
 }
 
@@ -431,14 +423,11 @@ void OneWire::sesja(
         if (txSize>0) memcpy(operation.pData+Size, pData_tx, txSize);
     }
     operation.Size = Size;
-    //ow_byte_index = 0;
     operation.free = true;
     operations.push(operation);//transmit
 
     if (rxSize>0) receive(pData_rx, rxSize, callbackFn);
-
     if (res) reset();
-  
 }                
 
 uint16_t OneWire::queueSize() {

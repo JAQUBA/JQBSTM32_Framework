@@ -1,22 +1,14 @@
 #ifndef ONEWIRE_H
 #define ONEWIRE_H
 
-#include "Core.h"
-#include "main.h"
-
+#include "../../Core.h"
 #include "Interface/IBus.h"
 #include "Hardware/Timer/Timer.h"
-
-#include "time.h"
 
 class OneWire : public IBus {
     public:
         OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
-      
         void TimInterrupt();
-
-        static OneWire *getInstance(TIM_HandleTypeDef *pHandler);
-
         void reset();
         void transmit(
             uint8_t *pData, uint16_t Size,
@@ -52,53 +44,32 @@ class OneWire : public IBus {
         Timer* timer;
         GPIO_TypeDef* GPIOx;
         uint16_t GPIO_Pin;
-
         uint32_t operationTimeout;
 
- 
+        enum {
+                IDLE,
+                CHECK_FREE,
+                WORK,
+                WAITING,
+                CLEAR,
+                FINISH
+            } operationState = IDLE;
 
-    enum {
-            IDLE,
-            CHECK_FREE,
-            WORK,
-            WAITING,
-            CLEAR,
-            FINISH
-        } operationState = IDLE;
-
-   enum EoperationType {
-            RESET,
-            RECEIVE,
-            TRANSMIT
-        };
+        enum EoperationType {
+                RESET,
+                RECEIVE,
+                TRANSMIT
+            };
+            
+        struct operation {
+            EoperationType  operationType;
+            uint8_t         *pData;
+            uint16_t        Size;
+            bool            free = false;
+            dataCallback_f  callback_f = nullptr;
+        } currentOperation;
         
-    struct operation {
-        EoperationType  operationType;
-        uint8_t         *pData;
-        uint16_t        Size;
-        bool            free = false;
-        
-        dataCallback_f  callback_f = nullptr;
-    } currentOperation;
-    
-    std::queue<operation> operations;
-
-    enum workState {
-        OW_LOW,
-        OW_HIGH
-    };
-
-    struct work {
-        workState state = OW_HIGH;
-        uint8_t bitIndex = 0;
-        uint8_t byteIndex = 0;
-        uint8_t *pData;
-        uint16_t Size;
-        uint8_t  byte;
-        dataCallback_f callback_f;
-    } currentWork;
-
-    void work();
+        std::queue<operation> operations;
 };
 
 #endif // ONEWIRE_H
