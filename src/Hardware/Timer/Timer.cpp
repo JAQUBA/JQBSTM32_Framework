@@ -17,12 +17,12 @@ Timer::Timer(TIM_HandleTypeDef *pHandler): _pHandler(pHandler) {
     _Timer_instances[_Timer_instancesNum++] = this;
     HAL_TIM_Base_Start_IT(_pHandler);
 }
-void Timer::attachInterrupt(InterruptType interruptType, timerCallback_f callback) {
+void Timer::attachInterrupt(InterruptType interruptType, voidCallback_f callback) {
     _callbacks.push_back(std::make_pair(interruptType, callback));
 }
 void Timer::handleInterrupt(InterruptType interruptType) {
     for (const auto& entry : _callbacks) {
-        if (entry.first == interruptType) entry.second(this);
+        if (entry.first == interruptType) entry.second();
     }
 }
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {

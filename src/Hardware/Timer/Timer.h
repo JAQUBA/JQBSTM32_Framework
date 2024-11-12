@@ -9,8 +9,8 @@
 #define TIMER_MAX_INSTANCES TIMERS_AVAILABLE
 #endif
 
-#define timerCallback [&](Timer *timer)
-using timerCallback_f = std::function<void(class Timer *timer)>;
+// #define timerCallback [&](Timer *timer)
+// using timerCallback_f = std::function<void(class Timer *timer)>;
 
 class Timer {
     public:
@@ -30,13 +30,13 @@ class Timer {
             ErrorCallback
         };
 
-        void attachInterrupt(InterruptType interruptType, timerCallback_f callback);
+        void attachInterrupt(InterruptType interruptType, voidCallback_f callback);
         void handleInterrupt(InterruptType interruptType);
 
         void setPeriod(uint32_t period);
     protected:
         TIM_HandleTypeDef* _pHandler;
-        std::list<std::pair<InterruptType, timerCallback_f>> _callbacks;
+        std::list<std::pair<InterruptType, voidCallback_f>> _callbacks;
 };
 
 #endif // _TIMER_H
