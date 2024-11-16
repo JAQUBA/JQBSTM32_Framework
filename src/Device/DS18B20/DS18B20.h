@@ -8,7 +8,7 @@ class DS18B20 {
     public:
         DS18B20(OneWire *oneWire);
         void addSensor(uint8_t *romCode, uint8_t nr);
-        uint16_t getTemperature(uint64_t romCode);
+        uint16_t getTemperature(uint8_t id);
     private:
         OneWire *oneWire;
 
