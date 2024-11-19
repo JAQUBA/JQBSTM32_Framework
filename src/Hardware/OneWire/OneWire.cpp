@@ -2,47 +2,16 @@
 
 static OneWire *_OneWire_instance;
 
-  
-    #define    OW_TIMER_PROGRESS_END                0
+#define OW_TIM_ELAPSED	ow_tim_delay==0
 
-      #define  OW_TIMER_PROGRESS_RESET  10
-      #define  OW_TIMER_PROGRESS_RESET_WAIT_END_LOW   11
-      #define  OW_TIMER_PROGRESS_RESET_WAIT_END_HIGH   12
-     #define   OW_TIMER_PROGRESS_RESET_WAIT_READ_STATUS 13
+static uint8_t  ow_tim_bit_index;
+static uint8_t  ow_tim_bit;
+static uint8_t  ow_tim_delay;
+static uint8_t  ow_tim_ready;
 
-     #define   OW_TIMER_PROCESS_WRITE   20
-    #define   OW_TIMER_PROCESS_WRITE_WAIT_END_HIGH 21
-    #define    OW_TIMER_PROCESS_WRITE_WAIT_END_LOW 22
-    #define    OW_TIMER_PROCESS_WRITE_WAIT_STATUS 23
-
-    #define    OW_TIMER_PROGRESS_READ  30
-     #define   OW_TIMER_PROGRESS_READ_WAIT 31
-     #define   OW_TIMER_PROGRESS_READ_GET 32
-     #define   OW_TIMER_PROGRESS_READ_END 33
-  
-
-    #define OW_TIM_ELAPSED	ow_tim_delay==0
-
-    static uint8_t  ow_tim_bit_index;
-    static uint8_t  ow_tim_bit;
-    static uint8_t  ow_tim_delay;
-    static uint8_t  ow_tim_ready;
-    static uint8_t  ow_tim_progress;
- 
-    #define        OW_PROGRESS_END 0
-    #define        OW_PROGRESS_RESET 10
-    #define        OW_PROGRESS_RESET_WAIT_TIMER_END 11
-    #define        OW_PROGRESS_WRITE 20
-    #define        OW_PROGRESS_WRITE_NEXT_BIT 21
-    #define        OW_PROGRESS_WRITE_WAIT_TIMER_END  22
-    #define        OW_PROGRESS_READ  30
-    #define        OW_PROGRESS_READ_NEXT_BIT 31
-    #define        OW_PROGRESS_READ_WAIT_TIMER_END 32
-   
-    static uint8_t  ow_progress;
-    static uint8_t  ow_byte_index;
-    static uint8_t  ow_byte;
-    bool            ow_presents;
+static uint8_t  ow_byte_index;
+static uint8_t  ow_byte;
+bool            ow_presents;
 
 void OneWire::TimInterrupt() {
 
