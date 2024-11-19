@@ -37,7 +37,6 @@ class OneWire : public IBus {
             bool    res = false,
             dataCallback_f callbackFn = nullptr
         );
-
         uint16_t queueSize();
 
     private:

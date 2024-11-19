@@ -424,7 +424,7 @@ void OneWire::sesja(
 
     if (rxSize>0) receive(pData_rx, rxSize, callbackFn);
     if (res) reset();
-}                
+}       
 
 uint16_t OneWire::queueSize() {
     return operations.size();
