@@ -42,6 +42,7 @@ class OneWire : public IBus {
 
     private:
         Timer* OW_Timer;
+
         GPIO_TypeDef* OW_Port;
         uint16_t OW_Pin; 
 
@@ -51,6 +52,7 @@ class OneWire : public IBus {
 
         uint8_t  ow_byte;
         uint8_t  ow_byte_index;
+
         uint8_t  ow_bit_index;
         
         
@@ -64,8 +66,7 @@ class OneWire : public IBus {
 
             OPERATION_PROGRESS_WRITE_START,
             OPERATION_PROGRESS_WRITE_BIT,
-            OPERATION_PROGRESS_WRITE_WAIT_HIGH,
-            OPERATION_PROGRESS_WRITE_WAIT_LOW,
+            OPERATION_PROGRESS_WRITE_WAIT,
             OPERATION_PROGRESS_WRITE_END,
 
             OPERATION_PROGRESS_READ_START,
