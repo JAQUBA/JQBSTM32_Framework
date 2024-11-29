@@ -42,21 +42,16 @@ class OneWire : public IBus {
 
     private:
         Timer* OW_Timer;
-
         GPIO_TypeDef* OW_Port;
         uint16_t OW_Pin; 
 
         uint32_t operationTimeout;
         bool     is_device_presence;
 
-
         uint8_t  ow_byte;
         uint8_t  ow_byte_index;
-
         uint8_t  ow_bit_index;
         
-        
-
         enum {
             OPERATION_PROGRESS_IDLE,
 
@@ -73,8 +68,6 @@ class OneWire : public IBus {
             OPERATION_PROGRESS_READ_WAIT,
             OPERATION_PROGRESS_READ_END
         } operationProgress = OPERATION_PROGRESS_IDLE;   
-
-
 
         enum {
             IDLE,
