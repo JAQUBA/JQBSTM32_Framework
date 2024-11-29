@@ -14,18 +14,11 @@ Analog* Analog::getInstance(ADC_HandleTypeDef *pHandler) {
     }
     return nullptr;
 }
-void Analog::convCpltCallback() {
-    display.toggle(displayMap::S1);//, true);
-    for (size_t i = 0; i < bufferSize; i++) {
-        // adcBuffer[i] = adcRAW[i];
-        // adcSamplesNum++;
-    }
-}
 
 Analog::Analog(ADC_HandleTypeDef *pHandler) : _pHandler(pHandler), bufferSize(pHandler->Init.NbrOfConversion) {
     _Analog_instances[_Analog_instancesNum++] = this;
 
-    HAL_ADCEx_Calibration_Start(pHandler);
+    
 
     // adcRAW = new uint32_t[bufferSize];
 
@@ -35,6 +28,8 @@ Analog::Analog(ADC_HandleTypeDef *pHandler) : _pHandler(pHandler), bufferSize(pH
 
     offsets = new uint16_t[bufferSize];
     multipliers = new uint16_t[bufferSize];
+
+    HAL_ADCEx_Calibration_Start(pHandler);
 
     if (HAL_ADC_Start_DMA(pHandler, adcBuffer, bufferSize) != HAL_OK) {
         Error_Handler();
@@ -47,6 +42,13 @@ Analog::Analog(ADC_HandleTypeDef *pHandler) : _pHandler(pHandler), bufferSize(pH
         // adcSamplesNum = 0;
         display.toggle(displayMap::S3);//, true);
     }, 1000);
+}
+void Analog::convCpltCallback() {
+    display.toggle(displayMap::S1);//, true);
+    for (size_t i = 0; i < bufferSize; i++) {
+        // adcBuffer[i] = adcRAW[i];
+        // adcSamplesNum++;
+    }
 }
 
 uint16_t Analog::getValue(uint8_t channel) {
