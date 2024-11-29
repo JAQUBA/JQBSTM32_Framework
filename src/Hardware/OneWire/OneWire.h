@@ -46,43 +46,35 @@ class OneWire : public IBus {
         uint16_t OW_Pin; 
 
         uint32_t operationTimeout;
-
-
-        uint8_t  ow_tim_bit_index;
-
-        uint8_t  ow_tim_bit;
-
-        uint8_t  ow_byte_index;
-        uint8_t  ow_byte;
-        
         bool     is_device_presence;
 
-        enum {
-            OW_TIMER_PROGRESS_IDLE,
 
-            OW_TIMER_PROGRESS_RESET,
-            OW_TIMER_PROGRESS_RESET_WAIT_END_LOW,
-            OW_TIMER_PROGRESS_RESET_WAIT_END_HIGH,
-
-            OW_TIMER_PROGRESS_WRITE,
-            OW_TIMER_PROGRESS_WRITE_WAIT_END_HIGH,
-            OW_TIMER_PROGRESS_WRITE_WAIT_END_LOW,
-
-            OW_TIMER_PROGRESS_READ,
-            OW_TIMER_PROGRESS_READ_WAIT,
-            OW_TIMER_PROGRESS_READ_GET
-        } ow_tim_progress = OW_TIMER_PROGRESS_IDLE;   
+        uint8_t  ow_byte;
+        uint8_t  ow_byte_index;
+        uint8_t  ow_bit_index;
+        
+        
 
         enum {
-            OW_PROGRESS_IDLE,
+            OPERATION_PROGRESS_IDLE,
 
-            OW_PROGRESS_WRITE,
-            OW_PROGRESS_WRITE_NEXT_BIT,
-            OW_PROGRESS_WRITE_WAIT_TIMER_END,
-            OW_PROGRESS_READ,
-            OW_PROGRESS_READ_NEXT_BIT,
-            OW_PROGRESS_READ_WAIT_TIMER_END
-        } ow_progress = OW_PROGRESS_IDLE;
+            OPERATION_PROGRESS_RESET,
+            OPERATION_PROGRESS_RESET_WAIT_LOW,
+            OPERATION_PROGRESS_RESET_WAIT_HIGH,
+
+            OPERATION_PROGRESS_WRITE_START,
+            OPERATION_PROGRESS_WRITE_BIT,
+            OPERATION_PROGRESS_WRITE_WAIT_HIGH,
+            OPERATION_PROGRESS_WRITE_WAIT_LOW,
+            OPERATION_PROGRESS_WRITE_END,
+
+            OPERATION_PROGRESS_READ_START,
+            OPERATION_PROGRESS_READ_BIT,
+            OPERATION_PROGRESS_READ_WAIT,
+            OPERATION_PROGRESS_READ_END
+        } operationProgress = OPERATION_PROGRESS_IDLE;   
+
+
 
         enum {
             IDLE,
