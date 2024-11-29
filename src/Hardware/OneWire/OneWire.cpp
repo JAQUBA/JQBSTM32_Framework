@@ -19,11 +19,14 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
                 break;
             }
             case OW_TIMER_PROGRESS_RESET_WAIT_END_HIGH: {
-                ow_presents = HAL_GPIO_ReadPin(OW_Port, OW_Pin);
+                is_device_presence = HAL_GPIO_ReadPin(OW_Port, OW_Pin);
                 OW_Timer->setPeriod(400);
                 ow_tim_progress=OW_TIMER_PROGRESS_IDLE;
                 break;
             }
+
+
+
             case OW_TIMER_PROGRESS_WRITE: {
                 HAL_GPIO_WritePin(OW_Port, OW_Pin, GPIO_PIN_RESET);
                 if (ow_tim_bit>0) {
@@ -47,6 +50,11 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
                 ow_tim_progress=OW_TIMER_PROGRESS_IDLE;
                 break;
             }
+
+
+
+
+
             case OW_TIMER_PROGRESS_READ: {
                 ow_tim_bit = 0;
                 HAL_GPIO_WritePin(OW_Port, OW_Pin, GPIO_PIN_RESET);
@@ -139,22 +147,21 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
         }
 
         switch(operationState) {
-			case IDLE:
+			case IDLE: {
 				if(!operations.empty()) {
 					currentOperation = operations.front();
 					operationState = CHECK_FREE;
                 }
-			break;
-			
-			case CHECK_FREE:
+			    break;
+            }
+			case CHECK_FREE: {
 				if(ow_tim_progress == OW_TIMER_PROGRESS_IDLE) {
 					operationState = WORK;
                 }
-            break;
-			
-			case WORK:
+                break;
+            }
+			case WORK: {
 				operationTimeout = millis()+40;
-                          
 				if(currentOperation.operationType == EoperationType::TRANSMIT) {
                     ow_byte = (*currentOperation.pData);
 					ow_progress = OW_PROGRESS_WRITE;
@@ -164,20 +171,19 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
 					ow_progress = OW_PROGRESS_READ;
 				}
 				else if(currentOperation.operationType == EoperationType::RESET) {
+                    is_device_presence = false;
                     ow_tim_progress = OW_TIMER_PROGRESS_RESET;
-                    ow_presents = false;
 				}
                 operationState = WAITING;
-			break;
-			
-			case WAITING:
+			    break;
+            }
+			case WAITING: {
        			if ((ow_progress==0) || (millis() >= operationTimeout)) {
 					operationState = FINISH;
                 }
-            break;
-			
-
-			case FINISH: 
+                break;
+            }
+			case FINISH: {
             	if(currentOperation.callback_f != nullptr) {
 					currentOperation.callback_f(
 						currentOperation.pData,
@@ -185,18 +191,17 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
 					);
                 }
 				operationState = CLEAR;
-    		break;
-				
-			case CLEAR:
+    		    break;
+            }
+			case CLEAR: {
 				if(currentOperation.free) free(currentOperation.pData);
 				operations.pop();
 				operationState = IDLE;
-            break;
-            
+                break;
+            }
 		}
     });
 }
-
 void OneWire::reset() {
     operation operation;
     operation.operationType = EoperationType::RESET;

@@ -49,11 +49,13 @@ class OneWire : public IBus {
 
 
         uint8_t  ow_tim_bit_index;
+
         uint8_t  ow_tim_bit;
 
         uint8_t  ow_byte_index;
         uint8_t  ow_byte;
-        bool     ow_presents;
+        
+        bool     is_device_presence;
 
         enum {
             OW_TIMER_PROGRESS_IDLE,
