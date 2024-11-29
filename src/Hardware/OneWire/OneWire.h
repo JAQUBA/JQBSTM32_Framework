@@ -8,8 +8,9 @@
 class OneWire : public IBus {
     public:
         OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
-        void TimInterrupt();
+
         void reset();
+
         void transmit(
             uint8_t *pData, uint16_t Size,
             dataCallback_f callbackFn = nullptr
@@ -22,7 +23,7 @@ class OneWire : public IBus {
         void transmitThenReceive(
             uint8_t *pData_tx, uint16_t txSize,
             uint8_t *pData_rx, uint16_t rxSize,
-            bool res = false,//wymuszenie resetu
+            bool res = false,
             dataCallback_f callbackFn = nullptr
         );
 
@@ -40,29 +41,39 @@ class OneWire : public IBus {
         uint16_t queueSize();
 
     private:
-        Timer* timer;
-        GPIO_TypeDef* GPIOx;
-        uint16_t GPIO_Pin; 
+        Timer* OW_Timer;
+        GPIO_TypeDef* OW_Port;
+        uint16_t OW_Pin; 
+
         uint32_t operationTimeout;
 
+
+        uint8_t  ow_tim_bit_index;
+        uint8_t  ow_tim_bit;
+
+        uint8_t  ow_byte_index;
+        uint8_t  ow_byte;
+        bool     ow_presents;
+
         enum {
-            OW_TIMER_PROGRESS_END,      
+            OW_TIMER_PROGRESS_IDLE,
+
             OW_TIMER_PROGRESS_RESET,
             OW_TIMER_PROGRESS_RESET_WAIT_END_LOW,
             OW_TIMER_PROGRESS_RESET_WAIT_END_HIGH,
-            OW_TIMER_PROGRESS_RESET_WAIT_READ_STATUS,
-            OW_TIMER_PROCESS_WRITE,
-            OW_TIMER_PROCESS_WRITE_WAIT_END_HIGH,
-            OW_TIMER_PROCESS_WRITE_WAIT_END_LOW,
-            OW_TIMER_PROCESS_WRITE_WAIT_STATUS,
+
+            OW_TIMER_PROGRESS_WRITE,
+            OW_TIMER_PROGRESS_WRITE_WAIT_END_HIGH,
+            OW_TIMER_PROGRESS_WRITE_WAIT_END_LOW,
+
             OW_TIMER_PROGRESS_READ,
             OW_TIMER_PROGRESS_READ_WAIT,
-            OW_TIMER_PROGRESS_READ_GET,
-            OW_TIMER_PROGRESS_READ_END
-        } ow_tim_progress = OW_TIMER_PROGRESS_END;   
+            OW_TIMER_PROGRESS_READ_GET
+        } ow_tim_progress = OW_TIMER_PROGRESS_IDLE;   
 
         enum {
-            OW_PROGRESS_END,
+            OW_PROGRESS_IDLE,
+
             OW_PROGRESS_RESET,
             OW_PROGRESS_RESET_WAIT_TIMER_END,
             OW_PROGRESS_WRITE,
@@ -71,22 +82,22 @@ class OneWire : public IBus {
             OW_PROGRESS_READ,
             OW_PROGRESS_READ_NEXT_BIT,
             OW_PROGRESS_READ_WAIT_TIMER_END
-        } ow_progress = OW_PROGRESS_END;
+        } ow_progress = OW_PROGRESS_IDLE;
 
         enum {
-                IDLE,
-                CHECK_FREE,
-                WORK,
-                WAITING,
-                CLEAR,
-                FINISH
-            } operationState = IDLE;
+            IDLE,
+            CHECK_FREE,
+            WORK,
+            WAITING,
+            CLEAR,
+            FINISH
+        } operationState = IDLE;
 
         enum EoperationType {
-                RESET,
-                RECEIVE,
-                TRANSMIT
-            };
+            RESET,
+            RECEIVE,
+            TRANSMIT
+        };
             
         struct operation {
             EoperationType  operationType;
