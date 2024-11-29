@@ -23,11 +23,11 @@ class OneWire : public IBus {
         void transmitThenReceive(
             uint8_t *pData_tx, uint16_t txSize,
             uint8_t *pData_rx, uint16_t rxSize,
-            bool res = false,
-            dataCallback_f callbackFn = nullptr
+            dataCallback_f callbackFn = nullptr,
+            bool res = false
         );
 
-        void sesja(
+        void transaction(
             uint8_t ROMcomm,
             uint8_t *adres,
             uint8_t FUNcomm,
@@ -35,8 +35,8 @@ class OneWire : public IBus {
             uint8_t txSize = 0,
             uint8_t *pData_rx = NULL,
             uint8_t rxSize  = 0,
-            bool    res = false,
-            dataCallback_f callbackFn = nullptr
+            dataCallback_f callbackFn = nullptr,
+            bool    res = false
         );
         uint16_t queueSize();
 

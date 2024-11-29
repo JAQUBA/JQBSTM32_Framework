@@ -51,7 +51,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
                 }
                 break;
             }
-            
+
             case OPERATION_PROGRESS_READ_START: {
                 ow_bit_index = 0;
                 ow_byte = 0;
@@ -142,6 +142,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
 		}
     });
 }
+
 void OneWire::reset() {
     operation operation;
     operation.operationType = EoperationType::RESET;
@@ -179,12 +180,10 @@ void OneWire::receive(
 void OneWire::transmitThenReceive(
     uint8_t *pData_tx, uint16_t txSize,
     uint8_t *pData_rx, uint16_t rxSize,
-    bool res,
-    dataCallback_f callbackFn
+    dataCallback_f callbackFn,
+    bool res
 ){
-    
     operation operation;
-
     reset();
     operation.operationType = EoperationType::TRANSMIT;
     operation.pData = (uint8_t*) malloc(txSize);
@@ -195,14 +194,14 @@ void OneWire::transmitThenReceive(
     receive(pData_rx, rxSize, callbackFn);
 }
 
-void OneWire::sesja(
-    uint8_t ROMcomm,
-    uint8_t *adres,
-    uint8_t FUNcomm,
+void OneWire::transaction(
+    uint8_t ROM_Command,
+    uint8_t *deviceAddress,
+    uint8_t FUNC_Command,
     uint8_t *pData_tx, uint8_t txSize,
     uint8_t *pData_rx, uint8_t rxSize,
-    bool     res,
-    dataCallback_f callbackFn
+    dataCallback_f callbackFn,
+    bool     res
 ){
     uint8_t Size;
     operation operation;
@@ -210,25 +209,25 @@ void OneWire::sesja(
     reset();
 
     operation.operationType = EoperationType::TRANSMIT;
-    if (adres==NULL){
+    if (deviceAddress==NULL){
         Size = 2;
         if (txSize>0) Size += txSize;
         operation.pData = (uint8_t*) malloc(Size);
-        *(operation.pData+0) = ROMcomm;
-        *(operation.pData+1) = FUNcomm;
+        *(operation.pData+0) = ROM_Command;
+        *(operation.pData+1) = FUNC_Command;
         if (txSize>0) memcpy(operation.pData+Size, pData_tx, txSize);
     } else {
         Size=10;
         if (txSize>0) Size += txSize;
         operation.pData = (uint8_t*) malloc(Size);
-        *(operation.pData+0) = ROMcomm;
-        memcpy(operation.pData+1, adres, 8);
-        *(operation.pData+9) = FUNcomm;
+        *(operation.pData+0) = ROM_Command;
+        memcpy(operation.pData+1, deviceAddress, 8);
+        *(operation.pData+9) = FUNC_Command;
         if (txSize>0) memcpy(operation.pData+Size, pData_tx, txSize);
     }
     operation.Size = Size;
     operation.free = true;
-    operations.push(operation);//transmit
+    operations.push(operation);
 
     if (rxSize>0) receive(pData_rx, rxSize, callbackFn);
     if (res) reset();

@@ -8,6 +8,9 @@
 #define DS_MAX_SENSORS 10
 #endif
 
+void unpack_rom(uint64_t number, uint8_t *result);
+uint64_t pack_rom(uint8_t *buffer);
+
 class DS18B20 {
     public:
         DS18B20(OneWire *oneWire);

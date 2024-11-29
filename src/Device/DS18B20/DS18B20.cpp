@@ -40,7 +40,7 @@ DS18B20::DS18B20(OneWire *a_oneWire) {
                 for (id=0; id<DS_MAX_SENSORS; id++) {
                     unpack_rom(sensors[id], b_rom);
                     if (b_rom[id]>0) {
-                        oneWire->sesja(0x55, b_rom,
+                        oneWire->transaction(0x55, b_rom,
                         0xBE, 0, 0, b_rd+(id*9), 9); //odczyt temperatury
                     }
                 } 
@@ -55,7 +55,7 @@ DS18B20::DS18B20(OneWire *a_oneWire) {
                 rom = pack_rom(b_rom);
             } else {
                 readT = true;
-                oneWire->sesja(0xCC, 0, 0x44);//start konwer. temp.
+                oneWire->transaction(0xCC, 0, 0x44);//start konwer. temp.
             }
         }
 	}, 1000);
