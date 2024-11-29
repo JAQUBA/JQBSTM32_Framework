@@ -1,16 +1,12 @@
 #include "OneWire.h"
 
 OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_Timer(timer), OW_Port(GPIO_Port), OW_Pin(GPIO_Pin) {
-    
     OW_Timer->attachInterrupt(Timer::PeriodElapsedCallback, voidCallback {
         switch(operationProgress) {
             case OPERATION_PROGRESS_IDLE: {
-                if(operationState == WAITING) {
-                    operationState = FINISH;
-                }
+                if(operationState == WAITING) operationState = FINISH;
                 break;
             }
-
             case OPERATION_PROGRESS_RESET: {
                 HAL_GPIO_WritePin(OW_Port, OW_Pin, GPIO_PIN_RESET);
                 OW_Timer->setPeriod(490);
@@ -29,49 +25,31 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
                 operationProgress=OPERATION_PROGRESS_IDLE;
                 break;
             }
-
             case OPERATION_PROGRESS_WRITE_START: {
-                if (ow_bit_index < 8) {
-                    operationProgress = OPERATION_PROGRESS_WRITE_BIT;
-                } else {
-                    if (++ow_byte_index<currentOperation.Size) {
-                        ow_byte = (*(currentOperation.pData + ow_byte_index));
-                        ow_bit_index = 0;
-                    }
-                    else {
-                        operationProgress = OPERATION_PROGRESS_IDLE;
-                        break;
-                    }
-                }
+                ow_byte = *(currentOperation.pData + ow_byte_index);
+                ow_bit_index = 0;
+                operationProgress = OPERATION_PROGRESS_WRITE_BIT;
             }
             case OPERATION_PROGRESS_WRITE_BIT: {
                 HAL_GPIO_WritePin(OW_Port, OW_Pin, GPIO_PIN_RESET);
                 OW_Timer->setPeriod(ow_byte & 0x01?10:30);
-                operationProgress=OPERATION_PROGRESS_WRITE_WAIT;
-                break;
-            }
-            case OPERATION_PROGRESS_WRITE_WAIT: {
-                HAL_GPIO_WritePin(OW_Port, OW_Pin, GPIO_PIN_SET);
-                OW_Timer->setPeriod(ow_byte & 0x01?30:10);
                 operationProgress=OPERATION_PROGRESS_WRITE_END;
                 break;
             }
             case OPERATION_PROGRESS_WRITE_END: {
-                ow_byte >>= 1;
-                ow_bit_index++;
-
-                if(true) {
-                    operationProgress=OPERATION_PROGRESS_WRITE_START;
+                HAL_GPIO_WritePin(OW_Port, OW_Pin, GPIO_PIN_SET);
+                OW_Timer->setPeriod(ow_byte & 0x01?30:10);
+                if (++ow_bit_index < 8) {
+                    ow_byte >>= 1;
+                    operationProgress = OPERATION_PROGRESS_WRITE_BIT;
                 } else {
-                    operationProgress=OPERATION_PROGRESS_IDLE;
+                    operationProgress = OPERATION_PROGRESS_IDLE;
+                    if (++ow_byte_index<currentOperation.Size) {
+                        operationProgress = OPERATION_PROGRESS_WRITE_START;
+                    }
                 }
                 break;
             }
-
-
-
-
-
 
 
             case OPERATION_PROGRESS_READ_START: {
@@ -141,10 +119,6 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
                     operationProgress = OPERATION_PROGRESS_RESET;
 				} else if(currentOperation.operationType == EoperationType::TRANSMIT) {
                     ow_byte_index = 0;
-                    ow_bit_index = 0;
-
-                    ow_byte = (*currentOperation.pData);
-
                     operationProgress = OPERATION_PROGRESS_WRITE_START;
 
 				} else if(currentOperation.operationType == EoperationType::RECEIVE) {
