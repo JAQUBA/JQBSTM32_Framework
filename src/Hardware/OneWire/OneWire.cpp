@@ -70,19 +70,8 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
     });
 
     addTaskMain(taskCallback {
-        switch (ow_progress) {
+        switch(ow_progress) {
             case OW_PROGRESS_IDLE: {
-                break;
-            }
-            case OW_PROGRESS_RESET: {
-                ow_tim_progress = OW_TIMER_PROGRESS_RESET;
-                ow_progress=OW_PROGRESS_RESET_WAIT_TIMER_END;
-                break;
-            }
-            case OW_PROGRESS_RESET_WAIT_TIMER_END: {
-                if (ow_tim_progress==OW_TIMER_PROGRESS_IDLE) {
-                    ow_progress=OW_PROGRESS_IDLE;
-                }
                 break;
             }
             case OW_PROGRESS_WRITE: {
@@ -158,7 +147,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
 			break;
 			
 			case CHECK_FREE:
-				if(ow_progress == OW_PROGRESS_IDLE) {//gotowosc 1-wire
+				if(ow_tim_progress == OW_TIMER_PROGRESS_IDLE) {
 					operationState = WORK;
                 }
             break;
@@ -174,9 +163,8 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
                     ow_byte = 0;
 					ow_progress = OW_PROGRESS_READ;
 				}
-				else if(currentOperation.operationType == EoperationType::RESET)
-                {
-				    ow_progress = OW_PROGRESS_RESET;
+				else if(currentOperation.operationType == EoperationType::RESET) {
+                    ow_tim_progress = OW_TIMER_PROGRESS_RESET;
                     ow_presents = false;
 				}
                 operationState = WAITING;

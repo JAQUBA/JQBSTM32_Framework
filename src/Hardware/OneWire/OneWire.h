@@ -74,8 +74,6 @@ class OneWire : public IBus {
         enum {
             OW_PROGRESS_IDLE,
 
-            OW_PROGRESS_RESET,
-            OW_PROGRESS_RESET_WAIT_TIMER_END,
             OW_PROGRESS_WRITE,
             OW_PROGRESS_WRITE_NEXT_BIT,
             OW_PROGRESS_WRITE_WAIT_TIMER_END,
