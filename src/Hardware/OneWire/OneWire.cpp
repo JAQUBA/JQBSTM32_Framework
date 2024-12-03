@@ -151,41 +151,38 @@ void OneWire::reset() {
     operations.push(operation);
 }
 void OneWire::transmit(
-    uint8_t *pData, uint16_t Size,
+    const uint8_t* pData, uint16_t size,
     dataCallback_f callbackFn
 ){
     operation operation;
-    reset();
     operation.operationType = EoperationType::TRANSMIT;
-    operation.pData = (uint8_t*) malloc(Size);
-    memcpy(operation.pData, pData, Size);
-    operation.Size = Size;
+    operation.pData = (uint8_t*) malloc(size);
+    memcpy(operation.pData, pData, size);
+    operation.Size = size;
     operation.free = true;
     operation.callback_f = callbackFn;
     operations.push(operation);
 }
 
 void OneWire::receive(
-    uint8_t *pData, uint16_t Size,
+    uint8_t* pData, uint16_t size,
     dataCallback_f callbackFn
 ){
     operation operation;
     operation.operationType = EoperationType::RECEIVE;
     operation.pData = pData;
-    operation.Size = Size;
+    operation.Size = size;
     operation.free = false;
     operation.callback_f = callbackFn;
     operations.push(operation);
 }
 
 void OneWire::transmitThenReceive(
-    uint8_t *pData_tx, uint16_t txSize,
-    uint8_t *pData_rx, uint16_t rxSize,
-    dataCallback_f callbackFn,
-    bool res
+    const uint8_t* pData_tx, uint16_t txSize,
+    uint8_t* pData_rx, uint16_t rxSize,
+    dataCallback_f callbackFn
 ){
     operation operation;
-    reset();
     operation.operationType = EoperationType::TRANSMIT;
     operation.pData = (uint8_t*) malloc(txSize);
     memcpy(operation.pData, pData_tx, txSize);
@@ -196,13 +193,15 @@ void OneWire::transmitThenReceive(
 }
 
 void OneWire::transaction(
-    uint8_t ROM_Command,
-    uint8_t *deviceAddress,
-    uint8_t FUNC_Command,
-    uint8_t *pData_tx, uint8_t txSize,
-    uint8_t *pData_rx, uint8_t rxSize,
+    uint8_t romCommand,
+    const uint8_t* address,
+    uint8_t functionCommand,
+    const uint8_t* pData_tx,
+    uint16_t txSize,
+    uint8_t* pData_rx,
+    uint16_t rxSize,
     dataCallback_f callbackFn,
-    bool     res
+    bool resetAfterTransaction
 ){
     uint8_t Size;
     operation operation;
@@ -210,20 +209,20 @@ void OneWire::transaction(
     reset();
 
     operation.operationType = EoperationType::TRANSMIT;
-    if (deviceAddress==NULL){
+    if (address==NULL){
         Size = 2;
         if (txSize>0) Size += txSize;
         operation.pData = (uint8_t*) malloc(Size);
-        *(operation.pData+0) = ROM_Command;
-        *(operation.pData+1) = FUNC_Command;
+        *(operation.pData+0) = romCommand;
+        *(operation.pData+1) = functionCommand;
         if (txSize>0) memcpy(operation.pData+Size, pData_tx, txSize);
     } else {
         Size=10;
         if (txSize>0) Size += txSize;
         operation.pData = (uint8_t*) malloc(Size);
-        *(operation.pData+0) = ROM_Command;
-        memcpy(operation.pData+1, deviceAddress, 8);
-        *(operation.pData+9) = FUNC_Command;
+        *(operation.pData+0) = romCommand;
+        memcpy(operation.pData+1, address, 8);
+        *(operation.pData+9) = functionCommand;
         if (txSize>0) memcpy(operation.pData+Size, pData_tx, txSize);
     }
     operation.Size = Size;
@@ -231,7 +230,7 @@ void OneWire::transaction(
     operations.push(operation);
 
     if (rxSize>0) receive(pData_rx, rxSize, callbackFn);
-    if (res) reset();
+    if (resetAfterTransaction) reset();
 }       
 
 uint16_t OneWire::queueSize() {

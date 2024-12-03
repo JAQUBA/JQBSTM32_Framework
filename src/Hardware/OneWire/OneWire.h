@@ -9,34 +9,39 @@ class OneWire : public IBus {
     public:
         OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
 
+        // Resetuje magistralę 1-Wire
         void reset();
 
+        // Wysyła dane przez 1-Wire
         void transmit(
-            uint8_t *pData, uint16_t Size,
+            const uint8_t* pData, uint16_t size,
             dataCallback_f callbackFn = nullptr
         );
+
+        // Odbiera dane przez 1-Wire
         void receive(
-            uint8_t *pData, uint16_t Size,
+            uint8_t* pData, uint16_t size,
             dataCallback_f callbackFn = nullptr
         );
 
+        // Sekwencja: najpierw transmisja, potem odbiór
         void transmitThenReceive(
-            uint8_t *pData_tx, uint16_t txSize,
-            uint8_t *pData_rx, uint16_t rxSize,
-            dataCallback_f callbackFn = nullptr,
-            bool res = false
+            const uint8_t* pData_tx, uint16_t txSize,
+            uint8_t* pData_rx, uint16_t rxSize,
+            dataCallback_f callbackFn = nullptr
         );
 
+        // Pełna transakcja na magistrali 1-Wire
         void transaction(
-            uint8_t ROMcomm,
-            uint8_t *adres,
-            uint8_t FUNcomm,
-            uint8_t *pData_tx = NULL,
-            uint8_t txSize = 0,
-            uint8_t *pData_rx = NULL,
-            uint8_t rxSize  = 0,
+            uint8_t romCommand,
+            const uint8_t* address,
+            uint8_t functionCommand,
+            const uint8_t* pData_tx = nullptr,
+            uint16_t txSize = 0,
+            uint8_t* pData_rx = nullptr,
+            uint16_t rxSize = 0,
             dataCallback_f callbackFn = nullptr,
-            bool    res = false
+            bool resetAfterTransaction = false
         );
         uint16_t queueSize();
 
