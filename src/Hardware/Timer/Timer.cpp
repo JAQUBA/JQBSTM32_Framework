@@ -11,7 +11,7 @@ Timer *Timer::getInstance(TIM_HandleTypeDef *pHandler) {
     return nullptr;
 }
 void Timer::setPeriod(uint32_t period) {
-    _pHandler->Instance->ARR = period;
+    _pHandler->Instance->ARR = period-1;
 }
 Timer::Timer(TIM_HandleTypeDef *pHandler): _pHandler(pHandler) {
     _Timer_instances[_Timer_instancesNum++] = this;
