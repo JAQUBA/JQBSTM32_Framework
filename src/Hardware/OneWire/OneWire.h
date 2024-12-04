@@ -41,8 +41,8 @@ class OneWire : public IBus {
 
     private:
         Timer* timer;
-        GPIO_TypeDef* GPIOx;
-        uint16_t GPIO_Pin; 
+        GPIO_TypeDef* _GPIOx;
+        uint16_t _GPIO_Pin; 
         uint32_t operationTimeout;
 
         enum {
