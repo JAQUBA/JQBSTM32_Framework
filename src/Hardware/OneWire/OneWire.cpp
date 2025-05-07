@@ -1,4 +1,5 @@
 #include "OneWire.h"
+#ifdef __ONEWIRE_H
 
 static OneWire *_OneWire_instance;
 
@@ -398,3 +399,5 @@ void OneWire::sesja(
 uint16_t OneWire::queueSize() {
     return operations.size();
 }
+
+#endif //__ONEWIRE_H

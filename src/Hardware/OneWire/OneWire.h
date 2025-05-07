@@ -1,9 +1,11 @@
-#ifndef ONEWIRE_H
-#define ONEWIRE_H
-
 #include "../../Core.h"
 #include "Interface/IBus.h"
 #include "Hardware/Timer/Timer.h"
+
+#ifdef __TIMER_H_
+
+#ifndef __ONEWIRE_H
+#define __ONEWIRE_H
 
 class OneWire : public IBus {
     public:
@@ -99,4 +101,5 @@ class OneWire : public IBus {
         std::queue<operation> operations;
 };
 
+#endif // __TIMER_H_
 #endif // ONEWIRE_H
