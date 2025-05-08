@@ -1,4 +1,5 @@
 #include "OneWire.h"
+#ifdef __ONEWIRE_H_
 
 OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_Timer(timer), OW_Port(GPIO_Port), OW_Pin(GPIO_Pin) {
 	OW_Timer->attachInterrupt(Timer::PeriodElapsedCallback, voidCallback {
@@ -236,3 +237,4 @@ void OneWire::transaction(
 uint16_t OneWire::queueSize() {
 	return operations.size();
 }
+#endif // __ONEWIRE_H_

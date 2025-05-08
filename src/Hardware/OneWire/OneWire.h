@@ -1,8 +1,15 @@
-#ifndef ONEWIRE_H
-#define ONEWIRE_H
-
 #include "../../Core.h"
-#include "Interface/IBus.h"
+#ifdef __TIMER_H_
+
+#ifndef __ONEWIRE_H_
+#define __ONEWIRE_H_
+
+#ifndef OW_MAX_INSTANCES
+#define OW_MAX_INSTANCES 2
+#endif
+
+#include "../../Interface/IBus.h"
+
 #include "Hardware/Timer/Timer.h"
 
 class OneWire : public IBus {
@@ -100,4 +107,5 @@ class OneWire : public IBus {
 		std::queue<operation> operations;
 };
 
-#endif // ONEWIRE_H
+#endif
+#endif // __ONEWIRE_H_

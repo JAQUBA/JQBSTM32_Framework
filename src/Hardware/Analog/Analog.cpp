@@ -34,17 +34,17 @@ Analog::Analog(ADC_HandleTypeDef *pHandler) : _pHandler(pHandler), bufferSize(pH
     if (HAL_ADC_Start_DMA(pHandler, adcBuffer, bufferSize) != HAL_OK) {
         Error_Handler();
     }
-    addTaskMain(taskCallback {
-        for (size_t i = 0; i < bufferSize; i++) {
+    // addTaskMain(taskCallback {
+        // for (size_t i = 0; i < bufferSize; i++) {
             // adcValue[i] = ((adcBuffer[i] / adcSamplesNum));
             // adcBuffer[i] = 0;
-        }
+        // }
         // adcSamplesNum = 0;
-        display.toggle(displayMap::S3);//, true);
-    }, 1000);
+        // display.toggle(displayMap::S3);//, true);
+    // }, 1000);
 }
 void Analog::convCpltCallback() {
-    display.toggle(displayMap::S1);//, true);
+    // display.toggle(displayMap::S1);//, true);
     for (size_t i = 0; i < bufferSize; i++) {
         // adcBuffer[i] = adcRAW[i];
         // adcSamplesNum++;

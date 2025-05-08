@@ -8,8 +8,8 @@
 #define ANALOG_MAX_INSTANCES 1
 #endif
 
-#include "Application/Display/Display.h"
-extern Display display;
+// #include "Application/Display/Display.h"
+// extern Display display;
 
 class Analog {
     public:
