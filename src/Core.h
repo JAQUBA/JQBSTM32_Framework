@@ -11,6 +11,10 @@
 #include "fl_bit.h"
 #include "Scheduler.hpp"
 
+#ifndef __weak
+#define __weak __attribute__((weak))
+#endif
+
 class Core {
     public:
         Core();

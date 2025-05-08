@@ -1,6 +1,7 @@
 #ifndef __SCHEDULER_H
 #define __SCHEDULER_H
 
+#include <stdint.h>
 #include <functional>
 #include <list>
 
