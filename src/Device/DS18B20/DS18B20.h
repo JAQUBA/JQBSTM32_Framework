@@ -1,5 +1,5 @@
 #include "../../Hardware/OneWire/OneWire.h"
-#ifdef ONEWIRE_H
+#ifdef __ONEWIRE_H
 
 #ifndef __DS18B20_H_
 #define __DS18B20_H_
