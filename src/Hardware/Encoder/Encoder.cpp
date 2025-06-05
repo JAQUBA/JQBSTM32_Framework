@@ -1,7 +1,10 @@
 #include "Encoder.h"
 #ifdef HAL_TIM_MODULE_ENABLED
 
+Encoder* Encoder::_instance = nullptr;
+
 Encoder::Encoder(TIM_HandleTypeDef *pHandler, uint32_t channel, StartType startType): Timer(pHandler) {
+    _instance = this;
     switch (startType) {
         case START_POLL: {
             HAL_TIM_Encoder_Start(_pHandler, channel);
@@ -16,10 +19,7 @@ Encoder::Encoder(TIM_HandleTypeDef *pHandler, uint32_t channel, StartType startT
             break;
         }
     }
-    Timer::attachInterrupt(Timer::IC_CaptureCallback, voidCallback {
-        _value+=getDirection()?1:-1;
-        if(fnCallback) fnCallback();
-    });
+    Timer::attachInterrupt(Timer::IC_CaptureCallback, Encoder::_staticCaptureCallback);
 }
 
 bool Encoder::getDirection() {
@@ -55,15 +55,14 @@ void Encoder::setLimits(int32_t min, int32_t max) {
 
 
 
-void Encoder::attachInterrupt(voidCallback_f callback) {
-	if (fnCallback) {
-		fnCallback = callback;
-	} else {
-		fnCallback = callback;
-		if (fnCallback) {
-		  __HAL_TIM_CLEAR_FLAG(_pHandler, TIM_FLAG_UPDATE);
-		  __HAL_TIM_ENABLE_IT(_pHandler, TIM_IT_UPDATE);
-		}
-	}
+void Encoder::attachInterrupt(void (*callback)()) {
+    fnCallback = callback;
+}
+
+void Encoder::_staticCaptureCallback() {
+    if(_instance) {
+        _instance->_value += _instance->getDirection() ? 1 : -1;
+        if(_instance->fnCallback) _instance->fnCallback();
+    }
 }
 #endif

@@ -8,7 +8,7 @@
 #define TASK(x) void x(taskStruct *task)
 
 #define taskCallback [&](taskStruct *task)
-using taskCallback_f = std::function<void(struct taskStruct *task)>;
+using taskCallback_f = void (*)(struct taskStruct *task);
 
 #define dataCallback [&](uint8_t *data, uint16_t size)
 using dataCallback_f = std::function<void(uint8_t *data, uint16_t size)>;
@@ -36,7 +36,7 @@ class Scheduler {
             MUL_1S = 10000
         };
 
-        taskStruct addTask(const taskCallback_f &func, uint32_t delay, bool single = false, taskTime time = MUL_1MS);
+        taskStruct addTask(taskCallback_f func, uint32_t delay, bool single = false, taskTime time = MUL_1MS);
         void execute();
         void poll();
     private:

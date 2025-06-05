@@ -52,14 +52,16 @@ class Encoder : public Timer {
          * @brief Attaches an interrupt callback function.
          * @param callback Function to be called on interrupt.
          */
-        void attachInterrupt(voidCallback_f callback);
+        void attachInterrupt(void (*callback)());
+        static void _staticCaptureCallback();
+        static Encoder* _instance;
 
     private:
         int32_t _value; /**< Current encoder value. */
         int32_t _min = 0; /**< Minimum encoder value. */
         int32_t _max = -1; /**< Maximum encoder value. */
         
-        voidCallback_f fnCallback; /**< Callback function for encoder interrupt. */
+        void (*fnCallback)(); /**< Callback function for encoder interrupt. */
 };
 
 #endif

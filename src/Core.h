@@ -20,8 +20,8 @@ class Core {
         Core();
 };
 
-taskStruct addTaskMain(taskCallback_f functionPointer, uint32_t delay = 0, bool single = false, Scheduler::taskTime time = Scheduler::taskTime::MUL_1MS);
-taskStruct addTaskInterrupt(taskCallback_f functionPointer, uint32_t delay = 0, bool single = false, Scheduler::taskTime time = Scheduler::taskTime::MUL_1MS);
+taskStruct addTaskMain(void (*functionPointer)(taskStruct*), uint32_t delay = 0, bool single = false, Scheduler::taskTime time = Scheduler::taskTime::MUL_1MS);
+taskStruct addTaskInterrupt(void (*functionPointer)(taskStruct*), uint32_t delay = 0, bool single = false, Scheduler::taskTime time = Scheduler::taskTime::MUL_1MS);
 
 #ifdef __cplusplus
 extern "C" {

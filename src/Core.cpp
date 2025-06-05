@@ -28,14 +28,30 @@ void delay(volatile uint32_t delay_ms) {HAL_Delay(delay_ms);}
 uint32_t ulMillis;
 uint32_t millis() {return ulMillis;}
 
+// Prosta funkcja callback bez użycia std::function
+TASK(tickCallbackTask) {
+    uwTick += (uint32_t)uwTickFreq;
+    ulMillis++;
+}
+
+// Pomocnicza struktura zadania dla inicjalizacji
+struct SimpleTask {
+    void (*function)(taskStruct*);
+    uint32_t delay;
+    bool single;
+    Scheduler::taskTime time;
+};
+
+// Pomocnicza funkcja do inicjalizacji zadania
+void initTickTask() {
+    addTaskInterrupt(tickCallbackTask, 1, false, Scheduler::taskTime::MUL_1MS);
+}
+
 Core::Core() {
 	HAL_Init();
 	SystemClock_Config();
 	SysTick_Config(HAL_RCC_GetHCLKFreq() / 10000UL);
-	addTaskInterrupt(taskCallback {
-		uwTick += (uint32_t)uwTickFreq;
-		ulMillis++;
-	}, 1);
+	initTickTask();
 	init();
 #ifdef DWT
 	DWT_COUNTER_ENABLE();

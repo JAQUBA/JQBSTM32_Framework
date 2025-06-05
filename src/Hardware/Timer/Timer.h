@@ -11,6 +11,7 @@
 
 // #define timerCallback [&](Timer *timer)
 // using timerCallback_f = std::function<void(class Timer *timer)>;
+using voidCallback_f = void (*)();
 
 class Timer {
     public:

@@ -1,10 +1,7 @@
 #include "Scheduler.hpp"
 
-taskStruct Scheduler::addTask(const taskCallback_f &func, uint32_t delay, bool single, taskTime time) {
+taskStruct Scheduler::addTask(taskCallback_f func, uint32_t delay, bool single, taskTime time) {
     taskStruct task;
-
-    delay *= time;
-
     task.functionPointer = func;
     task.delay = delay;
     task._delay = delay;
