@@ -8,7 +8,6 @@
 #define ANALOG_MAX_INSTANCES 1
 #endif
 
-
 // Definicje dla filtrowania i uśredniania
 #ifndef ADC_SAMPLES_COUNT
 #define ADC_SAMPLES_COUNT 64    // Liczba próbek do uśredniania
@@ -30,7 +29,6 @@
 #define ADC_PROCESS_TASK_PERIOD 10   // Okres zadania przetwarzania danych [ms]
 #endif
 
-=======
 
 #include "Application/Display/Display.h"
 extern Display display;
