@@ -8,6 +8,7 @@
 #define ANALOG_MAX_INSTANCES 1
 #endif
 
+
 // Definicje dla filtrowania i uśredniania
 #ifndef ADC_SAMPLES_COUNT
 #define ADC_SAMPLES_COUNT 64    // Liczba próbek do uśredniania
@@ -29,10 +30,13 @@
 #define ADC_PROCESS_TASK_PERIOD 10   // Okres zadania przetwarzania danych [ms]
 #endif
 
+=======
+
 #include "Application/Display/Display.h"
 extern Display display;
 
 class Analog {
+
 private:
     ADC_HandleTypeDef *_pHandler;
     size_t bufferSize;
@@ -69,6 +73,27 @@ public:
     void configureChannel(uint8_t channel, uint16_t offset, uint16_t multiplier);
     bool isDataReady();
     void resetFilters();
+
+    public:
+        static Analog* getInstance(ADC_HandleTypeDef *pHandler);
+        Analog(ADC_HandleTypeDef *pHandler);
+        void configureChannel(uint8_t channel, uint16_t *offset, uint16_t *multiplier);
+
+        uint16_t getValue(uint8_t channel);
+        
+        void convCpltCallback();
+    private:
+        ADC_HandleTypeDef *_pHandler;
+        uint32_t bufferSize;
+        static uint16_t adcRAW[8];
+
+        uint32_t *adcBuffer;
+        uint16_t adcSamplesNum;
+
+        uint32_t *adcValue;
+
+        uint16_t *offsets;
+        uint16_t *multipliers;
 };
 
 #endif
