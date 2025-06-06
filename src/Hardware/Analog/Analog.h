@@ -1,50 +1,38 @@
+#include "../../Core.h"
+#ifdef HAL_ADC_MODULE_ENABLED
+
 #ifndef __ANALOG_H_
 #define __ANALOG_H_
 
-#include "../../Core.h"
+#ifndef ANALOG_MAX_INSTANCES
+#define ANALOG_MAX_INSTANCES 1
+#endif
 
-/**
- * @class Analog
- * @brief Klasa do obsługi analogowych wejść.
- */
+#include "Application/Display/Display.h"
+extern Display display;
+
 class Analog {
     public:
-        /**
-         * @brief Inicjalizuje ADC.
-         * @param pHandler Wskaźnik do struktury ADC_HandleTypeDef.
-         */
-        static void init(ADC_HandleTypeDef *pHandler);
+        static Analog* getInstance(ADC_HandleTypeDef *pHandler);
+        Analog(ADC_HandleTypeDef *pHandler);
+        void configureChannel(uint8_t channel, uint16_t *offset, uint16_t *multiplier);
 
-        /**
-         * @brief Konstruktor klasy Analog.
-         * @param channelNumber Numer kanału ADC.
-         */
-        Analog(uint8_t channelNumber);
-
-        /**
-         * @brief Pobiera surową wartość ADC.
-         * @return Surowa wartość ADC.
-         */
-        uint16_t getRaw();
-
-        /**
-         * @brief Pobiera przetworzoną wartość ADC.
-         * @return Przetworzona wartość ADC.
-         */
-        uint16_t getValue();
-
-        /**
-         * @brief Konfiguruje kanał ADC.
-         * @param offset Wskaźnik do offsetu.
-         * @param divider Wskaźnik do dzielnika.
-         */
-        void configureChannel(uint16_t *offset, uint16_t *divider);
-
+        uint16_t getValue(uint8_t channel);
+        
+        void convCpltCallback();
     private:
-        static uint16_t rawADC[8]; /**< Tablica surowych wartości ADC. */
-        uint8_t _channelNumber; /**< Numer kanału ADC. */
-        uint16_t *_offset; /**< Wskaźnik do offsetu. */
-        uint16_t *_divider; /**< Wskaźnik do dzielnika. */
+        ADC_HandleTypeDef *_pHandler;
+        uint32_t bufferSize;
+        static uint16_t adcRAW[8];
+
+        uint32_t *adcBuffer;
+        uint16_t adcSamplesNum;
+
+        uint32_t *adcValue;
+
+        uint16_t *offsets;
+        uint16_t *multipliers;
 };
 
+#endif
 #endif

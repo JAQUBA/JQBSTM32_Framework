@@ -1,19 +1,21 @@
-#ifndef STEPPER_H_
-#define STEPPER_H_
+#include "../../Hardware/GPIO/GPIO.h"
+#ifdef __GPIO_H_
 
-#include "Core.h"
-
-enum StepperDirection {
-    STEPPER_RIGHT = GPIO_PIN_SET,
-    STEPPER_LEFT = GPIO_PIN_RESET
-};
-enum StepperHandler {
-    STEPPER_ON_LIMIT,
-    STEP
-};
+#ifndef __TMC2209_H_
+#define __TMC2209_H_
 
 class TMC2209 {
     public:
+
+        enum Direction {
+            STEPPER_RIGHT = GPIO_PIN_SET,
+            STEPPER_LEFT = GPIO_PIN_RESET
+        };
+        enum Handler {
+            STEPPER_ON_LIMIT,
+            STEP
+        };
+
         TMC2209(GPIO_TypeDef* enablePort, uint16_t enablePin,
             GPIO_TypeDef* stepPort, uint16_t stepPin,
             GPIO_TypeDef* directionPort, uint16_t directionPin,
@@ -30,12 +32,12 @@ class TMC2209 {
         void togglePower();
         void enable();
         void disable();
-        void direction(StepperDirection direction);
+        void direction(Direction direction);
 
-        StepperDirection getDirection();
+        Direction getDirection();
         
         void setLimit(uint32_t limit);
-        void setHandler(StepperHandler handler, void (*fnHandler)(void));
+        void setHandler(Handler handler, void (*fnHandler)(void));
 
         
 
@@ -56,11 +58,14 @@ class TMC2209 {
         GPIO_TypeDef* _MS1Port; uint16_t _MS1Pin;
         GPIO_TypeDef* _MS2Port; uint16_t _MS2Pin;
         GPIO_TypeDef* _zeroPort; uint16_t _zeroPin;
-        StepperDirection _direction;
+        Direction _direction;
+
+        std::list<void (*)()> _onStepHandlers;
         
         void (* _handlers [2])() = {};
 
         uint32_t _onStepLimit;
 };
 
+#endif
 #endif

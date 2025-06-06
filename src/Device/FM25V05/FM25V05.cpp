@@ -1,4 +1,5 @@
 #include "FM25V05.h"
+#ifdef __FM25V05_H_
 
 #define CMD_WREN 0x06 //0000 0110 Set Write Enable Latch
 #define CMD_WRITE 0x02 //0000 0010 Write Memory Data
@@ -60,3 +61,4 @@ void FM25V05::writeToMemory(
 	_pInstance->transmit(_CSPort, _CSPin, txBuf, Size+3);
 	free(txBuf);
 }
+#endif

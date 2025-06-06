@@ -31,6 +31,11 @@ uint32_t millis() {return ulMillis;}
 Core::Core() {
 	HAL_Init();
 	SystemClock_Config();
+	SysTick_Config(HAL_RCC_GetHCLKFreq() / 10000UL);
+	addTaskInterrupt(taskCallback {
+		uwTick += (uint32_t)uwTickFreq;
+		ulMillis++;
+	}, 1);
 	init();
 #ifdef DWT
 	DWT_COUNTER_ENABLE();
@@ -39,14 +44,7 @@ Core::Core() {
 Core _core;
 
 int main() {
-	SysTick_Config(HAL_RCC_GetHCLKFreq() / 10000UL);
-	addTaskInterrupt(taskCallback {
-		uwTick += (uint32_t)uwTickFreq;
-		ulMillis++;
-	}, 1);
-
 	setup();
-
 	while (1) {
 		mainTasks.execute();
 		loop();

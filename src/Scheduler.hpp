@@ -1,14 +1,19 @@
 #ifndef __SCHEDULER_H
 #define __SCHEDULER_H
 
-// #include "Core.h"
+#include <stdint.h>
 #include <functional>
 #include <list>
 
-#define taskCallback [&](taskStruct *task)
 #define TASK(x) void x(taskStruct *task)
 
+#define taskCallback [&](taskStruct *task)
 using taskCallback_f = std::function<void(struct taskStruct *task)>;
+
+#define dataCallback [&](uint8_t *data, uint16_t size)
+using dataCallback_f = std::function<void(uint8_t *data, uint16_t size)>;
+
+#define voidCallback [&](void)
 using voidCallback_f = std::function<void(void)>;
 
 struct taskStruct {

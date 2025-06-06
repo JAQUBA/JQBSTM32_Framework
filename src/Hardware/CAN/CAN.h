@@ -1,12 +1,15 @@
-#ifndef _CAN_H
-#define _CAN_H
 #include "../../Core.h"
-#include "Interface/IBus.h"
-#include <unordered_map> 
+#ifdef HAL_CAN_MODULE_ENABLED
+
+#ifndef __CAN_H_
+#define __CAN_H_
 
 #ifndef CAN_MAX_INSTANCES
 #define CAN_MAX_INSTANCES 1
 #endif
+
+#include "../../Interface/IBus.h"
+#include <unordered_map> 
 
 class CAN : public IBus{
 	public:
@@ -38,4 +41,5 @@ class CAN : public IBus{
 		std::list<struct handler> handlers;
 };
 
+#endif
 #endif

@@ -17,7 +17,7 @@ struct ModbusFrame {
 
 class Modbus {
     public:
-        void receive(uint8_t* data, uint16_t length, void(*functionPointer)(uint8_t *data, uint16_t size));
+        void receive(uint8_t* data, uint16_t length, dataCallback_f functionPointer);
         void bind_function(ModbusFunction function, void(*functionPointer)(ModbusFrame *request));
     protected:
         uint8_t *_slaveID;

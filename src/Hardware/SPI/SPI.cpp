@@ -1,4 +1,5 @@
 #include "SPI.h"
+#ifdef HAL_SPI_MODULE_ENABLED
 
 SPI *_SPI_instances[SPI_MAX_INSTANCES];
 uint8_t _SPI_instancesNum = 0;
@@ -161,3 +162,4 @@ void SPI::transmitReceive(
 uint16_t SPI::queueSize() {
 	return operations.size();
 }
+#endif

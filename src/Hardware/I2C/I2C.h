@@ -1,12 +1,14 @@
+#include "../../Core.h"
+#ifdef HAL_I2C_MODULE_ENABLED
+
 #ifndef __I2C_H_
 #define __I2C_H_
-
-#include "../../Core.h"
-#include "Interface/IBus.h"
 
 #ifndef I2C_MAX_INSTANCES
 #define I2C_MAX_INSTANCES 2
 #endif
+
+#include "../../Interface/IBus.h"
 
 class I2C : public IBus {
     public:
@@ -146,4 +148,5 @@ class I2C : public IBus {
 
         std::queue<operation> operations;
 };
+#endif
 #endif

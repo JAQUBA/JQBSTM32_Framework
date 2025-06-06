@@ -1,4 +1,5 @@
 #include "SED1520.h"
+#ifdef __SED1520_H_
 
 #define SED1520_RESET 0xE2
 #define SED1520_DUTY_RATIO 0xA9
@@ -83,3 +84,4 @@ void SED1520::flush() {
 	_i2c->transmit(0x4e, arr, dataQueue.size());
 	dataQueue.clear();
 }
+#endif

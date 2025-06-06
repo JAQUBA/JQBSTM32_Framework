@@ -1,12 +1,14 @@
-#ifndef __SPI_H
-#define __SPI_H
-
 #include "../../Core.h"
-#include "Interface/IBus.h"
+#ifdef HAL_SPI_MODULE_ENABLED
+
+#ifndef __SPI_H_
+#define __SPI_H_
 
 #ifndef SPI_MAX_INSTANCES
 #define SPI_MAX_INSTANCES 2
 #endif
+
+#include "../../Interface/IBus.h"
 
 class SPI : public IBus {
     public:
@@ -30,7 +32,8 @@ class SPI : public IBus {
         );
         void transmitReceive(
             GPIO_TypeDef* CSPort, uint16_t CSPin,
-            uint8_t *pDataTx, uint8_t *pDataRx, uint16_t Size,
+            uint8_t *pDataTx, uint8_t *pDataRx,
+            uint16_t Size,
             dataCallback_f callbackFn = nullptr
         );
 
@@ -72,4 +75,5 @@ class SPI : public IBus {
         
         std::queue<operation> operations;
 };
+#endif
 #endif

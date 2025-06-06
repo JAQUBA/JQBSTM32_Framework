@@ -1,16 +1,18 @@
+#include "../../Core.h"
+#ifdef HAL_UART_MODULE_ENABLED
+
 #ifndef __UART_H_
 #define __UART_H_
-
-#include "../../Core.h"
-#include "Interface/IBus.h"
 
 #ifndef UART_MAX_INSTANCES
 #define UART_MAX_INSTANCES 2
 #endif
 
+#include "../../Interface/IBus.h"
+
 class UART : public IBus {
     public:
-        UART(UART_HandleTypeDef *pHandler);
+        UART(UART_HandleTypeDef *pHandler, GPIO_TypeDef *dirPort = NULL, uint16_t dirPin = 0);
         static UART *getInstance(UART_HandleTypeDef *pHandler);
 
         void rxInterrupt();
@@ -29,6 +31,9 @@ class UART : public IBus {
 
         dataCallback_f fpOnReceive;
         voidCallback_f fpOnTransmit;
+
+        GPIO_TypeDef *_dirPort;
+        uint16_t _dirPin;
 
         uint8_t Received_u1;
         
@@ -52,4 +57,5 @@ class UART : public IBus {
         std::queue<operation> operations;
 };
 
+#endif
 #endif

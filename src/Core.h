@@ -11,6 +11,16 @@
 #include "fl_bit.h"
 #include "Scheduler.hpp"
 
+// Struktura dla pary GPIO (port + pin)
+struct GPIO_Pin {
+    GPIO_TypeDef* port;
+    uint16_t pin;
+};
+
+#ifndef __weak
+#define __weak __attribute__((weak))
+#endif
+
 class Core {
     public:
         Core();

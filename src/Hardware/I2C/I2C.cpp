@@ -1,4 +1,5 @@
 #include "I2C.h"
+#ifdef HAL_I2C_MODULE_ENABLED
 
 I2C *_I2C_instances[I2C_MAX_INSTANCES];
 uint8_t _I2C_instancesNum = 0;
@@ -151,3 +152,4 @@ void I2C::writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAd
 uint16_t I2C::queueSize() {
 	return operations.size();
 }
+#endif

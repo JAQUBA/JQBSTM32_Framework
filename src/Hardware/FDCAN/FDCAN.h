@@ -1,13 +1,15 @@
+#include "../../Core.h"
+#ifdef HAL_FDCAN_MODULE_ENABLED
+
 #ifndef __FDCAN_H_
 #define __FDCAN_H_
-
-#include "../../Core.h"
-#include "Interface/IBus.h"
-#include <unordered_map> 
 
 #ifndef FDCAN_MAX_INSTANCES
 #define FDCAN_MAX_INSTANCES 1
 #endif
+
+#include "../../Interface/IBus.h"
+#include <unordered_map> 
 
 /**
  * @class FDCAN
@@ -69,4 +71,5 @@ class FDCAN : public IBus {
 		};
 		std::list<struct handler> handlers;
 };
+#endif
 #endif

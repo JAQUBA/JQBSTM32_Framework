@@ -9,7 +9,7 @@ void ModbusSlave::setID(uint8_t *slaveID) {
 void Modbus::bind_function(ModbusFunction function, void(*functionPointer)(ModbusFrame *request)) {
     functionHandlers[function] = functionPointer;
 }
-void Modbus::receive(uint8_t* data, uint16_t length, void (*functionPointer)(uint8_t *data, uint16_t size)) {
+void Modbus::receive(uint8_t* data, uint16_t length, dataCallback_f functionPointer) {
     if(data[0] != *_slaveID) return;
     ModbusFrame *modbusFrame = (ModbusFrame*) malloc(sizeof(ModbusFrame));
     modbusFrame->function = (ModbusFunction) data[1];

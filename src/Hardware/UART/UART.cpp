@@ -1,4 +1,6 @@
 #include "UART.h"
+#ifdef HAL_UART_MODULE_ENABLED
+
 UART *_UART_instances[UART_MAX_INSTANCES];
 uint8_t _UART_instancesNum;
 
@@ -12,9 +14,11 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {UART::getInstance(huart
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {UART::getInstance(huart)->txInterrupt();}
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {UART::getInstance(huart)->errorInterrupt();}
 
-UART::UART(UART_HandleTypeDef *pHandler) {
+UART::UART(UART_HandleTypeDef *pHandler, GPIO_TypeDef *dirPort, uint16_t dirPin) {
     _pHandler = pHandler;
     _UART_instances[_UART_instancesNum++] = this;
+	_dirPort = dirPort;
+	_dirPin = dirPin;
     
     HAL_UART_Receive_IT(_pHandler, &Received_u1, 1);
 
@@ -42,6 +46,7 @@ UART::UART(UART_HandleTypeDef *pHandler) {
 			case WORK: {
 				operationTimeout = millis()+200;
 				if(currentOperation.operationType == EoperationType::SEND) {
+					if(_dirPort) HAL_GPIO_WritePin(_dirPort, _dirPin, GPIO_PIN_SET);
 					if(HAL_UART_Transmit_DMA(
 						_pHandler,
 						currentOperation.pData,
@@ -70,6 +75,7 @@ UART::UART(UART_HandleTypeDef *pHandler) {
 				break;
 			}
 			case CLEAR: {
+				if(_dirPort) HAL_GPIO_WritePin(_dirPort, _dirPin, GPIO_PIN_RESET);
 				if(currentOperation.free) free(currentOperation.pData);
 				operations.pop();
 				operationState = IDLE;
@@ -114,3 +120,4 @@ void UART::transmit(uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
 	operation.callback_f = callbackFn;
 	operations.push(operation);
 }
+#endif

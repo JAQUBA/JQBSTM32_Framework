@@ -1,7 +1,8 @@
-#ifndef APP_DFR0646_H
-#define APP_DFR0646_H
-
 #include "../../Hardware/I2C/I2C.h"
+#ifdef __I2C_H_
+
+#ifndef __DFR0646_H_
+#define __DFR0646_H_
 
 class DFR0646 {
 	public:
@@ -12,4 +13,5 @@ class DFR0646 {
 		uint8_t _DevAddress;
 };
 
+#endif
 #endif

@@ -1,4 +1,5 @@
 #include "EEP24C04.h"
+#ifdef __EEP24C04_H_
 
 EEP24C04::EEP24C04(
 	I2C *pInstance,
@@ -24,3 +25,4 @@ void EEP24C04::writeToMemory(
 ) {
 	_pInstance->writeToMemory(_DevAddress, _BaseAddress + MemAddress, _MemAddSize, pData, Size);
 }
+#endif
