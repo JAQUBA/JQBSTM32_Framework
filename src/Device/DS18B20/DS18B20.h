@@ -56,11 +56,10 @@ class DS18B20Manager {
         bool isSensorValid(uint8_t id);
         uint64_t getSensorRom(uint8_t id);
         uint8_t getSensorCount();
-        
-        // Automatyczny cykl odczytu
+          // Automatyczny cykl odczytu
         void enableAutoRead(uint32_t intervalMs = 1000);
         void disableAutoRead();
-        void setAutoReadCallback(TemperatureCallback callback);
+        void setAutoReadCallback(TemperatureCallback callback, uint32_t intervalMs = 1000);
         
     private:
         OneWire *oneWire;

@@ -200,8 +200,10 @@ void DS18B20Manager::disableAutoRead() {
     autoReadEnabled = false;
 }
 
-void DS18B20Manager::setAutoReadCallback(TemperatureCallback callback) {
+void DS18B20Manager::setAutoReadCallback(TemperatureCallback callback, uint32_t intervalMs) {
     autoReadCallback = callback;
+    autoReadInterval = intervalMs;
+    autoReadEnabled = true;
 }
 
 void DS18B20Manager::processAutoRead() {
