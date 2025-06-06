@@ -1,4 +1,5 @@
 #include "../../Hardware/OneWire/OneWire.h"
+
 #include "../../Interface/IExternalMemory.h"
 #include <functional>
 
@@ -10,6 +11,7 @@
 #ifndef DS_MAX_SENSORS
 #define DS_MAX_SENSORS 10
 #endif
+
 
 // Kody komend DS18B20
 #define DS18B20_READ_ROM        0x33
@@ -114,6 +116,25 @@ class DS18B20 {
         DS18B20Manager* manager;
         uint8_t sensorId;
         bool ownsManager;
+
+void unpack_rom(uint64_t number, uint8_t *result);
+uint64_t pack_rom(uint8_t *buffer);
+
+class DS18B20 {
+    public:
+        DS18B20(OneWire *oneWire);
+        void addSensor(uint64_t romCode, uint8_t nr);
+        uint16_t getTemperature(uint8_t id);
+        void readRom(void);
+        uint64_t getRom(void);
+    private:
+        bool read_rom = false;
+        OneWire *oneWire;
+        uint8_t b_rom[8] ={0};
+        uint64_t rom;
+        uint8_t id=0;
+        uint8_t b_rd[DS_MAX_SENSORS * 9]={0};
+
 };
 
 #endif // __DS18B20_H__
