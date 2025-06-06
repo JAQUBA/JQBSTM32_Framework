@@ -9,6 +9,16 @@ Timer *Timer::getInstance(TIM_HandleTypeDef *pHandler) {
         if(_Timer_instances[i]->_pHandler->Instance == pHandler->Instance) return _Timer_instances[i];
     }
     return nullptr;
+#ifdef HAL_TIM_MODULE_ENABLED
+
+Timer *_Timer_instances[TIMER_MAX_INSTANCES];
+uint8_t _Timer_instancesNum = 0;
+
+Timer *Timer::getInstance(TIM_HandleTypeDef *pHandler) {
+    for (size_t i = 0; i < _Timer_instancesNum; i++) {
+        if(_Timer_instances[i]->_pHandler->Instance == pHandler->Instance) return _Timer_instances[i];
+    }
+    return nullptr;
 }
 void Timer::setPeriod(uint32_t period) {
     _pHandler->Instance->ARR = period-1;

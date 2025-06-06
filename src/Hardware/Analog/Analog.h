@@ -1,6 +1,9 @@
 #include "../../Core.h"
 #ifdef HAL_ADC_MODULE_ENABLED
 
+#include "../../Core.h"
+#ifdef HAL_ADC_MODULE_ENABLED
+
 #ifndef __ANALOG_H_
 #define __ANALOG_H_
 
