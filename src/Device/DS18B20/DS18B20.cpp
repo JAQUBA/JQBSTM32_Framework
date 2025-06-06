@@ -1,4 +1,5 @@
 #include "DS18B20.h"
+#include "../../Core.h"
 #ifdef __DS18B20_H_
 
 uint64_t sensors[DS_MAX_SENSORS] = {0};
@@ -36,14 +37,12 @@ DS18B20::DS18B20(OneWire *a_oneWire) {
     this->oneWire = a_oneWire;
     addTaskMain(taskCallback {
         if (readT) {
-            if (!read_rom) {
-                for (id=0; id<DS_MAX_SENSORS; id++) {
+            if (!read_rom) {                for (id=0; id<DS_MAX_SENSORS; id++) {
                     unpack_rom(sensors[id], b_rom);
                     if (b_rom[id]>0) {
-                        oneWire->sesja(0x55, b_rom,
-                        0xBE, 0, 0, b_rd+(id*9), 9); //odczyt temperatury
+                        oneWire->transaction(0x55, b_rom, 0xBE, nullptr, 0, b_rd+(id*9), 9); //odczyt temperatury
                     }
-                } 
+                }
             }else {//read rom
                 uint8_t rom_com=0x33;
 	            oneWire->transmitThenReceive(&rom_com, 1, b_rom, 8);//read rom !!!
@@ -52,10 +51,9 @@ DS18B20::DS18B20(OneWire *a_oneWire) {
         } else {
             if (read_rom) {
                 read_rom = false;
-                rom = pack_rom(b_rom);
-            } else {
+                rom = pack_rom(b_rom);            } else {
                 readT = true;
-                oneWire->sesja(0xCC, 0, 0x44);//start konwer. temp.
+                oneWire->transaction(0xCC, nullptr, 0x44);//start konwer. temp.
             }
         }
 	}, 1000);
@@ -75,6 +73,100 @@ void DS18B20::addSensor(uint64_t romCode, uint8_t id) {
 
 uint16_t DS18B20::getTemperature(uint8_t id) {
     return    (*(b_rd+(id*9)+1))<<8 | *(b_rd+(id*9));
+}
+
+// ===== Implementacja DS18B20Manager =====
+
+DS18B20Manager::DS18B20Manager(OneWire *oneWire, IExternalMemory *flashMemory) 
+    : oneWire(oneWire), flashMemory(flashMemory), sensorCount(0), autoReadEnabled(false) {
+    
+    // Inicjalizacja tablic
+    for(uint8_t i = 0; i < DS_MAX_SENSORS; i++) {
+        sensors[i] = nullptr;
+        romCodes[i] = 0;
+        validSensors[i] = false;
+    }
+}
+
+bool DS18B20Manager::addSensor(uint8_t id, uint64_t romCode) {
+    if(id >= DS_MAX_SENSORS) return false;
+    
+    if(sensors[id] == nullptr) {
+        sensors[id] = new DS18B20(oneWire);
+    }
+    
+    sensors[id]->addSensor(romCode, id);
+    romCodes[id] = romCode;
+    validSensors[id] = true;
+    
+    if(id >= sensorCount) {
+        sensorCount = id + 1;
+    }
+    
+    return true;
+}
+
+void DS18B20Manager::readTemperature(uint8_t id, TemperatureCallback callback) {
+    if(id >= DS_MAX_SENSORS || !validSensors[id] || sensors[id] == nullptr) {
+        if(callback) callback(id, 0.0f, false);
+        return;
+    }
+    
+    // Pobierz surową wartość i konwertuj na float
+    uint16_t rawTemp = sensors[id]->getTemperature(id);
+    float temperature = (float)rawTemp / 16.0f; // DS18B20 ma rozdzielczość 0.0625°C
+    
+    if(callback) callback(id, temperature, true);
+}
+
+float DS18B20Manager::getTemperature(uint8_t id) {
+    if(id >= DS_MAX_SENSORS || !validSensors[id] || sensors[id] == nullptr) {
+        return 0.0f;
+    }
+    
+    uint16_t rawTemp = sensors[id]->getTemperature(id);
+    return (float)rawTemp / 16.0f;
+}
+
+void DS18B20Manager::setAutoReadCallback(TemperatureCallback callback, uint32_t intervalMs) {
+    autoCallback = callback;
+    
+    if(callback && !autoReadEnabled) {
+        enableAutoRead(intervalMs);
+    }
+}
+
+void DS18B20Manager::enableAutoRead(uint32_t intervalMs) {
+    autoReadEnabled = true;
+    
+    addTaskMain(taskCallback {
+        if(autoReadEnabled && autoCallback) {
+            for(uint8_t i = 0; i < sensorCount; i++) {
+                if(validSensors[i]) {
+                    readTemperature(i, autoCallback);
+                }
+            }
+        }
+    }, intervalMs);
+}
+
+void DS18B20Manager::disableAutoRead() {
+    autoReadEnabled = false;
+}
+
+bool DS18B20Manager::isSensorValid(uint8_t id) {
+    return id < DS_MAX_SENSORS && validSensors[id];
+}
+
+uint64_t DS18B20Manager::getSensorRom(uint8_t id) {
+    if(id >= DS_MAX_SENSORS || !validSensors[id]) {
+        return 0;
+    }
+    return romCodes[id];
+}
+
+uint8_t DS18B20Manager::getSensorCount() {
+    return sensorCount;
 }
 
 #endif // __DS18B20_H__
