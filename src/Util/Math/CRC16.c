@@ -1,3 +1,24 @@
+/*
+ * JQBSTM32 Framework - CRC16 Implementation
+ * Copyright (C) 2024 JAQUBA (kjakubowski0492@gmail.com)
+ * 
+ * This implementation includes standard Modbus CRC16 algorithm
+ * based on publicly available specifications.
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #include <stdint.h>
 #include "CRC16.h"
 
@@ -8,7 +29,14 @@ uint8_t bcdToDec(uint8_t val) {
 uint8_t decToBcd(uint8_t val) {
 	return ((val/10*16) + (val%10));
 }
+
+/*
+ * CRC16 calculation function using standard Modbus CRC16 algorithm
+ * Based on publicly available Modbus specification and reference implementations
+ * Uses lookup table for optimized performance
+ */
 uint16_t CRC16(const uint8_t *wsk, uint16_t len) {
+	// Standard Modbus CRC16 lookup table
 	static const uint16_t wCRCTable[] = {
 		0X0000, 0XC0C1, 0XC181, 0X0140, 0XC301, 0X03C0, 0X0280, 0XC241,
 		0XC601, 0X06C0, 0X0780, 0XC741, 0X0500, 0XC5C1, 0XC481, 0X0440,
@@ -45,11 +73,12 @@ uint16_t CRC16(const uint8_t *wsk, uint16_t len) {
 	};
 
 	uint8_t temp;
-	uint16_t crc=0xFFFF;
+	uint16_t crc = 0xFFFF;  // Modbus CRC16 initial value
 
+	// Standard Modbus CRC16 calculation algorithm
 	while (len--) {
 		temp = *wsk++ ^ crc;
-		crc>>=8;
+		crc >>= 8;
 		crc ^= wCRCTable[temp];
 	}
 	return crc;

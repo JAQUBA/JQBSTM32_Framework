@@ -1,3 +1,20 @@
+﻿/*
+ * JQBSTM32 Framework - Analog.h Header
+ * Copyright (C) 2024 JAQUBA (kjakubowski0492@gmail.com)
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
 #include "../../Core.h"
 #ifdef HAL_ADC_MODULE_ENABLED
 
@@ -8,29 +25,26 @@
 #define ANALOG_MAX_INSTANCES 1
 #endif
 
-// Definicje dla filtrowania i uśredniania
+// Definitions for filtering and averaging
 #ifndef ADC_SAMPLES_COUNT
-#define ADC_SAMPLES_COUNT 64    // Liczba próbek do uśredniania
+#define ADC_SAMPLES_COUNT 64    // Number of samples for averaging
 #endif
 
 #ifndef ADC_FILTER_ALPHA
-#define ADC_FILTER_ALPHA 0.1f   // Współczynnik filtra dolnoprzepustowego (0-1)
+#define ADC_FILTER_ALPHA 0.1f   // Low-pass filter coefficient (0-1)
 #endif
 
 #ifndef ADC_DMA_BUFFER_SIZE
-#define ADC_DMA_BUFFER_SIZE 2   // Rozmiar bufora DMA (podwójny bufor)
+#define ADC_DMA_BUFFER_SIZE 2   // DMA buffer size (double buffer)
 #endif
 
 #ifndef ADC_DEFAULT_MULTIPLIER
-#define ADC_DEFAULT_MULTIPLIER 1000  // Domyślny mnożnik (1.0 w fixed point)
+#define ADC_DEFAULT_MULTIPLIER 1000  // Default multiplier (1.0 in fixed point)
 #endif
 
 #ifndef ADC_PROCESS_TASK_PERIOD
-#define ADC_PROCESS_TASK_PERIOD 10   // Okres zadania przetwarzania danych [ms]
+#define ADC_PROCESS_TASK_PERIOD 10   // Data processing task period [ms]
 #endif
-
-#include "Application/Display/Display.h"
-extern Display display;
 
 class Analog {
 public:
@@ -52,18 +66,18 @@ private:
     ADC_HandleTypeDef *_pHandler;
     size_t bufferSize;
     
-    // Bufory DMA i przetwarzania
-    uint32_t *adcDMABuffer;        // Podwójny bufor DMA
-    uint32_t **adcSamples;         // Bufor próbek dla każdego kanału
-    uint32_t *adcAverage;          // Uśrednione wartości
-    float *adcFiltered;            // Wartości po filtracji
-    uint16_t *adcValue;            // Końcowe wartości
+    // DMA and processing buffers
+    uint32_t *adcDMABuffer;        // Double DMA buffer
+    uint32_t **adcSamples;         // Sample buffer for each channel
+    uint32_t *adcAverage;          // Averaged values
+    float *adcFiltered;            // Values after filtering
+    uint16_t *adcValue;            // Final values
     
-    // Kalibracja
+    // Calibration
     uint16_t *offsets;
     uint16_t *multipliers;
     
-    // Kontrola przetwarzania
+    // Process control
     volatile size_t sampleIndex;
     volatile bool dataReady;
     

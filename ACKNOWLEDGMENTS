@@ -1,0 +1,48 @@
+ACKNOWLEDGMENTS
+===============
+
+The JQBSTM32 Framework acknowledges the use of the following standards, specifications, and publicly available algorithms:
+
+## Protocol Implementations
+
+### Modbus RTU Protocol
+- Implementation based on the official Modbus specification
+- Reference: Modbus Organization (www.modbus.org)
+- File(s): src/Util/Modbus/
+
+### OneWire Protocol
+- Implementation according to Dallas/Maxim 1-Wire specification
+- Reference: Dallas Semiconductor / Maxim Integrated documentation
+- File(s): src/Hardware/OneWire/
+
+### DS18B20 Temperature Sensor
+- Driver implementation for Dallas/Maxim DS18B20 digital temperature sensor
+- Reference: DS18B20 datasheet and application notes
+- File(s): src/Device/DS18B20/
+
+## Algorithm Implementations
+
+### CRC16 Calculation
+- Standard Modbus CRC16 algorithm implementation using lookup table
+- Based on publicly available CRC16 specifications and reference implementations
+- File(s): src/Util/Math/CRC16.c
+
+### Standard Mathematical Functions
+- BCD to Decimal and Decimal to BCD conversion utilities
+- Standard algorithms in public domain
+- File(s): src/Util/Math/CRC16.c
+
+## Hardware Abstraction
+All hardware abstraction layer implementations are original work by the JQBSTM32 Framework authors, designed specifically for STM32 microcontrollers using STM32 HAL library.
+
+## License Compliance
+This framework is licensed under GNU General Public License v3.0 or later. All implementations either:
+1. Are original work by the framework authors, or
+2. Are based on publicly available standards and specifications, or
+3. Use algorithms in the public domain
+
+No copyrighted code from third-party libraries has been incorporated without proper licensing compatibility.
+
+---
+JQBSTM32 Framework
+Copyright (C) 2024 JAQUBA (kjakubowski0492@gmail.com)

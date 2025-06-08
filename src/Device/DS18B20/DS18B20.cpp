@@ -1,3 +1,23 @@
+/*
+ * JQBSTM32 Framework - DS18B20 Temperature Sensor Driver Implementation
+ * Copyright (C) 2024 JAQUBA (kjakubowski0492@gmail.com)
+ * 
+ * Driver for Dallas/Maxim DS18B20 digital temperature sensor.
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #include "DS18B20.h"
 #include "../../Core.h"
 #ifdef __DS18B20_H_
@@ -40,7 +60,7 @@ DS18B20::DS18B20(OneWire *a_oneWire) {
             if (!read_rom) {                for (id=0; id<DS_MAX_SENSORS; id++) {
                     unpack_rom(sensors[id], b_rom);
                     if (b_rom[id]>0) {
-                        oneWire->transaction(0x55, b_rom, 0xBE, nullptr, 0, b_rd+(id*9), 9); //odczyt temperatury
+                        oneWire->transaction(0x55, b_rom, 0xBE, nullptr, 0, b_rd+(id*9), 9); //temperature reading
                     }
                 }
             }else {//read rom
@@ -53,7 +73,7 @@ DS18B20::DS18B20(OneWire *a_oneWire) {
                 read_rom = false;
                 rom = pack_rom(b_rom);            } else {
                 readT = true;
-                oneWire->transaction(0xCC, nullptr, 0x44);//start konwer. temp.
+                oneWire->transaction(0xCC, nullptr, 0x44);//start temp. conversion
             }
         }
 	}, 1000);
@@ -75,12 +95,12 @@ uint16_t DS18B20::getTemperature(uint8_t id) {
     return    (*(b_rd+(id*9)+1))<<8 | *(b_rd+(id*9));
 }
 
-// ===== Implementacja DS18B20Manager =====
+// ===== DS18B20Manager Implementation =====
 
 DS18B20Manager::DS18B20Manager(OneWire *oneWire, IExternalMemory *flashMemory) 
     : oneWire(oneWire), flashMemory(flashMemory), sensorCount(0), autoReadEnabled(false) {
     
-    // Inicjalizacja tablic
+    // Array initialization
     for(uint8_t i = 0; i < DS_MAX_SENSORS; i++) {
         sensors[i] = nullptr;
         romCodes[i] = 0;
@@ -112,9 +132,9 @@ void DS18B20Manager::readTemperature(uint8_t id, TemperatureCallback callback) {
         return;
     }
     
-    // Pobierz surową wartość i konwertuj na float
+    // Get raw value and convert to float
     uint16_t rawTemp = sensors[id]->getTemperature(id);
-    float temperature = (float)rawTemp / 16.0f; // DS18B20 ma rozdzielczość 0.0625°C
+    float temperature = (float)rawTemp / 16.0f; // DS18B20 has 0.0625°C resolution
     
     if(callback) callback(id, temperature, true);
 }

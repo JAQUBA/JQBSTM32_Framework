@@ -1,3 +1,20 @@
+﻿/*
+ * JQBSTM32 Framework - Analog.cpp Implementation
+ * Copyright (C) 2024 JAQUBA (kjakubowski0492@gmail.com)
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
 #include "Analog.h"
 #ifdef __ANALOG_H_
 
@@ -25,7 +42,7 @@ Analog* Analog::getInstance(ADC_HandleTypeDef *pHandler) {
 Analog::Analog(ADC_HandleTypeDef *pHandler) : _pHandler(pHandler), bufferSize(pHandler->Init.NbrOfConversion) {
     _Analog_instances[_Analog_instancesNum++] = this;
 
-    // Inicjalizacja buforów
+    // Buffer initialization
     adcDMABuffer = new uint32_t[bufferSize * ADC_DMA_BUFFER_SIZE];
     adcSamples = new uint32_t*[bufferSize];
     adcAverage = new uint32_t[bufferSize];
@@ -36,7 +53,7 @@ Analog::Analog(ADC_HandleTypeDef *pHandler) : _pHandler(pHandler), bufferSize(pH
         adcSamples[i] = new uint32_t[ADC_SAMPLES_COUNT];
     }
 
-    // Inicjalizacja kalibracji
+    // Calibration initialization
     offsets = new uint16_t[bufferSize];
     multipliers = new uint16_t[bufferSize];
     
@@ -48,35 +65,33 @@ Analog::Analog(ADC_HandleTypeDef *pHandler) : _pHandler(pHandler), bufferSize(pH
         adcValue[i] = 0;
     }
 
-    // Inicjalizacja zmiennych kontrolnych
+    // Control variables initialization
     sampleIndex = 0;
     dataReady = false;
 
-    // Kalibracja ADC
+    // ADC calibration
     HAL_ADCEx_Calibration_Start(pHandler);
 
-    // Start ADC z DMA
+    // Start ADC with DMA
     if (HAL_ADC_Start_DMA(pHandler, adcDMABuffer, bufferSize * ADC_DMA_BUFFER_SIZE) != HAL_OK) {
         Error_Handler();
     }
 
-    // Zadanie przetwarzania danych
+    // Data processing task
     addTaskMain(taskCallback {
         if(dataReady) {
             processData();
             dataReady = false;
         }
-        display.toggle(displayMap::S3);
     }, ADC_PROCESS_TASK_PERIOD);
 }
 
 void Analog::convCpltCallback() {
-    processDMAData(adcDMABuffer + bufferSize);  // Druga połowa bufora
-    display.toggle(displayMap::S1);
+    processDMAData(adcDMABuffer + bufferSize);  // Second half of buffer
 }
 
 void Analog::convHalfCpltCallback() {
-    processDMAData(adcDMABuffer);  // Pierwsza połowa bufora
+    processDMAData(adcDMABuffer);  // First half of buffer
 }
 
 void Analog::processDMAData(uint32_t* data) {
@@ -93,21 +108,21 @@ void Analog::processDMAData(uint32_t* data) {
 
 void Analog::processData() {
     for(size_t channel = 0; channel < bufferSize; channel++) {
-        // Uśrednianie próbek
+        // Sample averaging
         uint32_t sum = 0;
         for(size_t i = 0; i < ADC_SAMPLES_COUNT; i++) {
             sum += adcSamples[channel][i];
         }
         adcAverage[channel] = sum / ADC_SAMPLES_COUNT;
         
-        // Filtracja dolnoprzepustowa
+        // Low-pass filtering
         adcFiltered[channel] = adcFiltered[channel] * (1.0f - ADC_FILTER_ALPHA) + 
                               adcAverage[channel] * ADC_FILTER_ALPHA;
         
-        // Kalibracja i konwersja do 16-bit
+        // Calibration and conversion to 16-bit
         int32_t calibrated = ((int32_t)adcFiltered[channel] - offsets[channel]) * multipliers[channel] / 1000;
         
-        // Ograniczenie do zakresu 16-bit
+        // Limit to 16-bit range
         if(calibrated < 0) calibrated = 0;
         if(calibrated > 65535) calibrated = 65535;
         

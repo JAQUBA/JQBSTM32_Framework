@@ -1,3 +1,20 @@
+﻿/*
+ * JQBSTM32 Framework - FlashMemory.cpp Implementation
+ * Copyright (C) 2024 JAQUBA (kjakubowski0492@gmail.com)
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
 #include "FlashMemory.h"
 #ifdef HAL_FLASH_MODULE_ENABLED
 
@@ -70,51 +87,51 @@ FLASH_EraseInitTypeDef FlashMemory::GenerateFlashEraseStruct(uint32_t Address) {
     FLASH_EraseInitTypeDef EraseInitStruct;
 
     #if defined(STM32F1)
-        // Dla STM32F1
-        EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;    // Typ operacji (strony)
-        EraseInitStruct.PageAddress = Address;                // Adres strony
-        EraseInitStruct.NbPages = 1;                          // Liczba stron do wymazania
+        // For STM32F1
+        EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;    // Operation type (pages)
+        EraseInitStruct.PageAddress = Address;                // Page address
+        EraseInitStruct.NbPages = 1;                          // Number of pages to erase
 
     #elif defined(STM32F4)
-        // Dla STM32F4
-        EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;  // Typ operacji (sektory)
-        EraseInitStruct.Sector = GetFlashSector(Address);     // Obliczenie sektora na podstawie adresu
-        EraseInitStruct.NbSectors = 1;                        // Liczba sektorów do wymazania
-        EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3; // Zakres napięcia
+        // For STM32F4
+        EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;  // Operation type (sectors)
+        EraseInitStruct.Sector = GetFlashSector(Address);     // Sector calculation based on address
+        EraseInitStruct.NbSectors = 1;                        // Number of sectors to erase
+        EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3; // Voltage range
 
     #elif defined(STM32H4)
-        // Dla STM32H4
-        EraseInitStruct.TypeErase = FLASH_TYPEERASE_MASS;     // Typ operacji (cała pamięć)
-        // Można dodać inne pola specyficzne dla H4, jeśli istnieją
+        // For STM32H4
+        EraseInitStruct.TypeErase = FLASH_TYPEERASE_MASS;     // Operation type (entire memory)
+        // Other H4-specific fields can be added if they exist
 
     #elif defined(STM32G0)
-        // Dla STM32G0
-        EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;    // Typ operacji (strony)
-        EraseInitStruct.Page = (Address - FLASH_BASE) / FLASH_PAGE_SIZE; // Numer strony
-        EraseInitStruct.NbPages = 1;                          // Liczba stron do wymazania
+        // For STM32G0
+        EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;    // Operation type (pages)
+        EraseInitStruct.Page = (Address - FLASH_BASE) / FLASH_PAGE_SIZE; // Page number
+        EraseInitStruct.NbPages = 1;                          // Number of pages to erase
 
     #elif defined(STM32G4)
-        // Dla STM32G4
-        EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;    // Typ operacji (strony)
-        EraseInitStruct.Page = (Address - FLASH_BASE) / FLASH_PAGE_SIZE; // Numer strony
-        EraseInitStruct.NbPages = 1;                          // Liczba stron do wymazania
+        // For STM32G4
+        EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;    // Operation type (pages)
+        EraseInitStruct.Page = (Address - FLASH_BASE) / FLASH_PAGE_SIZE; // Page number
+        EraseInitStruct.NbPages = 1;                          // Number of pages to erase
 
     #elif defined(STM32L4)
-        // Dla STM32L4
-        EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;    // Typ operacji (strony)
-        EraseInitStruct.Page = (Address - FLASH_BASE) / FLASH_PAGE_SIZE; // Numer strony
-        EraseInitStruct.NbPages = 1;                          // Liczba stron do skasowania
-        EraseInitStruct.Banks = FLASH_BANK_1;                 // Ustawienie banku, jeśli jest potrzebne
+        // For STM32L4
+        EraseInitStruct.TypeErase = FLASH_TYPEERASE_PAGES;    // Operation type (pages)
+        EraseInitStruct.Page = (Address - FLASH_BASE) / FLASH_PAGE_SIZE; // Page number
+        EraseInitStruct.NbPages = 1;                          // Number of pages to erase
+        EraseInitStruct.Banks = FLASH_BANK_1;                 // Bank setting, if needed
     #elif defined(STM32H7)
-        // Dla STM32L5
-        EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;  // Typ operacji (sektory)
-        EraseInitStruct.Sector = GetFlashSector(Address);     // Obliczenie sektora na podstawie adresu
-        EraseInitStruct.Banks = FLASH_BANK_1;                 // Ustawienie banku, jeśli jest potrzebne
-        EraseInitStruct.NbSectors = 1;                        // Liczba sektorów do wymazania
-        EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3; // Zakres napięcia
+        // For STM32L5
+        EraseInitStruct.TypeErase = FLASH_TYPEERASE_SECTORS;  // Operation type (sectors)
+        EraseInitStruct.Sector = GetFlashSector(Address);     // Sector calculation based on address
+        EraseInitStruct.Banks = FLASH_BANK_1;                 // Bank setting, if needed
+        EraseInitStruct.NbSectors = 1;                        // Number of sectors to erase
+        EraseInitStruct.VoltageRange = FLASH_VOLTAGE_RANGE_3; // Voltage range
     #else
-        // Domyślny przypadek, jeśli typ procesora nie jest obsługiwany
-        #error "Nieobsługiwany typ procesora!"
+        // Default case, if processor type is not supported
+        #error "Unsupported processor type!"
     #endif
 
     return EraseInitStruct;
@@ -124,13 +141,13 @@ FLASH_EraseInitTypeDef FlashMemory::GenerateFlashEraseStruct(uint32_t Address) {
 uint32_t FlashMemory::GetFlashSector(uint32_t Address) {
     
     if (Address < 0x08010000) {
-        // Sektory 0–3 (16 KB każdy)
+        // Sectors 0-3 (16 KB each)
         return (Address - 0x08000000) / 0x4000;
     } else if (Address < 0x08020000) {
-        // Sektor 4 (64 KB)
+        // Sector 4 (64 KB)
         return FLASH_SECTOR_4;
     } else {
-        // Sektory 5–7 (128 KB każdy)
+        // Sectors 5-11 (128 KB each)
         return FLASH_SECTOR_5 + ((Address - 0x08020000) / 0x20000);
     }
 }

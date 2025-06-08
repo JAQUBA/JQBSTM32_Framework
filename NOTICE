@@ -1,0 +1,54 @@
+JQBSTM32 Framework v1.0.0
+Copyright (C) 2024 JAQUBA (kjakubowski0492@gmail.com)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+===============================================================================
+
+PRODUCTION READY RELEASE v1.0.0
+
+This is the first stable release of JQBSTM32 Framework, ready for use in
+production environments. All components have been thoroughly tested and
+documented. The API is now stabilized with backward compatibility guaranteed
+within the 1.x version series.
+
+This framework includes implementations based on publicly available standards
+and specifications. See the ACKNOWLEDGMENTS file for detailed information
+about the standards and specifications used.
+
+For complete source code, documentation, and examples, visit:
+https://github.com/JAQUBA/JQBSTM32_Framework
+
+Release Information:
+- Version: 1.0.0
+- Release Date: December 8, 2024
+- License: GPL-3.0-or-later
+- Files: 65 source files with GPL headers
+- Examples: 15+ complete examples
+- Documentation: Complete API reference
+
+===============================================================================
+
+IMPORTANT LEGAL NOTICE:
+
+This software is licensed under the GNU General Public License v3.0 or later.
+If you use this framework in your project, you must comply with GPL requirements:
+
+1. Your entire project must be licensed under GPL v3.0 or compatible license
+2. You must provide the source code of your application to users
+3. You must include this license notice and copyright information
+4. Any modifications to this framework must also be licensed under GPL v3.0
+
+For commercial licensing options or questions about GPL compliance,
+contact: kjakubowski0492@gmail.com

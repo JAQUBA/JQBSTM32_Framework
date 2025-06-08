@@ -1,7 +1,7 @@
 {
     "name": "JQBSTM32",
-    "version": "1.0.0-alpha",
-    "description": "Framework for fast development STM32 applications with CubeMX and PlatformIO",
+    "version": "1.0.0",
+    "description": "Production-ready framework for rapid STM32 application development with CubeMX and PlatformIO",
     "keywords": "stm32, platformio, cubemx",
     "repository":
     {

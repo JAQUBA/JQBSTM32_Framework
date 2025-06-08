@@ -7,7 +7,7 @@ board = env.BoardConfig()
 MCU = board.get("build.mcu", "")
 MCU_FAMILY = MCU[0:7]
 
-# Ścieżka do domyślnego pliku HAL
+# Path to default HAL file
 framework_dir = platform.get_package_dir("framework-stm32cube%s" % MCU[5:7])
 default_conf_h_path = os.path.join(
     framework_dir,
@@ -17,18 +17,18 @@ default_conf_h_path = os.path.join(
     MCU_FAMILY + "xx_hal_conf.h"
 )
 
-# Ścieżka do niestandardowego pliku konfiguracyjnego w projekcie
+# Path to custom configuration file in project
 custom_conf_h_path = os.path.join(env["PROJECT_DIR"], "Core", "Inc", MCU_FAMILY + "xx_hal_conf.h")
 
-# Usuń oryginalny plik i skopiuj niestandardowy plik na jego miejsce
+# Remove original file and copy custom file to its place
 if os.path.isfile(default_conf_h_path):
     os.remove(default_conf_h_path)
 shutil.copy(custom_conf_h_path, default_conf_h_path)
 
-# Dodaj katalog projektu do ścieżek nagłówkowych
+# Add project directory to header paths
 env.Prepend(CPPPATH=[os.path.join(env["PROJECT_DIR"], "Core", "Inc")])
 
-# Skonfiguruj kompilację źródeł projektu
+# Configure compilation of project sources
 env.BuildSources(
     os.path.join("$BUILD_DIR", "Core", "Src"),
     os.path.join("$PROJECT_DIR", "Core", "Src")

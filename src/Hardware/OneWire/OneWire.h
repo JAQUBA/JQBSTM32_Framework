@@ -1,3 +1,23 @@
+/*
+ * JQBSTM32 Framework - OneWire Protocol Header
+ * Copyright (C) 2024 JAQUBA (kjakubowski0492@gmail.com)
+ * 
+ * Implementation according to Dallas/Maxim 1-Wire specification.
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #ifndef ONEWIRE_H
 #define ONEWIRE_H
 
@@ -9,29 +29,29 @@ class OneWire : public IBus {
 	public:
 		OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
 
-		// Resetuje magistralę 1-Wire
+		// Resets 1-Wire bus
 		void reset();
 
-		// Wysyła dane przez 1-Wire
+		// Sends data through 1-Wire
 		void transmit(
 			const uint8_t* pData, uint16_t size,
 			dataCallback_f callbackFn = nullptr
 		);
 
-		// Odbiera dane przez 1-Wire
+		// Receives data through 1-Wire
 		void receive(
 			uint8_t* pData, uint16_t size,
 			dataCallback_f callbackFn = nullptr
 		);
 
-		// Sekwencja: najpierw transmisja, potem odbiór
+		// Sequence: first transmit, then receive
 		void transmitThenReceive(
 			const uint8_t* pData_tx, uint16_t txSize,
 			uint8_t* pData_rx, uint16_t rxSize,
 			dataCallback_f callbackFn = nullptr
 		);
 
-		// Pełna transakcja na magistrali 1-Wire
+		// Full transaction on 1-Wire bus
 		void transaction(
 			uint8_t romCommand,
 			const uint8_t* address,
