@@ -47,7 +47,6 @@
 - **RegisterBank** - Register bank system for configuration data
 - **MemoryBlock** - Memory block management
 - **Menu System** - Menu system for user interfaces
-- **PID Controller** - PID controller
 - **Math Utils** - Mathematical functions
 - **Scheduler** - Advanced task scheduler
 
