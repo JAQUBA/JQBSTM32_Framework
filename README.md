@@ -83,11 +83,10 @@ lib_deps =
 
 ### 2. Local Installation
 ```bash
-```bash
 git submodule add https://github.com/JAQUBA/JQBSTM32_Framework.git lib/JQBSTM32
 git submodule update --init --recursive
 ```
-```
+
 
 ## Technical Support
 
