@@ -20,25 +20,49 @@
 
 //#include "../Interface/IBus.h"
 
-#define ADDRESS_SIZE_8BIT            (0x00000001U)
-#define ADDRESS_SIZE_16BIT           (0x00000002U)
-#define ADDRESS_SIZE_24BIT           (0x00000003U)
-#define ADDRESS_SIZE_32BIT           (0x00000004U)
+/**
+ * @brief Memory address size constants
+ * @details Define address size for different memory types
+ */
+#define ADDRESS_SIZE_8BIT            (0x00000001U) ///< 8-bit address size
+#define ADDRESS_SIZE_16BIT           (0x00000002U) ///< 16-bit address size  
+#define ADDRESS_SIZE_24BIT           (0x00000003U) ///< 24-bit address size
+#define ADDRESS_SIZE_32BIT           (0x00000004U) ///< 32-bit address size
 
+/**
+ * @brief External memory interface
+ * @details Abstract interface for external memory devices (EEPROM, FRAM, Flash, etc.)
+ * @note Provides standardized read/write operations for different memory types
+ */
 class IExternalMemory {
     public:
+        /**
+         * @brief Read data from memory
+         * @details Reads specified number of bytes from memory starting at given address
+         * @param MemAddress Memory address to read from
+         * @param pData Pointer to buffer for read data
+         * @param Size Number of bytes to read
+         */
         virtual void readFromMemory(
             uint32_t MemAddress,
             uint8_t *pData, 
             uint16_t Size
         ) = 0;
+        
+        /**
+         * @brief Write data to memory
+         * @details Writes specified number of bytes to memory starting at given address
+         * @param MemAddress Memory address to write to
+         * @param pData Pointer to data buffer to write
+         * @param Size Number of bytes to write
+         */
         virtual void writeToMemory(
             uint32_t MemAddress,
             uint8_t *pData, 
             uint16_t Size
         ) = 0;
     protected:
-        // IBus *_pInstance;
+        // IBus *_pInstance; ///< Bus instance pointer (commented out)
 };
 
 #endif

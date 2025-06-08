@@ -15,6 +15,36 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
+
+/**
+ * @file def_font.h
+ * @brief Default font definition for DFR0646 7-segment LED display
+ * @details Contains character encoding tables for displaying ASCII characters
+ *          on 7-segment LED displays. Maps ASCII values to 7-segment patterns.
+ * @author JAQUBA
+ * @version 1.0
+ * @date 2024
+ * 
+ * @note Some ASCII characters cannot be properly displayed on 7-segment displays
+ * @note Character patterns are optimized for readability on 7-segment format
+ */
+
+/**
+ * @brief Character encoding table for 7-segment display
+ * @details Array mapping ASCII character codes to 7-segment display patterns.
+ *          Each entry corresponds to the bit pattern needed to display
+ *          the character on a 7-segment LED display.
+ * 
+ * @note Array index corresponds to ASCII value minus 32 (space character)
+ * @note Value 0x00 indicates character cannot be displayed or is blank
+ * @note Bit pattern corresponds to 7-segment display segments (a-g)
+ * 
+ * Supported characters include:
+ * - Digits 0-9 (fully supported)
+ * - Some letters (limited by 7-segment constraints)
+ * - Basic punctuation where possible
+ * - Special symbols adapted for 7-segment format
+ */
 const unsigned char TAB2[] = {
 	0x00,//  32
 	0x00,//  33

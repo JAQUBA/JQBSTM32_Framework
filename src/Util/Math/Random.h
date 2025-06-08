@@ -20,7 +20,36 @@
 
 #include <stdlib.h>
 
+/**
+ * @file Random.h
+ * @brief Random number generation utilities
+ * @details This header provides functions for generating random numbers within
+ *          specified ranges for both integer and floating-point values.
+ *          Uses standard C library rand() function as the base generator.
+ */
+
+/**
+ * @brief Generate random floating-point number within specified range
+ * @param min Minimum value (inclusive)
+ * @param max Maximum value (exclusive)
+ * @return Random float value in range [min, max)
+ * @details Generates a random floating-point number uniformly distributed
+ *          between min (inclusive) and max (exclusive).
+ * @note Uses standard rand() function - consider seeding with srand() for better randomness
+ * @note Result is in range [min, max) where max is not included
+ */
 float random_float(float min, float max);
+
+/**
+ * @brief Generate random integer within specified range
+ * @param min Minimum value (inclusive)
+ * @param max Maximum value (inclusive)
+ * @return Random integer value in range [min, max]
+ * @details Generates a random integer uniformly distributed between
+ *          min and max (both inclusive).
+ * @note Uses standard rand() function - consider seeding with srand() for better randomness
+ * @note Both min and max values are included in the possible results
+ */
 int random_num(int min, int max);
 
 #endif

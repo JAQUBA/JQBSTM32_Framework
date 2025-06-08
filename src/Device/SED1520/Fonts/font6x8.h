@@ -15,8 +15,53 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
+
+/**
+ * @file font6x8.h
+ * @brief 6x8 pixel font definition for SED1520 LCD displays
+ * @details Contains bitmap font data for ASCII characters in 6x8 pixel format.
+ *          Each character is represented by 6 bytes, with each byte representing
+ *          a vertical column of 8 pixels.
+ * @author JAQUBA
+ * @version 1.0
+ * @date 2024
+ * 
+ * @note Font format: 6 pixels wide, 8 pixels high
+ * @note Character encoding: ASCII (space to various printable characters)
+ * @note Bit order: LSB at top, MSB at bottom for each vertical column
+ */
+
 #include <stdint.h>
+
+/**
+ * @brief Maximum number of characters defined in the font
+ * @details This constant defines how many characters are available in the font array
+ */
 #define FONT_MAX_CHAR 20
+
+/**
+ * @brief 6x8 pixel font bitmap data array
+ * @details Array containing bitmap data for ASCII characters. Each character
+ *          consists of 6 bytes representing vertical columns of pixels.
+ *          Character order corresponds to ASCII values starting from space (32).
+ * 
+ * @note Each byte represents a vertical column of 8 pixels
+ * @note Bit 0 = top pixel, Bit 7 = bottom pixel
+ * @note 6 bytes per character: [col0, col1, col2, col3, col4, col5]
+ * 
+ * Characters included:
+ * - Space (0x00)
+ * - ! (0x2F)
+ * - " (0x07, 0x00, 0x07)
+ * - # (hash symbol)
+ * - $ (dollar sign)
+ * - % (percent)
+ * - & (ampersand)
+ * - ' (apostrophe)
+ * - ( ) (parentheses)
+ * - * (asterisk)
+ * - And more...
+ */
 const uint8_t font6x8 [] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //   0 
     0x00, 0x00, 0x00, 0x2f, 0x00, 0x00, // ! 1 

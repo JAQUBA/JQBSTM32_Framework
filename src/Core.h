@@ -29,39 +29,115 @@
 #include "fl_bit.h"
 #include "Scheduler.hpp"
 
-// Struktura dla pary GPIO (port + pin)
+/**
+ * @brief GPIO Pin structure for pairing port and pin
+ * @details Structure containing GPIO port and pin information for easy GPIO handling
+ */
 struct GPIO_Pin {
-    GPIO_TypeDef* port;
-    uint16_t pin;
+    GPIO_TypeDef* port; ///< GPIO port pointer
+    uint16_t pin;       ///< GPIO pin number
 };
 
 #ifndef __weak
 #define __weak __attribute__((weak))
 #endif
 
+/**
+ * @brief Core framework class
+ * @details Main framework initialization class providing basic system setup
+ */
 class Core {
     public:
+        /**
+         * @brief Core constructor
+         * @details Initializes the core framework components
+         */
         Core();
 };
 
+/**
+ * @brief Add task to main scheduler
+ * @details Adds a new task to the main scheduler queue for execution in main loop context
+ * @param functionPointer Function pointer to the task callback
+ * @param delay Initial delay before first execution (default: 0)
+ * @param single Execute task only once (default: false)
+ * @param time Time multiplier for delay calculation (default: MUL_1MS)
+ * @return taskStruct Task structure containing task information
+ */
 taskStruct addTaskMain(taskCallback_f functionPointer, uint32_t delay = 0, bool single = false, Scheduler::taskTime time = Scheduler::taskTime::MUL_1MS);
+
+/**
+ * @brief Add task to interrupt scheduler
+ * @details Adds a new task to the interrupt scheduler for execution in interrupt context
+ * @param functionPointer Function pointer to the task callback
+ * @param delay Initial delay before first execution (default: 0)
+ * @param single Execute task only once (default: false)
+ * @param time Time multiplier for delay calculation (default: MUL_1MS)
+ * @return taskStruct Task structure containing task information
+ */
 taskStruct addTaskInterrupt(taskCallback_f functionPointer, uint32_t delay = 0, bool single = false, Scheduler::taskTime time = Scheduler::taskTime::MUL_1MS);
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/**
+ * @brief Initialize framework components
+ * @details Initializes all framework components and hardware abstractions
+ */
 void init();
+
+/**
+ * @brief User setup function
+ * @details User-defined setup function called once at startup (weak function)
+ */
 void setup();
+
+/**
+ * @brief User main loop function
+ * @details User-defined main loop function called repeatedly (weak function)
+ */
 void loop();
 
-extern uint32_t ulMillis;
+extern uint32_t ulMillis; ///< Global millisecond counter
+
+/**
+ * @brief Get current millisecond count
+ * @details Returns the number of milliseconds since system startup
+ * @return uint32_t Current millisecond count
+ */
 uint32_t millis();
+
+/**
+ * @brief Delay execution for specified milliseconds
+ * @details Blocks execution for the specified number of milliseconds
+ * @param delay_ms Delay time in milliseconds
+ */
 void delay(volatile uint32_t delay_ms);
+
+/**
+ * @brief Delay execution for specified microseconds
+ * @details Blocks execution for the specified number of microseconds
+ * @param delay_us Delay time in microseconds
+ */
 void delay_us(volatile uint32_t delay_us);
 
+/**
+ * @brief System clock configuration function
+ * @details External function for configuring system clock (implemented by user)
+ */
 extern void SystemClock_Config();
 
+/**
+ * @brief Map value from one range to another
+ * @details Re-maps a number from one range to another (Arduino-compatible function)
+ * @param x The number to map
+ * @param in_min The lower bound of the value's current range
+ * @param in_max The upper bound of the value's current range
+ * @param out_min The lower bound of the value's target range
+ * @param out_max The upper bound of the value's target range
+ * @return long The mapped value
+ */
 long map(long x, long in_min, long in_max, long out_min, long out_max);
 
 #ifdef __cplusplus

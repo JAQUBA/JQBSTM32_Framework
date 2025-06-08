@@ -23,14 +23,37 @@
 
 #include "../Timer/Timer.h"
 
+/**
+ * @brief PWM (Pulse Width Modulation) class
+ * @details Provides PWM signal generation with configurable duty cycle
+ * @note Inherits from Timer class for timer-based operations
+ */
 class PWM : public Timer {
     public:
+        /**
+         * @brief PWM constructor
+         * @details Initializes PWM instance with the specified timer and channel
+         * @param pHandler Pointer to HAL timer handler
+         * @param channel Timer channel for PWM output (TIM_CHANNEL_1, TIM_CHANNEL_2, etc.)
+         */
         PWM(TIM_HandleTypeDef *pHandler, uint32_t channel);
+        
+        /**
+         * @brief Set PWM duty cycle value
+         * @details Sets the PWM compare value (duty cycle)
+         * @param value PWM compare value (0 to timer auto-reload value)
+         */
         void set(uint32_t value);
+        
+        /**
+         * @brief Get current PWM duty cycle value
+         * @details Returns the current PWM compare value
+         * @return uint32_t Current PWM compare value
+         */
         uint32_t get();
     private:
-        uint32_t _channel;
-        uint32_t _value;
+        uint32_t _channel; ///< Timer channel used for PWM
+        uint32_t _value;   ///< Current PWM value
 };
 
 #endif

@@ -20,8 +20,13 @@
 
 #include <functional>
 
-#define MEM_ADR_INVALID 0
+#define MEM_ADR_INVALID 0 ///< Invalid memory address constant
 
+/**
+ * @brief Bus communication interface
+ * @details Abstract base class for communication bus implementations (I2C, SPI, UART, etc.)
+ * @note Provides common interface for all bus communication classes
+ */
 class IBus {
     public:
     protected:

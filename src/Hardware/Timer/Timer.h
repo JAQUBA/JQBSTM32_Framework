@@ -23,37 +23,74 @@
 
 #include "TimerCount.h"
 #ifndef TIMER_MAX_INSTANCES
-#define TIMER_MAX_INSTANCES TIMERS_AVAILABLE
+#define TIMER_MAX_INSTANCES TIMERS_AVAILABLE ///< Maximum number of timer instances
 #endif
 
 // #define timerCallback [&](Timer *timer)
 // using timerCallback_f = std::function<void(class Timer *timer)>;
 
+/**
+ * @brief Timer hardware abstraction class
+ * @details Provides timer functionality with interrupt handling and period control
+ */
 class Timer {
     public:
+        /**
+         * @brief Timer constructor
+         * @details Initializes timer instance with the specified HAL handler
+         * @param pHandler Pointer to HAL timer handler
+         */
         explicit Timer(TIM_HandleTypeDef *pHandler);
+        
+        /**
+         * @brief Get timer instance
+         * @details Returns existing timer instance or creates new one for the specified handler
+         * @param pHandler Pointer to HAL timer handler
+         * @return Timer* Pointer to timer instance
+         */
         static Timer *getInstance(TIM_HandleTypeDef *pHandler);
 
+        /**
+         * @brief Timer interrupt types enumeration
+         * @details Defines different types of timer interrupts that can be handled
+         */
         enum InterruptType {
-            PeriodElapsedCallback,
-            PeriodElapsedHalfCpltCallback,
-            OC_DelayElapsedCallback,
-            IC_CaptureCallback,
-            IC_CaptureHalfCpltCallback,
-            PWM_PulseFinishedCallback,
-            PWM_PulseFinishedHalfCpltCallback,
-            TriggerCallback,
-            TriggerHalfCpltCallback,
-            ErrorCallback
+            PeriodElapsedCallback,           ///< Timer period elapsed interrupt
+            PeriodElapsedHalfCpltCallback,   ///< Timer period half complete interrupt
+            OC_DelayElapsedCallback,         ///< Output compare delay elapsed interrupt
+            IC_CaptureCallback,              ///< Input capture interrupt
+            IC_CaptureHalfCpltCallback,      ///< Input capture half complete interrupt
+            PWM_PulseFinishedCallback,       ///< PWM pulse finished interrupt
+            PWM_PulseFinishedHalfCpltCallback, ///< PWM pulse half finished interrupt
+            TriggerCallback,                 ///< Timer trigger interrupt
+            TriggerHalfCpltCallback,         ///< Timer trigger half complete interrupt
+            ErrorCallback                    ///< Timer error interrupt
         };
 
+        /**
+         * @brief Attach interrupt callback
+         * @details Registers a callback function for specific timer interrupt type
+         * @param interruptType Type of interrupt to handle
+         * @param callback Function to be called on interrupt
+         */
         void attachInterrupt(InterruptType interruptType, voidCallback_f callback);
+        
+        /**
+         * @brief Handle timer interrupt
+         * @details Internal function called by HAL to handle timer interrupts
+         * @param interruptType Type of interrupt that occurred
+         */
         void handleInterrupt(InterruptType interruptType);
 
+        /**
+         * @brief Set timer period
+         * @details Sets the auto-reload value for the timer
+         * @param period Timer period value
+         */
         void setPeriod(uint32_t period);
     protected:
-        TIM_HandleTypeDef* _pHandler;
-        std::list<std::pair<InterruptType, voidCallback_f>> _callbacks;
+        TIM_HandleTypeDef* _pHandler; ///< HAL timer handler pointer
+        std::list<std::pair<InterruptType, voidCallback_f>> _callbacks; ///< List of interrupt callbacks
 };
 
 #endif // _TIMER_H
