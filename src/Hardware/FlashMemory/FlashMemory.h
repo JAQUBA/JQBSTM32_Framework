@@ -16,7 +16,7 @@ class FlashMemory : public IExternalMemory{
         
     private:
         FLASH_EraseInitTypeDef GenerateFlashEraseStruct(uint32_t Address);
-        #ifdef STM32F4
+        #if defined(STM32F4) || defined(STM32H7)
         uint32_t GetFlashSector(uint32_t Address);
         #endif
 };
