@@ -19,26 +19,41 @@
 #ifdef HAL_FLASH_MODULE_ENABLED
 
 void FlashMemory::writeToMemory(uint32_t MemAddress, uint8_t *pData, uint16_t Size) {
-    HAL_FLASH_Unlock();
+    // Ustal adres początku strony
+    uint32_t pageStart = MemAddress - (MemAddress % FLASH_PAGE_SIZE);
+    uint8_t pageBuffer[FLASH_PAGE_SIZE];
 
+    // Odczytaj całą stronę do bufora
+    for (uint32_t i = 0; i < FLASH_PAGE_SIZE; i++) {
+        pageBuffer[i] = *reinterpret_cast<uint8_t*>(pageStart + i);
+    }
+
+    // Podmień fragment w buforze
+    for (uint16_t i = 0; i < Size; i++) {
+        if ((MemAddress + i) < (pageStart + FLASH_PAGE_SIZE)) {
+            pageBuffer[(MemAddress + i) - pageStart] = pData[i];
+        }
+    }
+
+    HAL_FLASH_Unlock();
     FLASH_EraseInitTypeDef EraseInitStruct;
     EraseInitStruct = GenerateFlashEraseStruct(MemAddress);
-
     uint32_t PageError = 0;
     if (HAL_FLASHEx_Erase(&EraseInitStruct, &PageError) != HAL_OK) {
         HAL_FLASH_Lock();
         return;
     }
-    for (uint16_t i = 0; i < Size; i += 8) {
+    // Zapisz całą stronę z bufora
+    for (uint32_t i = 0; i < FLASH_PAGE_SIZE; i += 8) {
         uint64_t data = 0;
-        memcpy(&data, &pData[i], (Size - i >= 8) ? 8 : Size - i);
+        memcpy(&data, &pageBuffer[i], (FLASH_PAGE_SIZE - i >= 8) ? 8 : FLASH_PAGE_SIZE - i);
         #ifdef STM32H7
-        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, MemAddress + i, data) != HAL_OK) {
+        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, pageStart + i, data) != HAL_OK) {
             HAL_FLASH_Lock();
             return;
         }
         #elif defined(STM32F4) || defined(STM32F1) || defined(STM32G0) || defined(STM32G4) || defined(STM32L4)
-        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, MemAddress + i, data) != HAL_OK) {
+        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, pageStart + i, data) != HAL_OK) {
             HAL_FLASH_Lock();
             return;
         }
@@ -58,27 +73,42 @@ uint64_t FlashMemory::read(uint32_t MemAddress) {
 }
 
 void FlashMemory::write(uint32_t MemAddress, uint64_t Data) {
-    HAL_FLASH_Unlock();
+    // Ustal adres początku strony
+    uint32_t pageStart = MemAddress - (MemAddress % FLASH_PAGE_SIZE);
+    uint8_t pageBuffer[FLASH_PAGE_SIZE];
 
+    // Odczytaj całą stronę do bufora
+    for (uint32_t i = 0; i < FLASH_PAGE_SIZE; i++) {
+        pageBuffer[i] = *reinterpret_cast<uint8_t*>(pageStart + i);
+    }
+
+    // Podmień 8 bajtów w buforze
+    memcpy(&pageBuffer[MemAddress - pageStart], &Data, 8);
+
+    HAL_FLASH_Unlock();
     FLASH_EraseInitTypeDef EraseInitStruct;
     EraseInitStruct = GenerateFlashEraseStruct(MemAddress);
-
     uint32_t PageError = 0;
     if (HAL_FLASHEx_Erase(&EraseInitStruct, &PageError) != HAL_OK) {
         HAL_FLASH_Lock();
         return;
     }
-    #ifdef STM32H7
-    if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, MemAddress, Data) != HAL_OK) {
-        HAL_FLASH_Lock();
-        return;
+    // Zapisz całą stronę z bufora
+    for (uint32_t i = 0; i < FLASH_PAGE_SIZE; i += 8) {
+        uint64_t data = 0;
+        memcpy(&data, &pageBuffer[i], (FLASH_PAGE_SIZE - i >= 8) ? 8 : FLASH_PAGE_SIZE - i);
+        #ifdef STM32H7
+        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, pageStart + i, data) != HAL_OK) {
+            HAL_FLASH_Lock();
+            return;
+        }
+        #elif defined(STM32F4) || defined(STM32F1) || defined(STM32G0) || defined(STM32G4) || defined(STM32L4)
+        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, pageStart + i, data) != HAL_OK) {
+            HAL_FLASH_Lock();
+            return;
+        }
+        #endif
     }
-    #elif defined(STM32F4) || defined(STM32F1) || defined(STM32G0) || defined(STM32G4) || defined(STM32L4)
-    if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, MemAddress, Data) != HAL_OK) {
-        HAL_FLASH_Lock();
-        return;
-    }
-    #endif
     HAL_FLASH_Lock();
 }
 
