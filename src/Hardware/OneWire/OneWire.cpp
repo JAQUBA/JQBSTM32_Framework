@@ -256,3 +256,41 @@ void OneWire::transaction(
 uint16_t OneWire::queueSize() {
 	return operations.size();
 }
+
+void OneWire::readSingleDeviceROM(romCallback_f callbackFn) {
+	reset();
+	uint8_t* b_rom = (uint8_t*)malloc(8);
+	uint8_t READ_ROM = 0x33;
+	
+	transmitThenReceive(&READ_ROM, 1, b_rom, 8, [b_rom, callbackFn](uint8_t *data, uint16_t size) {
+		uint64_t deviceAddress = 0;
+		for(int i = 0; i < 8; i++) {
+			deviceAddress = (deviceAddress << 8) | data[i];
+		}
+		bool found = (deviceAddress != 0);
+		if(callbackFn != nullptr) {
+			callbackFn(deviceAddress, found);
+		}
+		free(b_rom);
+	});
+}
+
+uint64_t OneWire::pack_rom(uint8_t *buffer) {
+	uint64_t value = 0;
+	for(int i = 0; i < 8; i++) {
+		value = (value << 8) | buffer[i];
+	}	
+	return value;
+}
+
+std::array<uint8_t, 8> OneWire::unpack_rom(uint64_t number) {
+	std::array<uint8_t, 8> result;
+	
+	// Optimized version using loop (big-endian order)
+	for(int i = 7; i >= 0; i--) {
+		result[i] = number & 0xFF;
+		number >>= 8;
+	}
+	
+	return result;
+}

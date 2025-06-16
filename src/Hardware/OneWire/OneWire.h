@@ -24,6 +24,19 @@
 #include "../../Core.h"
 #include "Interface/IBus.h"
 #include "Hardware/Timer/Timer.h"
+#include <array>
+
+/**
+ * @brief ROM callback function type
+ * @details Function pointer type for ROM address callbacks
+ */
+using romCallback_f = std::function<void(uint64_t deviceAddress, bool found)>;
+
+/**
+ * @brief ROM callback macro
+ * @details Lambda expression macro for ROM address callbacks
+ */
+#define romCallback [&](uint64_t deviceAddress, bool found)
 
 /**
  * @brief OneWire communication protocol class
@@ -118,6 +131,14 @@ class OneWire : public IBus {
 		 */
 		uint16_t queueSize();
 
+		/**
+		 * @brief Read single device ROM address
+		 * @details Reads ROM address of a single device on the bus using READ_ROM command
+		 * @param callbackFn Callback function called with device address and success flag
+		 * @note This function only works when there is exactly one device on the bus
+		 */
+		void readSingleDeviceROM(romCallback_f callbackFn);
+
 	private:
 		Timer* OW_Timer;      ///< Timer instance for precise timing
 		GPIO_TypeDef* OW_Port; ///< GPIO port for OneWire data line
@@ -187,6 +208,22 @@ class OneWire : public IBus {
 		} currentOperation;
 		
 		std::queue<operation> operations; ///< Queue of pending operations
+
+		/**
+		 * @brief Pack 8-byte ROM address into uint64_t
+		 * @details Converts 8-byte array to 64-bit integer (big-endian)
+		 * @param buffer Pointer to 8-byte ROM address buffer
+		 * @return uint64_t Packed ROM address
+		 */
+		uint64_t pack_rom(uint8_t *buffer);
+
+		/**
+		 * @brief Unpack uint64_t ROM address into 8-byte array
+		 * @details Converts 64-bit integer to 8-byte array (big-endian)
+		 * @param number 64-bit ROM address
+		 * @return Array of 8 bytes representing the ROM address
+		 */
+		std::array<uint8_t, 8> unpack_rom(uint64_t number);
 };
 
 #endif // ONEWIRE_H
