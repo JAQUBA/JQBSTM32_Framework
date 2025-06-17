@@ -19,7 +19,6 @@
  */
 
 #include "../../Hardware/OneWire/OneWire.h"
-#include "../../Interface/IExternalMemory.h"
 #include <functional>
 
 #ifdef ONEWIRE_H
@@ -27,179 +26,49 @@
 #ifndef __DS18B20_H_
 #define __DS18B20_H_
 
-#ifndef DS_MAX_SENSORS
-#define DS_MAX_SENSORS 10 ///< Maximum number of DS18B20 sensors supported
-#endif
-
-/**
- * @brief Temperature reading callback function type
- * @details Callback function called when temperature reading is complete
- * @param sensorId Sensor identifier
- * @param temperature Temperature value in Celsius
- * @param success Operation success flag
- */
-using TemperatureCallback = std::function<void(uint8_t sensorId, float temperature, bool success)>;
-
-/**
- * @brief Unpack ROM code to byte array
- * @details Converts 64-bit ROM code to 8-byte array
- * @param number 64-bit ROM code
- * @param result Pointer to 8-byte result array
- */
-void unpack_rom(uint64_t number, uint8_t *result);
-
-/**
- * @brief Pack byte array to ROM code
- * @details Converts 8-byte array to 64-bit ROM code
- * @param buffer Pointer to 8-byte buffer
- * @return uint64_t 64-bit ROM code
- */
-uint64_t pack_rom(uint8_t *buffer);
-
 /**
  * @brief DS18B20 temperature sensor driver
- * @details Low-level driver for Dallas/Maxim DS18B20 digital temperature sensor
- * @note Basic implementation for single sensor operations
+ * @details Simple driver for Dallas/Maxim DS18B20 digital temperature sensor
  */
 class DS18B20 {
-    public:
-        /**
+    public:        /**
          * @brief DS18B20 constructor
          * @details Initializes DS18B20 driver with OneWire interface
          * @param oneWire Pointer to OneWire interface instance
          */
         DS18B20(OneWire *oneWire);
-        
-        /**
-         * @brief Add sensor with ROM code
-         * @details Registers a sensor with its unique ROM code
-         * @param romCode 64-bit ROM code of the sensor
-         * @param nr Sensor number/identifier
-         */
-        void addSensor(uint64_t romCode, uint8_t nr);
-        
-        /**
-         * @brief Get temperature reading
-         * @details Reads temperature from specified sensor
-         * @param id Sensor identifier
-         * @return uint16_t Temperature value (raw format)
-         */
-        uint16_t getTemperature(uint8_t id);
-        
-        /**
-         * @brief Read ROM code from sensor
-         * @details Reads ROM code from single sensor on the bus
-         */
-        void readRom(void);
-        
-        /**
-         * @brief Get ROM code
-         * @details Returns the ROM code read from sensor
-         * @return uint64_t 64-bit ROM code
-         */
-        uint64_t getRom(void);
-    private:
-        bool read_rom = false;        ///< ROM reading status flag
-        OneWire *oneWire;            ///< OneWire interface pointer
-        uint8_t b_rom[8] ={0};       ///< ROM code byte array
-        uint64_t rom;                ///< ROM code as 64-bit value
-        uint8_t id=0;                ///< Current sensor ID
-        uint8_t b_rd[DS_MAX_SENSORS * 9]={0}; ///< Data buffer for multiple sensors
-};
-
-/**
- * @brief DS18B20 Manager class
- * @details High-level manager for multiple DS18B20 temperature sensors
- * @note Provides advanced features like automatic reading and flash storage
- */
-class DS18B20Manager {
-    public:
-        /**
-         * @brief DS18B20Manager constructor
-         * @details Initializes DS18B20 manager with OneWire interface and optional flash storage
-         * @param oneWire Pointer to OneWire interface instance
-         * @param flashMemory Pointer to external memory interface for ROM storage (optional)
-         */
-        DS18B20Manager(OneWire *oneWire, IExternalMemory *flashMemory = nullptr);
-        
-        /**
-         * @brief Add sensor to manager
-         * @details Registers a sensor with specific ID and ROM code
-         * @param id Sensor identifier (0 to DS_MAX_SENSORS-1)
-         * @param romCode 64-bit ROM code of the sensor
-         * @return bool Success flag (true if added successfully)
-         */
-        bool addSensor(uint8_t id, uint64_t romCode);
-        
-        /**
+          /**
          * @brief Read temperature asynchronously
          * @details Initiates temperature reading with callback notification
-         * @param id Sensor identifier
+         * @param deviceAddress 64-bit ROM address of the sensor
          * @param callback Callback function called when reading is complete
          */
-        void readTemperature(uint8_t id, TemperatureCallback callback);
-        
+        void readTemperature(uint64_t deviceAddress, const std::function<void(float temperature)> &callbackFn);
+
         /**
-         * @brief Get last temperature reading
-         * @details Returns the last temperature reading for specified sensor
-         * @param id Sensor identifier
-         * @return float Temperature in Celsius degrees
+         * @brief Read single device ROM address
+         * @details Reads ROM address of a single device on the bus using READ_ROM command
+         * @param callbackFn Callback function called with device address and success flag
+         * @note This function only works when there is exactly one device on the bus
          */
-        float getTemperature(uint8_t id);
-        
-        /**
-         * @brief Set automatic reading callback
-         * @details Sets callback for automatic temperature reading
-         * @param callback Callback function for temperature updates
-         * @param intervalMs Reading interval in milliseconds (default: 1000ms)
-         */
-        void setAutoReadCallback(TemperatureCallback callback, uint32_t intervalMs = 1000);
-        
-        /**
-         * @brief Enable automatic reading
-         * @details Enables automatic temperature reading for all sensors
-         * @param intervalMs Reading interval in milliseconds (default: 1000ms)
-         */
-        void enableAutoRead(uint32_t intervalMs = 1000);
-        
-        /**
-         * @brief Disable automatic reading
-         * @details Disables automatic temperature reading
-         */
-        void disableAutoRead();
-        
-        /**
-         * @brief Check if sensor is valid
-         * @details Checks if sensor with specified ID is registered and valid
-         * @param id Sensor identifier
-         * @return bool True if sensor is valid
-         */
-        bool isSensorValid(uint8_t id);
-        
-        /**
-         * @brief Get sensor ROM code
-         * @details Returns ROM code of specified sensor
-         * @param id Sensor identifier
-         * @return uint64_t 64-bit ROM code
-         */
-        uint64_t getSensorRom(uint8_t id);
-        
-        /**
-         * @brief Get sensor count
-         * @details Returns number of registered sensors
-         * @return uint8_t Number of sensors
-         */
-        uint8_t getSensorCount();
+        void readSingleDeviceROM(const std::function<void(uint64_t, bool)> &callbackFn);
         
     private:
-        OneWire *oneWire;                     ///< OneWire interface pointer
-        IExternalMemory *flashMemory;        ///< External memory interface pointer
-        DS18B20 *sensors[DS_MAX_SENSORS];    ///< Array of DS18B20 sensor instances
-        uint64_t romCodes[DS_MAX_SENSORS];   ///< ROM codes of registered sensors
-        bool validSensors[DS_MAX_SENSORS];   ///< Validity flags for sensors
-        uint8_t sensorCount;                 ///< Number of registered sensors
-        TemperatureCallback autoCallback;     ///< Automatic reading callback
-        bool autoReadEnabled;                ///< Automatic reading enable flag
+        OneWire *ow;                    ///< OneWire interface pointer
+        
+        /**
+         * @brief Convert 64-bit ROM address to byte array
+         * @param romAddress 64-bit ROM address
+         * @param result Pointer to 8-byte result array
+         */
+        void unpackRom(uint64_t romAddress, uint8_t *result);
+        
+        /**
+         * @brief Convert byte array to 64-bit ROM address
+         * @param buffer Pointer to 8-byte ROM address buffer
+         * @return uint64_t Packed ROM address
+         */
+        uint64_t packRom(uint8_t *buffer);
 };
 
 #endif // __DS18B20_H__

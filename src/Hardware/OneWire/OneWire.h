@@ -110,13 +110,51 @@ class OneWire : public IBus {
 			dataCallback_f callbackFn = nullptr,
 			bool resetAfterTransaction = false
 		);
-		
-		/**
+				/**
 		 * @brief Get operation queue size
 		 * @details Returns the number of pending operations in the queue
 		 * @return uint16_t Number of pending operations
 		 */
 		uint16_t queueSize();
+
+		/**
+		 * @brief Check if device is present on the bus
+		 * @details Returns the result of the last reset pulse
+		 * @return bool True if device responded to reset pulse
+		 */
+		bool isDevicePresent();
+
+		/**
+		 * @brief Check if OneWire operation is in progress
+		 * @details Returns true if any operation is currently being executed
+		 * @return bool True if operation is busy
+		 */
+		bool isBusy();
+
+		/**
+		 * @brief Clear all pending operations
+		 * @details Removes all operations from the queue
+		 */
+		void clearQueue();
+
+		/**
+		 * @brief Calculate CRC8 checksum
+		 * @details Calculates CRC8 using Dallas/Maxim polynomial (0x31)
+		 * @param data Pointer to data buffer
+		 * @param length Number of bytes to calculate CRC for
+		 * @return uint8_t Calculated CRC8 value
+		 */
+		static uint8_t calculateCRC8(const uint8_t* data, uint8_t length);
+
+		/**
+		 * @brief Validate CRC8 checksum
+		 * @details Validates data against expected CRC8 value
+		 * @param data Pointer to data buffer
+		 * @param length Number of bytes to validate
+		 * @param expectedCRC Expected CRC8 value
+		 * @return bool True if CRC is valid
+		 */
+		static bool validateCRC(const uint8_t* data, uint8_t length, uint8_t expectedCRC);
 
 	private:
 		Timer* OW_Timer;      ///< Timer instance for precise timing
@@ -185,7 +223,6 @@ class OneWire : public IBus {
 			bool            free = false; ///< Operation slot availability flag
 			dataCallback_f  callback_f = nullptr; ///< Callback function
 		} currentOperation;
-		
 		std::queue<operation> operations; ///< Queue of pending operations
 };
 

@@ -256,3 +256,40 @@ void OneWire::transaction(
 uint16_t OneWire::queueSize() {
 	return operations.size();
 }
+
+bool OneWire::isDevicePresent() {
+	return !is_device_presence; // Inverted logic - LOW means device present
+}
+
+bool OneWire::isBusy() {
+	return operationState != IDLE || operationProgress != OPERATION_PROGRESS_IDLE;
+}
+
+void OneWire::clearQueue() {
+	while(!operations.empty()) {
+		if(operations.front().free && operations.front().pData != nullptr) {
+			free(operations.front().pData);
+		}
+		operations.pop();
+	}
+}
+
+uint8_t OneWire::calculateCRC8(const uint8_t* data, uint8_t length) {
+	uint8_t crc = 0;
+	
+	for(uint8_t i = 0; i < length; i++) {
+		uint8_t inbyte = data[i];
+		for(uint8_t j = 0; j < 8; j++) {
+			uint8_t mix = (crc ^ inbyte) & 0x01;
+			crc >>= 1;
+			if(mix) crc ^= 0x8C; // Dallas/Maxim CRC8 polynomial
+			inbyte >>= 1;
+		}
+	}
+	
+	return crc;
+}
+
+bool OneWire::validateCRC(const uint8_t* data, uint8_t length, uint8_t expectedCRC) {
+	return calculateCRC8(data, length) == expectedCRC;
+}
