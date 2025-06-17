@@ -20,17 +20,12 @@
 
 #include "DS18B20.h"
 #include "../../Core.h"
+#include <cstdlib>
 
 #ifdef __DS18B20_H_
 
 DS18B20::DS18B20(OneWire *oneWire) : ow(oneWire) {
-    // Initialize arrays
-    for(uint8_t i = 0; i < 9; i++) {
-        scratchpad[i] = 0;
-    }
-    for(uint8_t i = 0; i < 8; i++) {
-        b_rom[i] = 0;
-    }
+    // Constructor - no array initialization needed
 }
 
 void DS18B20::unpackRom(uint64_t romAddress, uint8_t *result) {
@@ -47,56 +42,85 @@ uint64_t DS18B20::packRom(uint8_t *buffer) {
         value = (value << 8) | buffer[i];
     }
     return value;
-}
+}    
 
-void DS18B20::readTemperature(uint64_t deviceAddress, TemperatureCallback callback) {
+void DS18B20::readTemperature(uint64_t deviceAddress, const std::function<void(float temperature)> &callbackFn) {
     // Safety check
     if(!ow) return;
     
+    // Allocate local ROM buffer
+    uint8_t *b_rom = (uint8_t*)malloc(8);
+    if(!b_rom) return; // Failed to allocate memory
+    
     // Convert ROM address to byte array
     unpackRom(deviceAddress, b_rom);
-    
-    // Start temperature conversion
+
     ow->reset();
-    uint8_t MATCH_ROM = 0x55;
-    ow->transmit(&MATCH_ROM, 1);
-    ow->transmit(b_rom, 8);
-    uint8_t CMD_CONVERT_T = 0x44;
-    ow->transmit(&CMD_CONVERT_T, 1, dataCallback {
+
+    // Start temperature conversion
+    uint8_t cmd_buf[10];
+    cmd_buf[0] = 0x55; // MATCH_ROM
+    for(int i = 0; i < 8; ++i) cmd_buf[1 + i] = b_rom[i];
+    cmd_buf[9] = 0x44; // CMD_CONVERT_T
+    ow->transmit(cmd_buf, 10, [=](uint8_t *data, uint16_t size) {
         // Schedule temperature reading after conversion time (750ms)
-        addTaskMain(taskCallback {
+        addTaskMain([=](taskStruct *task) {
+            // Allocate scratchpad buffer for this operation
+            uint8_t *scratchpad = (uint8_t*)malloc(9);
+            if(!scratchpad) {
+                free(b_rom);
+                return; // Failed to allocate memory
+            }
+
             ow->reset();
-            uint8_t MATCH_ROM = 0x55;
-            ow->transmit(&MATCH_ROM, 1);
-            ow->transmit(b_rom, 8);
-            uint8_t CMD_READ_SCRATCHPAD = 0xBE;
-            ow->transmitThenReceive(&CMD_READ_SCRATCHPAD, 1, scratchpad, 9, dataCallback {
+            
+            // Combine all commands into a single buffer for efficiency
+            uint8_t cmd_buf2[10];
+            cmd_buf2[0] = 0x55; // MATCH_ROM
+            for(int i = 0; i < 8; ++i) cmd_buf2[1 + i] = b_rom[i];
+            cmd_buf2[9] = 0xBE; // CMD_READ_SCRATCHPAD
+            ow->transmitThenReceive(cmd_buf2, 10, scratchpad, 9, [=](uint8_t *data, uint16_t size) {
                 // Calculate temperature from scratchpad data
                 int16_t rawTemperature = (data[1] << 8) | data[0];
                 float temperature = rawTemperature / 16.0f;
                 
                 // Call the user callback with the result
-                if(callback) {
-                    callback(deviceAddress, temperature, true);
+                if(callbackFn) {
+                    callbackFn(temperature);
                 }
+                
+                // Free allocated memory
+                free(scratchpad);
+                free(b_rom);
             });
         }, 750, true); // Execute once after 750ms delay
     });
 }
 
-void DS18B20::readSingleDeviceROM(std::function<void(uint64_t, bool)> callbackFn) {
+void DS18B20::readSingleDeviceROM(const std::function<void(uint64_t, bool)> &callbackFn) {
     // Safety check
     if(!ow) return;
+    
+    // Allocate local ROM buffer
+    uint8_t *b_rom = (uint8_t*)malloc(8);
+    if(!b_rom) return; // Failed to allocate memory
     
     ow->reset();
     uint8_t READ_ROM = 0x33;
     
-    ow->transmitThenReceive(&READ_ROM, 1, b_rom, 8, [this, callbackFn](uint8_t *data, uint16_t size) {
-        uint64_t deviceAddress = packRom(data);
+    ow->transmitThenReceive(&READ_ROM, 1, b_rom, 8, [=](uint8_t *data, uint16_t size) {
+        // Copy ROM data to local buffer
+        for(int i = 0; i < 8; i++) {
+            b_rom[i] = data[i];
+        }
+        uint64_t deviceAddress = packRom(b_rom);
         bool found = (deviceAddress != 0);
-        if(callbackFn != nullptr) {
+        if(callbackFn) {
             callbackFn(deviceAddress, found);
         }
+        
+        // Free allocated memory
+        free(b_rom);
     });
 }
 

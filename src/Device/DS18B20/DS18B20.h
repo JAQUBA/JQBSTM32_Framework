@@ -27,15 +27,6 @@
 #define __DS18B20_H_
 
 /**
- * @brief Temperature reading callback function type
- * @details Callback function called when temperature reading is complete
- * @param romAddress 64-bit ROM address of the sensor
- * @param temperature Temperature value in Celsius
- * @param success Operation success flag
- */
-using TemperatureCallback = std::function<void(uint64_t romAddress, float temperature, bool success)>;
-
-/**
  * @brief DS18B20 temperature sensor driver
  * @details Simple driver for Dallas/Maxim DS18B20 digital temperature sensor
  */
@@ -52,21 +43,20 @@ class DS18B20 {
          * @param deviceAddress 64-bit ROM address of the sensor
          * @param callback Callback function called when reading is complete
          */
-        void readTemperature(uint64_t deviceAddress, TemperatureCallback callback);
-        
+        void readTemperature(uint64_t deviceAddress, const std::function<void(float temperature)> &callbackFn);
+
         /**
          * @brief Read single device ROM address
          * @details Reads ROM address of a single device on the bus using READ_ROM command
          * @param callbackFn Callback function called with device address and success flag
          * @note This function only works when there is exactly one device on the bus
          */
-        void readSingleDeviceROM(std::function<void(uint64_t, bool)> callbackFn);
+        void readSingleDeviceROM(const std::function<void(uint64_t, bool)> &callbackFn);
         
     private:
         OneWire *ow;                    ///< OneWire interface pointer
-        uint8_t scratchpad[9];          ///< Scratchpad data buffer
-        uint8_t b_rom[8];               ///< ROM address byte array
-          /**
+        
+        /**
          * @brief Convert 64-bit ROM address to byte array
          * @param romAddress 64-bit ROM address
          * @param result Pointer to 8-byte result array
