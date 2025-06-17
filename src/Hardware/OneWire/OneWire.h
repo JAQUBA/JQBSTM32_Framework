@@ -24,7 +24,6 @@
 #include "../../Core.h"
 #include "Interface/IBus.h"
 #include "Hardware/Timer/Timer.h"
-#include <array>
 
 /**
  * @brief OneWire communication protocol class
