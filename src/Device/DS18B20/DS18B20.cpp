@@ -20,173 +20,84 @@
 
 #include "DS18B20.h"
 #include "../../Core.h"
+
 #ifdef __DS18B20_H_
 
-uint64_t sensors[DS_MAX_SENSORS] = {0};
-
-bool readT = false;
-
-void unpack_rom(uint64_t number, uint8_t *result) {
-    result[7] = number & 0x00000000000000FF ; number = number >> 8 ;
-    result[6] = number & 0x00000000000000FF ; number = number >> 8 ;
-    result[5] = number & 0x00000000000000FF ; number = number >> 8 ;
-    result[4] = number & 0x00000000000000FF ; number = number >> 8 ;
-    result[3] = number & 0x00000000000000FF ; number = number >> 8 ;
-    result[2] = number & 0x00000000000000FF ; number = number >> 8 ;
-    result[1] = number & 0x00000000000000FF ; number = number >> 8 ;
-    result[0] = number & 0x00000000000000FF ;
+DS18B20::DS18B20(OneWire *oneWire) : ow(oneWire) {
+    // Initialize arrays
+    for(uint8_t i = 0; i < 9; i++) {
+        scratchpad[i] = 0;
+    }
+    for(uint8_t i = 0; i < 8; i++) {
+        b_rom[i] = 0;
+    }
 }
 
-uint64_t  pack_rom(uint8_t *buffer) {
-
-    uint64_t value ;
-
-    value = buffer[0] ;
-    value = (value << 8 ) + buffer[1] ;
-    value = (value << 8 ) + buffer[2] ;
-    value = (value << 8 ) + buffer[3] ;
-    value = (value << 8 ) + buffer[4] ;
-    value = (value << 8 ) + buffer[5] ;
-    value = (value << 8 ) + buffer[6] ;
-    value = (value << 8 ) + buffer[7] ;
-
-    return value ;
+void DS18B20::unpackRom(uint64_t romAddress, uint8_t *result) {
+    // Optimized version using loop (little-endian order for DS18B20)
+    for(int i = 7; i >= 0; i--) {
+        result[i] = romAddress & 0xFF;
+        romAddress >>= 8;
+    }
 }
 
-DS18B20::DS18B20(OneWire *a_oneWire) {
-    this->oneWire = a_oneWire;
-    addTaskMain(taskCallback {
-        if (readT) {
-            if (!read_rom) {                for (id=0; id<DS_MAX_SENSORS; id++) {
-                    unpack_rom(sensors[id], b_rom);
-                    if (b_rom[id]>0) {
-                        oneWire->transaction(0x55, b_rom, 0xBE, nullptr, 0, b_rd+(id*9), 9); //temperature reading
-                    }
+uint64_t DS18B20::packRom(uint8_t *buffer) {
+    uint64_t value = 0;
+    for(int i = 0; i < 8; i++) {
+        value = (value << 8) | buffer[i];
+    }
+    return value;
+}
+
+void DS18B20::readTemperature(uint64_t deviceAddress, TemperatureCallback callback) {
+    // Safety check
+    if(!ow) return;
+    
+    // Convert ROM address to byte array
+    unpackRom(deviceAddress, b_rom);
+    
+    // Start temperature conversion
+    ow->reset();
+    uint8_t MATCH_ROM = 0x55;
+    ow->transmit(&MATCH_ROM, 1);
+    ow->transmit(b_rom, 8);
+    uint8_t CMD_CONVERT_T = 0x44;
+    ow->transmit(&CMD_CONVERT_T, 1, dataCallback {
+        // Schedule temperature reading after conversion time (750ms)
+        addTaskMain(taskCallback {
+            ow->reset();
+            uint8_t MATCH_ROM = 0x55;
+            ow->transmit(&MATCH_ROM, 1);
+            ow->transmit(b_rom, 8);
+            uint8_t CMD_READ_SCRATCHPAD = 0xBE;
+            ow->transmitThenReceive(&CMD_READ_SCRATCHPAD, 1, scratchpad, 9, dataCallback {
+                // Calculate temperature from scratchpad data
+                int16_t rawTemperature = (data[1] << 8) | data[0];
+                float temperature = rawTemperature / 16.0f;
+                
+                // Call the user callback with the result
+                if(callback) {
+                    callback(deviceAddress, temperature, true);
                 }
-            }else {//read rom
-                uint8_t rom_com=0x33;
-	            oneWire->transmitThenReceive(&rom_com, 1, b_rom, 8);//read rom !!!
-            }
-            readT = false;
-        } else {
-            if (read_rom) {
-                read_rom = false;
-                rom = pack_rom(b_rom);            } else {
-                readT = true;
-                oneWire->transaction(0xCC, nullptr, 0x44);//start temp. conversion
-            }
+            });
+        }, 750, true); // Execute once after 750ms delay
+    });
+}
+
+void DS18B20::readSingleDeviceROM(std::function<void(uint64_t, bool)> callbackFn) {
+    // Safety check
+    if(!ow) return;
+    
+    ow->reset();
+    uint8_t READ_ROM = 0x33;
+    
+    ow->transmitThenReceive(&READ_ROM, 1, b_rom, 8, [this, callbackFn](uint8_t *data, uint16_t size) {
+        uint64_t deviceAddress = packRom(data);
+        bool found = (deviceAddress != 0);
+        if(callbackFn != nullptr) {
+            callbackFn(deviceAddress, found);
         }
-	}, 1000);
-}
-
-void DS18B20::readRom(void) {
-    read_rom = true;
-}
-
-uint64_t DS18B20::getRom(void) {
-    return rom;
-}
-
-void DS18B20::addSensor(uint64_t romCode, uint8_t id) {
-    sensors[id]=romCode;
-}
-
-uint16_t DS18B20::getTemperature(uint8_t id) {
-    return    (*(b_rd+(id*9)+1))<<8 | *(b_rd+(id*9));
-}
-
-// ===== DS18B20Manager Implementation =====
-
-DS18B20Manager::DS18B20Manager(OneWire *oneWire, IExternalMemory *flashMemory) 
-    : oneWire(oneWire), flashMemory(flashMemory), sensorCount(0), autoReadEnabled(false) {
-    
-    // Array initialization
-    for(uint8_t i = 0; i < DS_MAX_SENSORS; i++) {
-        sensors[i] = nullptr;
-        romCodes[i] = 0;
-        validSensors[i] = false;
-    }
-}
-
-bool DS18B20Manager::addSensor(uint8_t id, uint64_t romCode) {
-    if(id >= DS_MAX_SENSORS) return false;
-    
-    if(sensors[id] == nullptr) {
-        sensors[id] = new DS18B20(oneWire);
-    }
-    
-    sensors[id]->addSensor(romCode, id);
-    romCodes[id] = romCode;
-    validSensors[id] = true;
-    
-    if(id >= sensorCount) {
-        sensorCount = id + 1;
-    }
-    
-    return true;
-}
-
-void DS18B20Manager::readTemperature(uint8_t id, TemperatureCallback callback) {
-    if(id >= DS_MAX_SENSORS || !validSensors[id] || sensors[id] == nullptr) {
-        if(callback) callback(id, 0.0f, false);
-        return;
-    }
-    
-    // Get raw value and convert to float
-    uint16_t rawTemp = sensors[id]->getTemperature(id);
-    float temperature = (float)rawTemp / 16.0f; // DS18B20 has 0.0625°C resolution
-    
-    if(callback) callback(id, temperature, true);
-}
-
-float DS18B20Manager::getTemperature(uint8_t id) {
-    if(id >= DS_MAX_SENSORS || !validSensors[id] || sensors[id] == nullptr) {
-        return 0.0f;
-    }
-    
-    uint16_t rawTemp = sensors[id]->getTemperature(id);
-    return (float)rawTemp / 16.0f;
-}
-
-void DS18B20Manager::setAutoReadCallback(TemperatureCallback callback, uint32_t intervalMs) {
-    autoCallback = callback;
-    
-    if(callback && !autoReadEnabled) {
-        enableAutoRead(intervalMs);
-    }
-}
-
-void DS18B20Manager::enableAutoRead(uint32_t intervalMs) {
-    autoReadEnabled = true;
-    
-    addTaskMain(taskCallback {
-        if(autoReadEnabled && autoCallback) {
-            for(uint8_t i = 0; i < sensorCount; i++) {
-                if(validSensors[i]) {
-                    readTemperature(i, autoCallback);
-                }
-            }
-        }
-    }, intervalMs);
-}
-
-void DS18B20Manager::disableAutoRead() {
-    autoReadEnabled = false;
-}
-
-bool DS18B20Manager::isSensorValid(uint8_t id) {
-    return id < DS_MAX_SENSORS && validSensors[id];
-}
-
-uint64_t DS18B20Manager::getSensorRom(uint8_t id) {
-    if(id >= DS_MAX_SENSORS || !validSensors[id]) {
-        return 0;
-    }
-    return romCodes[id];
-}
-
-uint8_t DS18B20Manager::getSensorCount() {
-    return sensorCount;
+    });
 }
 
 #endif // __DS18B20_H__

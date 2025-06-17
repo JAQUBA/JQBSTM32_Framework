@@ -27,18 +27,6 @@
 #include <array>
 
 /**
- * @brief ROM callback function type
- * @details Function pointer type for ROM address callbacks
- */
-using romCallback_f = std::function<void(uint64_t deviceAddress, bool found)>;
-
-/**
- * @brief ROM callback macro
- * @details Lambda expression macro for ROM address callbacks
- */
-#define romCallback [&](uint64_t deviceAddress, bool found)
-
-/**
  * @brief OneWire communication protocol class
  * @details Implementation of Dallas/Maxim 1-Wire communication protocol
  * @note Inherits from IBus interface for standardized bus operations
@@ -123,8 +111,7 @@ class OneWire : public IBus {
 			dataCallback_f callbackFn = nullptr,
 			bool resetAfterTransaction = false
 		);
-		
-		/**
+				/**
 		 * @brief Get operation queue size
 		 * @details Returns the number of pending operations in the queue
 		 * @return uint16_t Number of pending operations
@@ -132,12 +119,43 @@ class OneWire : public IBus {
 		uint16_t queueSize();
 
 		/**
-		 * @brief Read single device ROM address
-		 * @details Reads ROM address of a single device on the bus using READ_ROM command
-		 * @param callbackFn Callback function called with device address and success flag
-		 * @note This function only works when there is exactly one device on the bus
+		 * @brief Check if device is present on the bus
+		 * @details Returns the result of the last reset pulse
+		 * @return bool True if device responded to reset pulse
 		 */
-		void readSingleDeviceROM(romCallback_f callbackFn);
+		bool isDevicePresent();
+
+		/**
+		 * @brief Check if OneWire operation is in progress
+		 * @details Returns true if any operation is currently being executed
+		 * @return bool True if operation is busy
+		 */
+		bool isBusy();
+
+		/**
+		 * @brief Clear all pending operations
+		 * @details Removes all operations from the queue
+		 */
+		void clearQueue();
+
+		/**
+		 * @brief Calculate CRC8 checksum
+		 * @details Calculates CRC8 using Dallas/Maxim polynomial (0x31)
+		 * @param data Pointer to data buffer
+		 * @param length Number of bytes to calculate CRC for
+		 * @return uint8_t Calculated CRC8 value
+		 */
+		static uint8_t calculateCRC8(const uint8_t* data, uint8_t length);
+
+		/**
+		 * @brief Validate CRC8 checksum
+		 * @details Validates data against expected CRC8 value
+		 * @param data Pointer to data buffer
+		 * @param length Number of bytes to validate
+		 * @param expectedCRC Expected CRC8 value
+		 * @return bool True if CRC is valid
+		 */
+		static bool validateCRC(const uint8_t* data, uint8_t length, uint8_t expectedCRC);
 
 	private:
 		Timer* OW_Timer;      ///< Timer instance for precise timing
@@ -206,24 +224,7 @@ class OneWire : public IBus {
 			bool            free = false; ///< Operation slot availability flag
 			dataCallback_f  callback_f = nullptr; ///< Callback function
 		} currentOperation;
-		
 		std::queue<operation> operations; ///< Queue of pending operations
-
-		/**
-		 * @brief Pack 8-byte ROM address into uint64_t
-		 * @details Converts 8-byte array to 64-bit integer (big-endian)
-		 * @param buffer Pointer to 8-byte ROM address buffer
-		 * @return uint64_t Packed ROM address
-		 */
-		uint64_t pack_rom(uint8_t *buffer);
-
-		/**
-		 * @brief Unpack uint64_t ROM address into 8-byte array
-		 * @details Converts 64-bit integer to 8-byte array (big-endian)
-		 * @param number 64-bit ROM address
-		 * @return Array of 8 bytes representing the ROM address
-		 */
-		std::array<uint8_t, 8> unpack_rom(uint64_t number);
 };
 
 #endif // ONEWIRE_H
