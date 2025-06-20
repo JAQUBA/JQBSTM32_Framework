@@ -158,6 +158,13 @@ class SPI : public IBus {
          */
         uint16_t getMaxQueueSize();
 
+        /**
+         * @brief Get HAL SPI handler
+         * @details Returns pointer to HAL SPI handler for direct HAL calls
+         * @return SPI_HandleTypeDef* Pointer to HAL SPI handler
+         */
+        SPI_HandleTypeDef* getHandler();
+
     private:
         SPI_HandleTypeDef* _pHandler; ///< HAL SPI handler pointer
         uint32_t operationTimeout;    ///< Operation timeout value

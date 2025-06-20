@@ -134,19 +134,7 @@ bool SPI::enqueueOperation(const operation& op) {
     return true;
 }
 
-void SPI::transmit(
-	GPIO_TypeDef* CSPort, uint16_t CSPin, 
-	uint8_t *pData, uint16_t Size, 
-	dataCallback_f callbackFn
-) {
-	operation operation;
-	operation.operationType = EoperationType::TRANSMIT;
-	operation._CSPort = CSPort;
-    operation._CSPin = CSPin;
-	operation.pData = (uint8_t*) malloc(Size);
-	memcpy(operation.pData, pData, Size);
-	operation.Size = Size;
-	operation.free = true;bool SPI::transmit(
+bool SPI::transmit(
 	GPIO_TypeDef* CSPort, uint16_t CSPin, 
 	uint8_t *pData, uint16_t Size, 
 	dataCallback_f callbackFn
@@ -190,36 +178,51 @@ void SPI::transmitThenReceive(
 	uint8_t *pData_rx, uint16_t rxSize,
 	dataCallback_f callbackFn
 ) {
-	operation operation;
-	operation.operationType = EoperationType::TRANSMIT;
-	operation._CSPort = CSPort;
-    operation._CSPin = CSPin;
-	operation._pinReset = false;
+	if (txSize > SPI_MAX_DATA_SIZE) return;
+	
+	operation op;
+	op.operationType = EoperationType::TRANSMIT;
+	op._CSPort = CSPort;
+    op._CSPin = CSPin;
+	op._pinReset = false;
+	op.Size = txSize;
+	op.callback_f = nullptr;
+	
+	// Copy data to internal buffer
+	memcpy(op.internalData, pData_tx, txSize);
+	op.pData = op.internalData;
+	op.useInternalBuffer = true;
 	operation.pData = (uint8_t*) malloc(txSize);
 	memcpy(operation.pData, pData_tx, txSize);
 	operation.Size = txSize;
-	operation.free = true;
-	operations.push(operation);
+	operation.free = true;	enqueueOperation(op);
 	receive(CSPort, CSPin, pData_rx, rxSize, callbackFn);
 }
+
 void SPI::transmitReceive(
 	GPIO_TypeDef* CSPort, uint16_t CSPin,
 	uint8_t *pDataTx, uint8_t *pDataRx, uint16_t Size,
 	dataCallback_f callbackFn
 ) {
-	// operation operation;
-	// operation.operationType = EoperationType::TRANSMIT_RECEIVE;
-	// operation._CSPort = CSPort;
-	// operation._CSPin = CSPin;
-	// operation.pData_tx = (uint8_t*) malloc(Size);
-	// operation.free = true;
-	// memcpy(operation.pData_tx, pDataTx, Size);
-	// operation.pData_rx = pDataRx;
-	// operation.Size = Size;
-	// operation.callback_f = callbackFn;
-	// operations.push(operation);
+	// This would require full-duplex operation - not implemented yet
+	// For now, perform sequential transmit then receive
+	transmitThenReceive(CSPort, CSPin, pDataTx, Size, pDataRx, Size, callbackFn);
 }
+
 uint16_t SPI::queueSize() {
-	return operations.size();
+	return _operationCount;
 }
+
+bool SPI::isQueueFull() {
+    return _operationCount >= SPI_MAX_OPERATIONS;
+}
+
+uint16_t SPI::getMaxQueueSize() {
+    return SPI_MAX_OPERATIONS;
+}
+
+SPI_HandleTypeDef* SPI::getHandler() {
+    return _pHandler;
+}
+
 #endif

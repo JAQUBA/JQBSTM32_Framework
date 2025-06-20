@@ -100,7 +100,6 @@ Core _core;
 
 int main() {
 	setup();
-	uint32_t lastExecutionTime = millis();
 	
 	while (1) {
 		uint32_t currentTime = millis();
@@ -113,15 +112,12 @@ int main() {
 		
 		uint32_t executionTime = millis() - executionStart;
 		if (executionTime > _maxExecutionTime) {
-			_maxExecutionTime = executionTime;
-		}
+			_maxExecutionTime = executionTime;		}
 		
 		// Check for task overruns (execution taking too long)
 		if (executionTime > 10) { // 10ms threshold
 			_taskOverruns++;
 		}
-		
-		lastExecutionTime = currentTime;
 	}
 }
 
