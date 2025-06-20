@@ -25,39 +25,18 @@
 #define ANALOG_MAX_INSTANCES 1 ///< Maximum number of ADC instances
 #endif
 
-/**
- * @brief ADC configuration constants
- * @details Configuration parameters for analog input processing
- */
-#ifndef ADC_SAMPLES_COUNT
-#define ADC_SAMPLES_COUNT 64    ///< Number of samples for averaging
-#endif
-
-#ifndef ADC_FILTER_ALPHA
-#define ADC_FILTER_ALPHA 0.1f   ///< Low-pass filter coefficient (0-1)
-#endif
-
-#ifndef ADC_DMA_BUFFER_SIZE
-#define ADC_DMA_BUFFER_SIZE 2   ///< DMA buffer size (double buffer)
-#endif
-
-#ifndef ADC_DEFAULT_MULTIPLIER
-#define ADC_DEFAULT_MULTIPLIER 1000  ///< Default multiplier (1.0 in fixed point)
-#endif
-
-#ifndef ADC_PROCESS_TASK_PERIOD
-#define ADC_PROCESS_TASK_PERIOD 10   ///< Data processing task period [ms]
+#ifndef ANALOG_MAX_CHANNELS
+#define ANALOG_MAX_CHANNELS 8 ///< Maximum number of ADC channels
 #endif
 
 /**
- * @brief Analog/ADC input processing class
- * @details Provides analog input reading with filtering, averaging, and calibration
+ * @brief Simple Analog/ADC input processing class with calibration
+ * @details Provides analog input reading with DMA and channel calibration
  */
 class Analog {
 public:
     /**
      * @brief Get ADC instance
-     * @details Returns existing ADC instance or creates new one for the specified handler
      * @param pHandler Pointer to HAL ADC handler
      * @return Analog* Pointer to ADC instance
      */
@@ -65,110 +44,62 @@ public:
     
     /**
      * @brief Analog constructor
-     * @details Initializes ADC instance with the specified HAL handler
      * @param pHandler Pointer to HAL ADC handler
      */
     Analog(ADC_HandleTypeDef *pHandler);
     
     /**
      * @brief ADC conversion complete callback
-     * @details Internal function called by HAL when ADC conversion is complete
      */
     void convCpltCallback();
     
     /**
-     * @brief ADC conversion half complete callback
-     * @details Internal function called by HAL when ADC conversion is half complete
-     */
-    void convHalfCpltCallback();
-    
-    /**
-     * @brief Get processed ADC value
-     * @details Returns calibrated and processed ADC value for specified channel
-     * @param channel ADC channel number
-     * @return uint16_t Processed ADC value
-     */
-    uint16_t getValue(uint8_t channel);
-    
-    /**
-     * @brief Get raw ADC value
-     * @details Returns unprocessed raw ADC value for specified channel
-     * @param channel ADC channel number
-     * @return uint16_t Raw ADC value
+     * @brief Get raw ADC value for channel
+     * @param channel ADC channel number (0-7)
+     * @return uint16_t Raw ADC value (0-1023 for 10-bit ADC)
      */
     uint16_t getRawValue(uint8_t channel);
     
     /**
-     * @brief Get filtered ADC value
-     * @details Returns filtered ADC value as floating point for specified channel
-     * @param channel ADC channel number
-     * @return float Filtered ADC value
+     * @brief Get calibrated ADC value for channel
+     * @param channel ADC channel number (0-7)
+     * @return uint16_t Calibrated value after offset and multiplier
      */
-    float getFilteredValue(uint8_t channel);
+    uint16_t getValue(uint8_t channel);
     
     /**
+     * @brief Get voltage for channel
+     * @param channel ADC channel number (0-7)
+     * @param vref Reference voltage in millivolts (default 3300mV)
+     * @return uint16_t Voltage in millivolts
+     */
+    uint16_t getVoltage(uint8_t channel, uint16_t vref = 3300);
+      /**
      * @brief Configure channel calibration
-     * @details Sets offset and multiplier for ADC channel calibration
-     * @param channel ADC channel number
-     * @param offset Pointer to offset value
-     * @param multiplier Pointer to multiplier value
+     * @param channel ADC channel number (0-7)
+     * @param offset Pointer to offset value (dynamically updated, subtracted from raw ADC)
+     * @param multiplier Pointer to multiplier value (dynamically updated, multiplied by 1000, e.g., 1000 = 1.0x)
      */
     void configureChannel(uint8_t channel, uint16_t *offset, uint16_t *multiplier);
-    /**
-     * @brief Check if new data is ready
-     * @details Returns true if new ADC data has been processed and is ready to read
-     * @return bool True if data is ready
-     */
-    bool isDataReady();
     
     /**
-     * @brief Reset all filters
-     * @details Resets all low-pass filters to initial state
+     * @brief Start ADC conversion
      */
-    void resetFilters();
+    void start();
+    
+    /**
+     * @brief Stop ADC conversion
+     */
+    void stop();
 
 private:
-    ADC_HandleTypeDef *_pHandler; ///< HAL ADC handler pointer
-    size_t bufferSize;            ///< Size of ADC buffer
-    
-    /**
-     * @brief ADC data buffers
-     * @details Various buffers for ADC data processing pipeline
-     */
-    uint32_t *adcDMABuffer;       ///< Double DMA buffer
-    uint32_t **adcSamples;        ///< Sample buffer for each channel
-    uint32_t *adcAverage;         ///< Averaged values
-    float *adcFiltered;           ///< Values after filtering
-    uint16_t *adcValue;           ///< Final processed values
-    
-    /**
-     * @brief Calibration parameters
-     * @details Offset and multiplier arrays for channel calibration
-     */
-    uint16_t *offsets;            ///< Offset values for each channel
-    uint16_t *multipliers;        ///< Multiplier values for each channel
-    
-    /**
-     * @brief Process control variables
-     * @details Variables for controlling data processing
-     */
-    volatile size_t sampleIndex;  ///< Current sample index
-    volatile bool dataReady;      ///< Data ready flag
-    
-    /**
-     * @brief Process DMA data
-     * @details Internal function to process data from DMA buffer
-     * @param data Pointer to DMA data buffer
-     */
-    void processDMAData(uint32_t* data);
-    
-    /**
-     * @brief Process ADC data
-     * @details Internal function to process and filter ADC data
-     */
-    void processData();
-    
-    static uint16_t adcRAW[8];    ///< Static raw ADC values array
+    ADC_HandleTypeDef *_pHandler;    ///< HAL ADC handler pointer
+    uint8_t _channelCount;           ///< Number of configured channels
+    uint16_t _adcBuffer[ANALOG_MAX_CHANNELS]; ///< DMA buffer for ADC values
+    volatile bool _dataReady;        ///< Data ready flag
+      // Calibration parameters
+    uint16_t *_offsets[ANALOG_MAX_CHANNELS];     ///< Pointers to offset values for each channel
+    uint16_t *_multipliers[ANALOG_MAX_CHANNELS]; ///< Pointers to multiplier values for each channel (x1000)
 };
 
 #endif // __ANALOG_H_
