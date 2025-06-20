@@ -21,6 +21,14 @@
 #include "../../Core.h"
 #include "../../Util/MemoryBlock/MemoryBlock.h"
 
+#ifndef REGISTER_BANK_MAX_SIZE
+#define REGISTER_BANK_MAX_SIZE 256 ///< Maximum number of 16-bit registers in a bank
+#endif
+
+#ifndef REGISTER_BANK_MAX_INSTANCES
+#define REGISTER_BANK_MAX_INSTANCES 8 ///< Maximum number of RegisterBank instances
+#endif
+
 /**
  * @class RegisterBank
  * @brief Register bank management system for configuration and data storage
@@ -156,15 +164,14 @@ class RegisterBank {
          *          Operation is ignored if no MemoryBlock is configured.
          * @note Write operation duration depends on memory type (EEPROM vs FRAM)
          */
-        void save();
-
-    private:
+        void save();    private:
         MemoryBlock *_memoryBlock = nullptr; ///< Pointer to the memory block.
 
         uint16_t _size;   ///< Size of the register bank.
         uint16_t _start;  ///< Start address of the register bank.
         uint16_t _stop;   ///< Stop address of the register bank.
-        uint16_t *_registers; ///< Pointer to the array of registers.
+        uint16_t _registers[REGISTER_BANK_MAX_SIZE]; ///< Static array of registers
+        bool _initialized; ///< Flag indicating if bank is properly initialized
 
         /**
          * @brief Initializes the register bank.
