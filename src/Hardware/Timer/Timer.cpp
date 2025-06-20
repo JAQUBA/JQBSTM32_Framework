@@ -28,8 +28,15 @@ Timer *Timer::getInstance(TIM_HandleTypeDef *pHandler) {
     return nullptr;
 }
 
-Timer::Timer(TIM_HandleTypeDef *pHandler): _pHandler(pHandler) {
+Timer::Timer(TIM_HandleTypeDef *pHandler): _pHandler(pHandler), _callbackCount(0) {
     _Timer_instances[_Timer_instancesNum++] = this;
+    
+    // Initialize callback array
+    for (uint8_t i = 0; i < TIMER_MAX_CALLBACKS; i++) {
+        _callbacks[i].active = false;
+        _callbacks[i].callback = nullptr;
+    }
+    
     HAL_TIM_Base_Start_IT(_pHandler);
 }
 
@@ -37,14 +44,66 @@ void Timer::setPeriod(uint32_t period) {
     _pHandler->Instance->ARR = period-1;
 }
 
-void Timer::attachInterrupt(InterruptType interruptType, voidCallback_f callback) {
-    _callbacks.push_back(std::make_pair(interruptType, callback));
+int8_t Timer::findFreeCallbackSlot() {
+    for (uint8_t i = 0; i < TIMER_MAX_CALLBACKS; i++) {
+        if (!_callbacks[i].active) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int8_t Timer::findCallback(InterruptType interruptType) {
+    for (uint8_t i = 0; i < TIMER_MAX_CALLBACKS; i++) {
+        if (_callbacks[i].active && _callbacks[i].type == interruptType) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+bool Timer::attachInterrupt(InterruptType interruptType, voidCallback_f callback) {
+    if (!callback) return false;
+    
+    // Check if callback for this type already exists
+    int8_t existingIndex = findCallback(interruptType);
+    if (existingIndex >= 0) {
+        // Replace existing callback
+        _callbacks[existingIndex].callback = callback;
+        return true;
+    }
+    
+    // Find free slot for new callback
+    int8_t freeIndex = findFreeCallbackSlot();
+    if (freeIndex < 0) return false; // No free slots
+    
+    _callbacks[freeIndex].type = interruptType;
+    _callbacks[freeIndex].callback = callback;
+    _callbacks[freeIndex].active = true;
+    _callbackCount++;
+    
+    return true;
+}
+
+void Timer::detachInterrupt(InterruptType interruptType) {
+    int8_t index = findCallback(interruptType);
+    if (index >= 0) {
+        _callbacks[index].active = false;
+        _callbacks[index].callback = nullptr;
+        _callbackCount--;
+    }
 }
 
 void Timer::handleInterrupt(InterruptType interruptType) {
-    for (const auto& entry : _callbacks) {
-        if (entry.first == interruptType) entry.second();
+    for (uint8_t i = 0; i < TIMER_MAX_CALLBACKS; i++) {
+        if (_callbacks[i].active && _callbacks[i].type == interruptType && _callbacks[i].callback) {
+            _callbacks[i].callback();
+        }
     }
+}
+
+uint8_t Timer::getCallbackCount() const {
+    return _callbackCount;
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {

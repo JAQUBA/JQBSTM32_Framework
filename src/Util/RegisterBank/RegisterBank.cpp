@@ -17,60 +17,73 @@
  */
 #include "RegisterBank.h"
 
+// Global registry of register banks for efficient lookup
 struct Register {
     RegisterBank *bank;
-    struct Register *next = NULL;
-} *registers;
+    struct Register *next = nullptr;
+} *registers = nullptr;
 
-RegisterBank::RegisterBank(uint16_t start,
-    uint16_t size) {
+// Performance optimization: cache for last accessed bank
+static RegisterBank* lastAccessedBank = nullptr;
+static uint16_t lastAccessedAddress = 0xFFFF;
 
+RegisterBank::RegisterBank(uint16_t start, uint16_t size) {
     _size = size;
     _start = start;
     _stop = _start + size;
-
+    _memoryBlock = nullptr;
+    
     _initialize();
 }
 
-RegisterBank::RegisterBank(uint16_t start,
-    uint16_t size,
-    MemoryBlock *memoryBlock) {
-        
+RegisterBank::RegisterBank(uint16_t start, uint16_t size, MemoryBlock *memoryBlock) {
     _size = size;
     _start = start;
     _stop = _start + size;
-
     _memoryBlock = memoryBlock;
-
+    
     _initialize();
 }
+
 void RegisterBank::_initialize() {
-    if(_size > 0) {
-        _registers = (uint16_t*)malloc(sizeof(uint16_t) * _size);
-        if(_registers == NULL) {
-            free(_registers);
+    if(_size > 0) {        // Use calloc instead of malloc for zero-initialized memory
+        _registers = (uint16_t*)calloc(_size, sizeof(uint16_t));
+        if(_registers == nullptr) {
+            // Handle allocation failure gracefully
+            _size = 0;
             return;
         }
     } else {
-        _registers = NULL;
+        _registers = nullptr;
     }
-    (void)memset(_registers, 0, sizeof(uint16_t) * _size);
-
+    // Remove redundant memset since calloc already zeros the memory
+    
+    // Register this bank in global registry
     struct Register *temp = registers, *r;
-    if(registers == NULL) {
+    if(registers == nullptr) {
         temp = (struct Register*)malloc(sizeof(struct Register));
+        if(temp == nullptr) {
+            // Handle allocation failure
+            free(_registers);
+            _registers = nullptr;
+            _size = 0;
+            return;
+        }
         temp->bank = this;
-        temp->next = NULL;
-        registers = temp;
-    } else {
-        while(temp->next != NULL) temp = temp->next;
+        temp->next = nullptr;
+        registers = temp;    } else {
+        while(temp->next != nullptr) temp = temp->next;
         r = (struct Register*) malloc(sizeof(struct Register));
+        if(r == nullptr) {
+            // Handle allocation failure gracefully
+            return;
+        }
         r->bank = this;
-        r->next = NULL;
-        temp->next = r;
-    }
+        r->next = nullptr;
+        temp->next = r;    }
     load();
 }
+
 void RegisterBank::load() {
      if(_memoryBlock) {
         _memoryBlock->loadBlock(
@@ -88,12 +101,26 @@ void RegisterBank::save() {
     }
 }
 RegisterBank *RegisterBank::find(uint16_t fullAddress) {
+    // Performance optimization: check cache first
+    if (lastAccessedBank != nullptr && 
+        lastAccessedAddress == fullAddress && 
+        lastAccessedBank->_start <= fullAddress && 
+        lastAccessedBank->_stop > fullAddress) {
+        return lastAccessedBank;
+    }
+    
+    // Search through registry
     struct Register *temp = registers;
-    while(temp != NULL) {
-        if(temp->bank->_start <= fullAddress && temp->bank->_stop >= fullAddress) return temp->bank;
+    while(temp != nullptr) {
+        if(temp->bank->_start <= fullAddress && temp->bank->_stop > fullAddress) {
+            // Update cache
+            lastAccessedBank = temp->bank;
+            lastAccessedAddress = fullAddress;
+            return temp->bank;
+        }
         temp = temp->next;
     }
-    return NULL;
+    return nullptr;
 }
 void RegisterBank::setValue(uint16_t regAddress, uint16_t value, bool instantSave) {
     _registers[regAddress] = value;

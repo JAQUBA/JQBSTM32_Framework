@@ -61,21 +61,40 @@ void FM25V05::writeToMemory(
 	uint8_t *pData, 
 	uint16_t Size
 ) {
-	uint8_t *txBuf = (uint8_t*) malloc(Size+3);
-
-	uint8_t header[] = {
-		CMD_WRITE, 
-		(uint8_t)((MemAddress & 0x0000FF00)>>8), 
-		(uint8_t)((MemAddress & 0x000000FF))
-	};
-
-	memcpy(txBuf, header, 3);
-	memcpy(txBuf+3, pData, Size);
-
+	// Enable write operation
 	uint8_t wren = CMD_WREN;
 	_pInstance->transmit(_CSPort, _CSPin, &wren, 1);
 
-	_pInstance->transmit(_CSPort, _CSPin, txBuf, Size+3);
-	free(txBuf);
+	// Use stack buffer for small writes, avoid malloc for better performance
+	constexpr uint16_t STACK_BUFFER_SIZE = 128;
+	
+	if (Size <= STACK_BUFFER_SIZE - 3) {
+		// Use stack buffer for small writes
+		uint8_t txBuf[STACK_BUFFER_SIZE];
+		
+		txBuf[0] = CMD_WRITE;
+		txBuf[1] = (uint8_t)((MemAddress & 0x0000FF00) >> 8);
+		txBuf[2] = (uint8_t)(MemAddress & 0x000000FF);
+		
+		memcpy(txBuf + 3, pData, Size);
+		_pInstance->transmit(_CSPort, _CSPin, txBuf, Size + 3);
+	} else {
+		// For large writes, send header first, then data
+		uint8_t header[] = {
+			CMD_WRITE, 
+			(uint8_t)((MemAddress & 0x0000FF00) >> 8), 
+			(uint8_t)(MemAddress & 0x000000FF)
+		};
+		
+		// Manual CS control for continuous transaction
+		HAL_GPIO_WritePin(_CSPort, _CSPin, GPIO_PIN_RESET);
+				// Send header
+		HAL_SPI_Transmit(_pInstance->getHandler(), header, 3, HAL_MAX_DELAY);
+		
+		// Send data
+		HAL_SPI_Transmit(_pInstance->getHandler(), pData, Size, HAL_MAX_DELAY);
+		
+		HAL_GPIO_WritePin(_CSPort, _CSPin, GPIO_PIN_SET);
+	}
 }
 #endif

@@ -31,11 +31,17 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {UART::getInstance(huart
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {UART::getInstance(huart)->txInterrupt();}
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {UART::getInstance(huart)->errorInterrupt();}
 
-UART::UART(UART_HandleTypeDef *pHandler, GPIO_TypeDef *dirPort, uint16_t dirPin) {
+UART::UART(UART_HandleTypeDef *pHandler, GPIO_TypeDef *dirPort, uint16_t dirPin) 
+    : _operationHead(0), _operationTail(0), _operationCount(0) {
     _pHandler = pHandler;
     _UART_instances[_UART_instancesNum++] = this;
 	_dirPort = dirPort;
 	_dirPin = dirPin;
+    
+    // Initialize operations array
+    for (uint8_t i = 0; i < UART_MAX_OPERATIONS; i++) {
+        _operations[i].active = false;
+    }
     
     HAL_UART_Receive_IT(_pHandler, &Received_u1, 1);
 
@@ -48,8 +54,7 @@ UART::UART(UART_HandleTypeDef *pHandler, GPIO_TypeDef *dirPort, uint16_t dirPin)
 
         switch(operationState) {
 			case IDLE: {
-				if(!operations.empty()) {
-					currentOperation = operations.front();
+				if(getNextOperation()) {
 					operationState = CHECK_FREE;
 				}
 				break;
@@ -90,11 +95,9 @@ UART::UART(UART_HandleTypeDef *pHandler, GPIO_TypeDef *dirPort, uint16_t dirPin)
 				fpOnTransmit();
 				operationState = CLEAR;
 				break;
-			}
-			case CLEAR: {
+			}			case CLEAR: {
 				if(_dirPort) HAL_GPIO_WritePin(_dirPort, _dirPin, GPIO_PIN_RESET);
-				if(currentOperation.free) free(currentOperation.pData);
-				operations.pop();
+				// No need to free memory - using stack buffers
 				operationState = IDLE;
 				break;
 			}
@@ -127,14 +130,48 @@ void UART::errorInterrupt() {
 void UART::onReceiveHandler(dataCallback_f onReceive) {fpOnReceive = onReceive;}
 void UART::onTransmitHandler(voidCallback_f onTransmit) {fpOnTransmit = onTransmit;}
 
+bool UART::getNextOperation() {
+    if (_operationCount == 0) return false;
+    
+    currentOperation = _operations[_operationTail];
+    _operationTail = (_operationTail + 1) % UART_MAX_OPERATIONS;
+    _operationCount--;
+    
+    return true;
+}
 
-void UART::transmit(uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
-    operation operation;
-	operation.operationType = EoperationType::SEND;
-	operation.pData = (uint8_t*) malloc(Size);
-	memcpy(operation.pData, pData, Size);
-	operation.Size = Size;
-	operation.callback_f = callbackFn;
-	operations.push(operation);
+bool UART::enqueueOperation(const operation& op) {
+    if (_operationCount >= UART_MAX_OPERATIONS) return false;
+    
+    _operations[_operationHead] = op;
+    _operations[_operationHead].active = true;
+    _operationHead = (_operationHead + 1) % UART_MAX_OPERATIONS;
+    _operationCount++;
+    
+    return true;
+}
+
+bool UART::transmit(uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
+    if (Size > UART_MAX_DATA_SIZE) return false;
+    
+    operation op;
+	op.operationType = EoperationType::SEND;
+	op.Size = Size;
+	op.callback_f = callbackFn;
+	
+	// Copy data to internal buffer
+	memcpy(op.internalData, pData, Size);
+	op.pData = op.internalData;
+	op.useInternalBuffer = true;
+	
+	return enqueueOperation(op);
+}
+
+uint16_t UART::queueSize() {
+    return _operationCount;
+}
+
+bool UART::isQueueFull() {
+    return _operationCount >= UART_MAX_OPERATIONS;
 }
 #endif

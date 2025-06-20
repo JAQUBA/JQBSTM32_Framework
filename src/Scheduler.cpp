@@ -20,6 +20,13 @@
 
 taskStruct Scheduler::addTask(const taskCallback_f &func, uint32_t delay, bool single, taskTime time) {
     taskStruct task;
+    
+    // Find free slot
+    uint8_t slotIndex = findFreeSlot();
+    if (slotIndex >= MAX_SCHEDULER_TASKS) {
+        // No free slots available, return invalid task
+        return task;
+    }
 
     delay *= time;
 
@@ -28,27 +35,85 @@ taskStruct Scheduler::addTask(const taskCallback_f &func, uint32_t delay, bool s
     task._delay = delay;
     task._single = single;
     task._id = _taskNum++;
+    task.active = true;
+    task.executionCount = 0;
 
-    tasks.push_back(task);
+    // Store task in array
+    tasks[slotIndex] = task;
+    _activeTaskCount++;
+    
     return task;
 }
 
+bool Scheduler::removeTask(uint16_t taskId) {
+    for (uint8_t i = 0; i < MAX_SCHEDULER_TASKS; i++) {
+        if (tasks[i].isValid() && tasks[i]._id == taskId) {
+            tasks[i].active = false;
+            tasks[i]._id = INVALID_TASK_ID;
+            _activeTaskCount--;
+            return true;
+        }
+    }
+    return false;
+}
+
 void Scheduler::execute() {
-    for (auto it = tasks.begin(); it != tasks.end(); ) {
-        if (it->delay == 0) {
-            it->functionPointer(&(*it));
-            it->delay = it->_delay;
-            if (it->_single) {
-                it = tasks.erase(it);
+    for (uint8_t i = 0; i < MAX_SCHEDULER_TASKS; i++) {
+        taskStruct& task = tasks[i];
+        
+        if (!task.isValid()) {
+            continue;
+        }
+        
+        if (task.delay == 0) {
+            // Execute task
+            if (task.functionPointer) {
+                task.functionPointer(&task);
+                task.executionCount++;
+            }
+            
+            // Handle task lifecycle
+            if (task._single) {
+                // Remove single-execution task
+                task.active = false;
+                task._id = INVALID_TASK_ID;
+                _activeTaskCount--;
+            } else {
+                // Reset delay for periodic task
+                task.delay = task._delay;
             }
         }
-        ++it;
     }
 }
+
 void Scheduler::poll() {
-    for (auto &task : tasks) {
-        if (task.delay > 0) {
-            --task.delay;
+    for (uint8_t i = 0; i < MAX_SCHEDULER_TASKS; i++) {
+        taskStruct& task = tasks[i];
+        
+        if (task.isValid() && task.delay > 0) {
+            task.delay--;
         }
     }
+}
+
+uint8_t Scheduler::getActiveTaskCount() const {
+    return _activeTaskCount;
+}
+
+uint8_t Scheduler::findFreeSlot() {
+    for (uint8_t i = 0; i < MAX_SCHEDULER_TASKS; i++) {
+        if (!tasks[i].isValid()) {
+            return i;
+        }
+    }
+    return MAX_SCHEDULER_TASKS; // No free slot found
+}
+
+taskStruct* Scheduler::findTask(uint16_t taskId) {
+    for (uint8_t i = 0; i < MAX_SCHEDULER_TASKS; i++) {
+        if (tasks[i].isValid() && tasks[i]._id == taskId) {
+            return &tasks[i];
+        }
+    }
+    return nullptr;
 }

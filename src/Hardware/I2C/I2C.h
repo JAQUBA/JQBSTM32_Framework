@@ -25,6 +25,14 @@
 #define I2C_MAX_INSTANCES 2
 #endif
 
+#ifndef I2C_MAX_OPERATIONS
+#define I2C_MAX_OPERATIONS 8 ///< Maximum number of queued I2C operations
+#endif
+
+#ifndef I2C_MAX_DATA_SIZE
+#define I2C_MAX_DATA_SIZE 128 ///< Maximum size of data for single I2C operation
+#endif
+
 #include "../../Interface/IBus.h"
 
 class I2C : public IBus {
@@ -42,17 +50,16 @@ class I2C : public IBus {
          * @param pHandler Pointer to the I2C handler.
          * @return I2C* Pointer to the I2C instance.
          */
-        static I2C *getInstance(I2C_HandleTypeDef *pHandler);
-
-        /**
+        static I2C *getInstance(I2C_HandleTypeDef *pHandler);        /**
          * @brief Transmits data to the specified device address.
          * 
          * @param DevAddress The address of the device to transmit to.
          * @param pData Pointer to the data to transmit.
          * @param Size The size of the data to transmit.
          * @param callbackFn Callback function to be called after transmission (default is nullptr).
+         * @return bool True if operation was queued successfully, false if queue is full or data too large
          */
-        void transmit(
+        bool transmit(
             uint16_t DevAddress,
             uint8_t *pData, uint16_t Size,
             dataCallback_f callbackFn = nullptr
@@ -65,8 +72,9 @@ class I2C : public IBus {
          * @param pData Pointer to the buffer to store received data.
          * @param Size The size of the data to receive.
          * @param callbackFn Callback function to be called after reception (default is nullptr).
+         * @return bool True if operation was queued successfully, false if queue is full
          */
-        void receive(
+        bool receive(
             uint16_t DevAddress,
             uint8_t *pData, uint16_t Size,
             dataCallback_f callbackFn = nullptr
@@ -81,8 +89,9 @@ class I2C : public IBus {
          * @param pData Pointer to the buffer to store read data.
          * @param Size The size of the data to read.
          * @param callbackFn Callback function to be called after reading (default is nullptr).
+         * @return bool True if operation was queued successfully, false if queue is full
          */
-        void readFromMemory(
+        bool readFromMemory(
             uint16_t DevAddress,
             uint16_t MemAddress,
             uint16_t MemAddSize,
@@ -99,8 +108,9 @@ class I2C : public IBus {
          * @param pData Pointer to the data to write.
          * @param Size The size of the data to write.
          * @param callbackFn Callback function to be called after writing (default is nullptr).
+         * @return bool True if operation was queued successfully, false if queue is full or data too large
          */
-        void writeToMemory(
+        bool writeToMemory(
             uint16_t DevAddress,
             uint16_t MemAddress,
             uint16_t MemAddSize,
@@ -127,9 +137,20 @@ class I2C : public IBus {
          * 
          * @param hi2c Pointer to the I2C handler.
          */
-        void errorInterrupt();
-        
+        void errorInterrupt();        
         uint16_t queueSize();
+        
+        /**
+         * @brief Check if operation queue is full
+         * @return bool True if queue is full
+         */
+        bool isQueueFull();
+        
+        /**
+         * @brief Get maximum queue capacity
+         * @return uint16_t Maximum number of operations that can be queued
+         */
+        uint16_t getMaxQueueSize();
     private:
         I2C_HandleTypeDef* _pHandler;
 
@@ -158,12 +179,35 @@ class I2C : public IBus {
             uint16_t MemAddress;
             uint16_t MemAddSize;
             uint8_t *pData;
+            uint8_t internalData[I2C_MAX_DATA_SIZE]; ///< Internal buffer for data copies
             uint16_t Size;
             dataCallback_f callback_f;
-            bool free = true;
-        } currentOperation;
+            bool useInternalBuffer; ///< True if using internal buffer, false if using external pointer
+            bool active; ///< True if operation slot is active
+            
+            operation() : operationType(TRANSMIT), DevAddress(0), MemAddress(0), 
+                         MemAddSize(0), pData(nullptr), Size(0), callback_f(nullptr),
+                         useInternalBuffer(false), active(false) {}
+        };
 
-        std::queue<operation> operations;
+        operation currentOperation;
+        operation _operations[I2C_MAX_OPERATIONS]; ///< Circular buffer for operations
+        uint8_t _operationHead; ///< Head index for circular buffer
+        uint8_t _operationTail; ///< Tail index for circular buffer
+        uint8_t _operationCount; ///< Number of operations in queue
+        
+        /**
+         * @brief Get next operation from queue
+         * @return bool True if operation was available, false if queue empty
+         */
+        bool getNextOperation();
+        
+        /**
+         * @brief Add operation to queue
+         * @param op Operation to add
+         * @return bool True if successfully added, false if queue full
+         */
+        bool enqueueOperation(const operation& op);
 };
 #endif
 #endif

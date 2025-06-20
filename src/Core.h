@@ -99,7 +99,7 @@ void setup();
  */
 void loop();
 
-extern uint32_t ulMillis; ///< Global millisecond counter
+extern volatile uint32_t ulMillis; ///< Global millisecond counter
 
 /**
  * @brief Get current millisecond count
@@ -139,6 +139,33 @@ extern void SystemClock_Config();
  * @return long The mapped value
  */
 long map(long x, long in_min, long in_max, long out_min, long out_max);
+
+/**
+ * @brief Get system uptime in milliseconds
+ * @details Returns the time elapsed since system initialization
+ * @return uint32_t System uptime in milliseconds
+ */
+uint32_t getSystemUptime();
+
+/**
+ * @brief Get number of task overruns
+ * @details Returns the count of times task execution exceeded threshold
+ * @return uint32_t Number of task overruns
+ */
+uint32_t getTaskOverruns();
+
+/**
+ * @brief Get maximum execution time recorded
+ * @details Returns the longest task execution time measured
+ * @return uint32_t Maximum execution time in milliseconds
+ */
+uint32_t getMaxExecutionTime();
+
+/**
+ * @brief Reset performance counters
+ * @details Resets all performance monitoring counters to zero
+ */
+void resetPerformanceCounters();
 
 #ifdef __cplusplus
 }

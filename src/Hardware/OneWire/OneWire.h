@@ -25,6 +25,14 @@
 #include "Interface/IBus.h"
 #include "Hardware/Timer/Timer.h"
 
+#ifndef ONEWIRE_MAX_OPERATIONS
+#define ONEWIRE_MAX_OPERATIONS 4 ///< Maximum number of queued OneWire operations
+#endif
+
+#ifndef ONEWIRE_MAX_DATA_SIZE
+#define ONEWIRE_MAX_DATA_SIZE 16 ///< Maximum size of data for single OneWire operation
+#endif
+
 /**
  * @brief OneWire communication protocol class
  * @details Implementation of Dallas/Maxim 1-Wire communication protocol
@@ -32,14 +40,14 @@
  */
 class OneWire : public IBus {
 	public:
-		/**
-		 * @brief OneWire constructor
-		 * @details Initializes OneWire interface with timer and GPIO configuration
-		 * @param timer Pointer to Timer instance for precise timing
-		 * @param GPIOx GPIO port for OneWire data line
-		 * @param GPIO_Pin GPIO pin for OneWire data line
-		 */
-		OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
+	/**
+	 * @brief OneWire constructor
+	 * @details Initializes OneWire interface with timer and GPIO configuration
+	 * @param timer Pointer to Timer instance for precise timing
+	 * @param GPIOx GPIO port for OneWire data line
+	 * @param GPIO_Pin GPIO pin for OneWire data line
+	 */
+	OneWire(Timer* timer, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
 
 		/**
 		 * @brief Reset OneWire bus
@@ -211,19 +219,40 @@ class OneWire : public IBus {
 			RECEIVE, ///< Receive operation
 			TRANSMIT ///< Transmit operation
 		};
-			
-		/**
+					/**
 		 * @brief Operation structure
 		 * @details Structure holding information about pending OneWire operation
 		 */
 		struct operation {
 			EoperationType  operationType; ///< Type of operation
 			uint8_t         *pData;       ///< Pointer to data buffer
+			uint8_t         internalData[ONEWIRE_MAX_DATA_SIZE]; ///< Internal buffer for data copies
 			uint16_t        Size;         ///< Size of data
-			bool            free = false; ///< Operation slot availability flag
-			dataCallback_f  callback_f = nullptr; ///< Callback function
+			bool            useInternalBuffer; ///< True if using internal buffer
+			bool            active;       ///< True if operation slot is active
+			dataCallback_f  callback_f;   ///< Callback function
+			
+			operation() : operationType(RESET), pData(nullptr), Size(0), 
+			             useInternalBuffer(false), active(false), callback_f(nullptr) {}
 		} currentOperation;
-		std::queue<operation> operations; ///< Queue of pending operations
+		
+		operation _operations[ONEWIRE_MAX_OPERATIONS]; ///< Circular buffer for operations
+		uint8_t _operationHead; ///< Head index for circular buffer
+		uint8_t _operationTail; ///< Tail index for circular buffer
+		uint8_t _operationCount; ///< Number of operations in queue
+		
+		/**
+		 * @brief Get next operation from queue
+		 * @return bool True if operation was available, false if queue empty
+		 */
+		bool getNextOperation();
+		
+		/**
+		 * @brief Add operation to queue
+		 * @param op Operation to add
+		 * @return bool True if successfully added, false if queue full
+		 */
+		bool enqueueOperation(const operation& op);
 };
 
 #endif // ONEWIRE_H

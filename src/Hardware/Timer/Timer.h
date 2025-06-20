@@ -26,6 +26,10 @@
 #define TIMER_MAX_INSTANCES TIMERS_AVAILABLE ///< Maximum number of timer instances
 #endif
 
+#ifndef TIMER_MAX_CALLBACKS
+#define TIMER_MAX_CALLBACKS 8 ///< Maximum number of callbacks per timer
+#endif
+
 // #define timerCallback [&](Timer *timer)
 // using timerCallback_f = std::function<void(class Timer *timer)>;
 
@@ -65,15 +69,21 @@ class Timer {
             TriggerCallback,                 ///< Timer trigger interrupt
             TriggerHalfCpltCallback,         ///< Timer trigger half complete interrupt
             ErrorCallback                    ///< Timer error interrupt
-        };
-
-        /**
+        };        /**
          * @brief Attach interrupt callback
          * @details Registers a callback function for specific timer interrupt type
          * @param interruptType Type of interrupt to handle
          * @param callback Function to be called on interrupt
+         * @return bool True if callback was successfully attached, false if no free slots
          */
-        void attachInterrupt(InterruptType interruptType, voidCallback_f callback);
+        bool attachInterrupt(InterruptType interruptType, voidCallback_f callback);
+        
+        /**
+         * @brief Detach interrupt callback
+         * @details Removes callback function for specific timer interrupt type
+         * @param interruptType Type of interrupt to remove
+         */
+        void detachInterrupt(InterruptType interruptType);
         
         /**
          * @brief Handle timer interrupt
@@ -88,9 +98,44 @@ class Timer {
          * @param period Timer period value
          */
         void setPeriod(uint32_t period);
+        
+        /**
+         * @brief Get number of attached callbacks
+         * @details Returns the current number of attached interrupt callbacks
+         * @return uint8_t Number of callbacks
+         */
+        uint8_t getCallbackCount() const;
     protected:
+        /**
+         * @brief Timer callback entry structure
+         * @details Holds interrupt type and callback function pair
+         */
+        struct CallbackEntry {
+            InterruptType type;
+            voidCallback_f callback;
+            bool active;
+            
+            CallbackEntry() : type(PeriodElapsedCallback), callback(nullptr), active(false) {}
+        };
+        
         TIM_HandleTypeDef* _pHandler; ///< HAL timer handler pointer
-        std::list<std::pair<InterruptType, voidCallback_f>> _callbacks; ///< List of interrupt callbacks
+        CallbackEntry _callbacks[TIMER_MAX_CALLBACKS]; ///< Array of interrupt callbacks
+        uint8_t _callbackCount; ///< Number of active callbacks
+        
+        /**
+         * @brief Find free callback slot
+         * @details Searches for an available slot in the callbacks array
+         * @return int8_t Index of free slot or -1 if none available
+         */
+        int8_t findFreeCallbackSlot();
+        
+        /**
+         * @brief Find callback by type
+         * @details Searches for callback with specific interrupt type
+         * @param interruptType Type of interrupt to find
+         * @return int8_t Index of callback or -1 if not found
+         */
+        int8_t findCallback(InterruptType interruptType);
 };
 
 #endif // _TIMER_H

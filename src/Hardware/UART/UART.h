@@ -25,6 +25,14 @@
 #define UART_MAX_INSTANCES 2
 #endif
 
+#ifndef UART_MAX_OPERATIONS  
+#define UART_MAX_OPERATIONS 4 ///< Maximum number of queued UART operations
+#endif
+
+#ifndef UART_MAX_DATA_SIZE
+#define UART_MAX_DATA_SIZE 256 ///< Maximum size of data for single UART operation
+#endif
+
 #include "../../Interface/IBus.h"
 
 /**
@@ -67,16 +75,15 @@ class UART : public IBus {
          * @brief UART error interrupt handler
          * @details Internal function called by HAL when an error occurs
          */
-        void errorInterrupt();
-
-        /**
+        void errorInterrupt();        /**
          * @brief Transmit data via UART
          * @details Sends data through UART with optional callback on completion
          * @param pData Pointer to data buffer to transmit
          * @param Size Number of bytes to transmit
          * @param callbackFn Optional callback function called after transmission (default: nullptr)
+         * @return bool True if operation was queued successfully, false if queue is full or data too large
          */
-        void transmit(
+        bool transmit(
             uint8_t *pData, uint16_t Size,
             dataCallback_f callbackFn = nullptr
         );
@@ -87,13 +94,24 @@ class UART : public IBus {
          * @param onReceive Callback function for received data
          */
         void onReceiveHandler(dataCallback_f onReceive);
-        
-        /**
+          /**
          * @brief Set transmit callback handler
          * @details Registers callback function to be called when transmission is complete
          * @param onTransmit Callback function for transmission completion
          */
         void onTransmitHandler(voidCallback_f onTransmit);
+        
+        /**
+         * @brief Get number of operations in queue
+         * @return uint16_t Number of queued operations
+         */
+        uint16_t queueSize();
+        
+        /**
+         * @brief Check if operation queue is full
+         * @return bool True if queue is full
+         */
+        bool isQueueFull();
     private:
         UART_HandleTypeDef *_pHandler; ///< HAL UART handler pointer
 
@@ -123,20 +141,40 @@ class UART : public IBus {
          * @details Defines types of UART operations
          */
         enum EoperationType {SEND};
-        
-        /**
+          /**
          * @brief Operation structure
          * @details Structure holding information about pending UART operation
          */
         struct operation {
             EoperationType operationType; ///< Type of operation
             uint8_t *pData;              ///< Pointer to data buffer
+            uint8_t internalData[UART_MAX_DATA_SIZE]; ///< Internal buffer for data copies
             uint16_t Size;               ///< Size of data
             dataCallback_f callback_f;   ///< Callback function
-            bool free = true;            ///< Operation slot availability flag
+            bool useInternalBuffer;      ///< True if using internal buffer
+            bool active;                 ///< True if operation slot is active
+            
+            operation() : operationType(SEND), pData(nullptr), Size(0), 
+                         callback_f(nullptr), useInternalBuffer(false), active(false) {}
         } currentOperation;
         
-        std::queue<operation> operations; ///< Queue of pending operations
+        operation _operations[UART_MAX_OPERATIONS]; ///< Circular buffer for operations
+        uint8_t _operationHead; ///< Head index for circular buffer
+        uint8_t _operationTail; ///< Tail index for circular buffer
+        uint8_t _operationCount; ///< Number of operations in queue
+        
+        /**
+         * @brief Get next operation from queue
+         * @return bool True if operation was available, false if queue empty
+         */
+        bool getNextOperation();
+        
+        /**
+         * @brief Add operation to queue
+         * @param op Operation to add
+         * @return bool True if successfully added, false if queue full
+         */
+        bool enqueueOperation(const operation& op);
 };
 
 #endif

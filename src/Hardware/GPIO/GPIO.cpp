@@ -20,16 +20,92 @@
 
 HardwareGPIO GPIO;
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {GPIO._interruptCallback(GPIO_Pin);}
-void HardwareGPIO::_interruptCallback(uint16_t GPIO_Pin) {
-    for (auto interrupt : interrupts) {if(interrupt.GPIO_Pin == GPIO_Pin) interrupt.callback();}
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+    GPIO._interruptCallback(GPIO_Pin);
 }
-void HardwareGPIO::attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidCallback_f callback) {
-    interrupt interrupt;
-    interrupt.GPIOx = GPIOx;
-    interrupt.GPIO_Pin = GPIO_Pin;
-    interrupt.callback = callback;
-    interrupts.push_back(interrupt);
+
+void HardwareGPIO::_interruptCallback(uint16_t GPIO_Pin) {
+    uint32_t currentTime = millis();
+    
+    for (uint8_t i = 0; i < MAX_GPIO_INTERRUPTS; i++) {
+        if (interrupts[i].active && interrupts[i].GPIO_Pin == GPIO_Pin) {
+            interrupts[i].triggerCount++;
+            interrupts[i].lastTriggerTime = currentTime;
+            
+            if (interrupts[i].callback) {
+                interrupts[i].callback();
+            }
+            break; // Found and processed, exit loop
+        }
+    }
+}
+
+bool HardwareGPIO::attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidCallback_f callback) {
+    // Check if interrupt already exists for this pin
+    uint8_t existingSlot = findInterruptSlot(GPIOx, GPIO_Pin);
+    if (existingSlot < MAX_GPIO_INTERRUPTS) {
+        // Update existing interrupt
+        interrupts[existingSlot].callback = callback;
+        return true;
+    }
+    
+    // Find free slot for new interrupt
+    uint8_t freeSlot = findFreeInterruptSlot();
+    if (freeSlot >= MAX_GPIO_INTERRUPTS) {
+        return false; // No free slots available
+    }
+    
+    // Configure new interrupt
+    interrupts[freeSlot].GPIOx = GPIOx;
+    interrupts[freeSlot].GPIO_Pin = GPIO_Pin;
+    interrupts[freeSlot].callback = callback;
+    interrupts[freeSlot].active = true;
+    interrupts[freeSlot].triggerCount = 0;
+    interrupts[freeSlot].lastTriggerTime = millis();
+    interruptCount++;
+    
+    return true;
+}
+
+bool HardwareGPIO::detachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
+    uint8_t slot = findInterruptSlot(GPIOx, GPIO_Pin);
+    if (slot < MAX_GPIO_INTERRUPTS) {
+        interrupts[slot].active = false;
+        interrupts[slot].GPIOx = nullptr;
+        interrupts[slot].GPIO_Pin = 0;
+        interrupts[slot].callback = nullptr;
+        interruptCount--;
+        return true;
+    }
+    return false;
+}
+
+uint32_t HardwareGPIO::getInterruptCount(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
+    uint8_t slot = findInterruptSlot(GPIOx, GPIO_Pin);
+    if (slot < MAX_GPIO_INTERRUPTS) {
+        return interrupts[slot].triggerCount;
+    }
+    return 0;
+}
+
+uint8_t HardwareGPIO::findInterruptSlot(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
+    for (uint8_t i = 0; i < MAX_GPIO_INTERRUPTS; i++) {
+        if (interrupts[i].active && 
+            interrupts[i].GPIOx == GPIOx && 
+            interrupts[i].GPIO_Pin == GPIO_Pin) {
+            return i;
+        }
+    }
+    return MAX_GPIO_INTERRUPTS; // Not found
+}
+
+uint8_t HardwareGPIO::findFreeInterruptSlot() {
+    for (uint8_t i = 0; i < MAX_GPIO_INTERRUPTS; i++) {
+        if (!interrupts[i].active) {
+            return i;
+        }
+    }
+    return MAX_GPIO_INTERRUPTS; // No free slot
 }
 void HardwareGPIO::setup(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint32_t mode) {
     GPIO_InitTypeDef GPIO_InitStruct  = {0};

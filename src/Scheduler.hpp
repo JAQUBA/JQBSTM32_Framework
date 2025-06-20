@@ -21,7 +21,16 @@
 
 #include <stdint.h>
 #include <functional>
-#include <list>
+#include <array>
+
+// Configuration: Maximum number of tasks - can be adjusted based on memory requirements
+#ifndef MAX_SCHEDULER_TASKS
+#define MAX_SCHEDULER_TASKS 16
+#endif
+
+#ifndef INVALID_TASK_ID
+#define INVALID_TASK_ID 0xFFFF
+#endif
 
 /**
  * @brief Task definition macro
@@ -75,8 +84,19 @@ struct taskStruct {
     volatile uint32_t _delay = 0;    ///< Original delay value
 	volatile uint32_t delay = 0;     ///< Current delay counter
 	bool _single = false;            ///< Single execution flag
-
-    uint16_t _id = 0;                ///< Task unique identifier
+    uint16_t _id = INVALID_TASK_ID;  ///< Task unique identifier
+    
+    // Enhanced features for optimization
+    bool active = false;             ///< Task active flag
+    uint32_t executionCount = 0;     ///< Number of times executed
+    
+    // Constructor for easier initialization
+    taskStruct() = default;
+    
+    // Method to check if task is valid
+    inline bool isValid() const { 
+        return _id != INVALID_TASK_ID && active; 
+    }
 };
 
 /**
@@ -97,7 +117,6 @@ class Scheduler {
             MUL_100MS = 1000, ///< 100 millisecond base
             MUL_1S = 10000    ///< 1 second base
         };
-
         /**
          * @brief Add task to scheduler
          * @details Adds a new task to the scheduler with specified timing parameters
@@ -110,6 +129,14 @@ class Scheduler {
         taskStruct addTask(const taskCallback_f &func, uint32_t delay, bool single = false, taskTime time = MUL_1MS);
         
         /**
+         * @brief Remove task from scheduler
+         * @details Removes task with specified ID from scheduler
+         * @param taskId ID of task to remove
+         * @return true if task was found and removed
+         */
+        bool removeTask(uint16_t taskId);
+        
+        /**
          * @brief Execute scheduled tasks
          * @details Executes all tasks that are ready to run
          */
@@ -120,9 +147,30 @@ class Scheduler {
          * @details Updates task timers and prepares tasks for execution
          */
         void poll();
+        
+        /**
+         * @brief Get number of active tasks
+         * @return Number of active tasks
+         */
+        uint8_t getActiveTaskCount() const;
+        
     private:
-        uint16_t _taskNum = 0;    ///< Task counter for ID assignment
-        std::list<taskStruct> tasks; ///< List of scheduled tasks
+        uint16_t _taskNum = 1;    ///< Task counter for ID assignment (start from 1)
+        uint8_t _activeTaskCount = 0;  ///< Number of active tasks
+        std::array<taskStruct, MAX_SCHEDULER_TASKS> tasks; ///< Fixed-size array of tasks
+        
+        /**
+         * @brief Find free task slot
+         * @return Index of free slot or MAX_SCHEDULER_TASKS if none available
+         */
+        uint8_t findFreeSlot();
+        
+        /**
+         * @brief Find task by ID
+         * @param taskId Task ID to search for
+         * @return Pointer to task or nullptr if not found
+         */
+        taskStruct* findTask(uint16_t taskId);
 
 };
 #endif

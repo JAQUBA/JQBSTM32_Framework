@@ -25,6 +25,14 @@
 #define SPI_MAX_INSTANCES 2
 #endif
 
+#ifndef SPI_MAX_OPERATIONS
+#define SPI_MAX_OPERATIONS 4 ///< Maximum number of queued SPI operations
+#endif
+
+#ifndef SPI_MAX_DATA_SIZE
+#define SPI_MAX_DATA_SIZE 128 ///< Maximum size of data for single SPI operation
+#endif
+
 #include "../../Interface/IBus.h"
 
 /**
@@ -137,6 +145,19 @@ class SPI : public IBus {
          * @return uint16_t Number of pending operations
          */
         uint16_t queueSize();
+        
+        /**
+         * @brief Check if operation queue is full
+         * @return bool True if queue is full
+         */
+        bool isQueueFull();
+        
+        /**
+         * @brief Get maximum queue capacity
+         * @return uint16_t Maximum number of operations that can be queued
+         */
+        uint16_t getMaxQueueSize();
+
     private:
         SPI_HandleTypeDef* _pHandler; ///< HAL SPI handler pointer
         uint32_t operationTimeout;    ///< Operation timeout value
@@ -163,8 +184,7 @@ class SPI : public IBus {
             TRANSMIT,          ///< Transmit operation
             TRANSMIT_RECEIVE   ///< Full-duplex operation
         };
-        
-        /**
+          /**
          * @brief Operation structure
          * @details Structure holding information about pending SPI operation
          */
@@ -173,15 +193,37 @@ class SPI : public IBus {
             
             GPIO_TypeDef*   _CSPort;      ///< Chip Select GPIO port
             uint16_t        _CSPin;       ///< Chip Select GPIO pin
-            bool            _pinReset = true; ///< CS pin reset flag
+            bool            _pinReset;    ///< CS pin reset flag
             uint8_t         *pData;       ///< Pointer to data buffer
+            uint8_t         internalData[SPI_MAX_DATA_SIZE]; ///< Internal buffer for data copies
             uint16_t        Size;         ///< Size of data
-            bool            free = false; ///< Operation slot availability flag
+            bool            useInternalBuffer; ///< True if using internal buffer
+            bool            active;       ///< True if operation slot is active
             
-            dataCallback_f  callback_f = nullptr; ///< Callback function
+            dataCallback_f  callback_f;   ///< Callback function
+            
+            operation() : operationType(RECEIVE), _CSPort(nullptr), _CSPin(0), 
+                         _pinReset(true), pData(nullptr), Size(0), 
+                         useInternalBuffer(false), active(false), callback_f(nullptr) {}
         } currentOperation;
         
-        std::queue<operation> operations; ///< Queue of pending operations
+        operation _operations[SPI_MAX_OPERATIONS]; ///< Circular buffer for operations
+        uint8_t _operationHead; ///< Head index for circular buffer
+        uint8_t _operationTail; ///< Tail index for circular buffer
+        uint8_t _operationCount; ///< Number of operations in queue
+        
+        /**
+         * @brief Get next operation from queue
+         * @return bool True if operation was available, false if queue empty
+         */
+        bool getNextOperation();
+        
+        /**
+         * @brief Add operation to queue
+         * @param op Operation to add
+         * @return bool True if successfully added, false if queue full
+         */
+        bool enqueueOperation(const operation& op);
 };
 #endif
 #endif

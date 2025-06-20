@@ -25,6 +25,10 @@
 #define CAN_MAX_INSTANCES 1  ///< Maximum number of CAN instances supported
 #endif
 
+#ifndef CAN_MAX_HANDLERS
+#define CAN_MAX_HANDLERS 8 ///< Maximum number of CAN message handlers
+#endif
+
 #include "../../Interface/IBus.h"
 #include <unordered_map> 
 
@@ -110,7 +114,6 @@ class CAN : public IBus{
 		uint32_t canMailbox;              ///< CAN mailbox identifier for transmission
 		uint8_t pData[8] = {0,0,0,0,0,0,0,0}; ///< Internal data buffer for message processing
 		bool hasPacket = false;           ///< Flag indicating if new packet has been received
-
 		/**
 		 * @struct handler
 		 * @brief Structure to store callback handler information
@@ -119,8 +122,26 @@ class CAN : public IBus{
 		struct handler {
 			uint32_t commNumber;    ///< CAN message identifier to match
 			dataCallback_f handler; ///< Callback function to execute on match
+			bool active;            ///< True if handler slot is active
+			
+			handler() : commNumber(0), handler(nullptr), active(false) {}
 		};
-		std::list<struct handler> handlers; ///< List of registered message handlers
+		
+		handler _handlers[CAN_MAX_HANDLERS]; ///< Array of message handlers
+		uint8_t _handlerCount; ///< Number of active handlers
+		
+		/**
+		 * @brief Find free handler slot
+		 * @return int8_t Index of free slot or -1 if none available
+		 */
+		int8_t findFreeHandlerSlot();
+		
+		/**
+		 * @brief Find handler by message ID
+		 * @param commNumber Message ID to find
+		 * @return int8_t Index of handler or -1 if not found
+		 */
+		int8_t findHandler(uint32_t commNumber);
 };
 
 #endif

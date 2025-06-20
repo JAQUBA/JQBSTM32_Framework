@@ -20,7 +20,13 @@
 
 #include "OneWire.h"
 
-OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_Timer(timer), OW_Port(GPIO_Port), OW_Pin(GPIO_Pin) {
+OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) 
+    : OW_Timer(timer), OW_Port(GPIO_Port), OW_Pin(GPIO_Pin), _operationHead(0), _operationTail(0), _operationCount(0) {
+    
+    // Initialize operations array
+    for (uint8_t i = 0; i < ONEWIRE_MAX_OPERATIONS; i++) {
+        _operations[i].active = false;
+    }
 	OW_Timer->attachInterrupt(Timer::PeriodElapsedCallback, voidCallback {
 		switch(operationProgress) {
 			case OPERATION_PROGRESS_IDLE: {
@@ -106,12 +112,11 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
 			}
 		}
 	});
-
 	addTaskMain(taskCallback {
 		switch(operationState) {
 			case IDLE: {
-				if(!operations.empty()) {
-					currentOperation = operations.front();
+				if(getNextOperation()) {
+					operationState = CHECK_FREE;
 					operationState = CHECK_FREE;
 				}
 				break;
@@ -153,10 +158,8 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
 				}
 				operationState = CLEAR;
 				break;
-			}
-			case CLEAR: {
-				if(currentOperation.free) free(currentOperation.pData);
-				operations.pop();
+			}			case CLEAR: {
+				// No need to free memory - using stack buffers or external pointers
 				operationState = IDLE;
 				break;
 			}
@@ -164,37 +167,64 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
 	});
 }
 
-void OneWire::reset() {
-	operation operation;
-	operation.operationType = EoperationType::RESET;
-	operation.free = false;
-	operations.push(operation);
+bool OneWire::getNextOperation() {
+    if (_operationCount == 0) return false;
+    
+    currentOperation = _operations[_operationTail];
+    _operationTail = (_operationTail + 1) % ONEWIRE_MAX_OPERATIONS;
+    _operationCount--;
+    
+    return true;
 }
+
+bool OneWire::enqueueOperation(const operation& op) {
+    if (_operationCount >= ONEWIRE_MAX_OPERATIONS) return false;
+    
+    _operations[_operationHead] = op;
+    _operations[_operationHead].active = true;
+    _operationHead = (_operationHead + 1) % ONEWIRE_MAX_OPERATIONS;
+    _operationCount++;
+    
+    return true;
+}
+
+void OneWire::reset() {
+	operation op;
+	op.operationType = EoperationType::RESET;
+	op.useInternalBuffer = false;
+	enqueueOperation(op);
+}
+
 void OneWire::transmit(
 	const uint8_t* pData, uint16_t size,
 	dataCallback_f callbackFn
 ){
-	operation operation;
-	operation.operationType = EoperationType::TRANSMIT;
-	operation.pData = (uint8_t*) malloc(size);
-	memcpy(operation.pData, pData, size);
-	operation.Size = size;
-	operation.free = true;
-	operation.callback_f = callbackFn;
-	operations.push(operation);
+	if (size > ONEWIRE_MAX_DATA_SIZE) return;
+	
+	operation op;
+	op.operationType = EoperationType::TRANSMIT;
+	op.Size = size;
+	op.callback_f = callbackFn;
+	
+	// Copy data to internal buffer
+	memcpy(op.internalData, pData, size);
+	op.pData = op.internalData;
+	op.useInternalBuffer = true;
+	
+	enqueueOperation(op);
 }
 
 void OneWire::receive(
 	uint8_t* pData, uint16_t size,
 	dataCallback_f callbackFn
 ){
-	operation operation;
-	operation.operationType = EoperationType::RECEIVE;
-	operation.pData = pData;
-	operation.Size = size;
-	operation.free = false;
-	operation.callback_f = callbackFn;
-	operations.push(operation);
+	operation op;
+	op.operationType = EoperationType::RECEIVE;
+	op.pData = pData;
+	op.Size = size;
+	op.useInternalBuffer = false;
+	op.callback_f = callbackFn;
+	enqueueOperation(op);
 }
 
 void OneWire::transmitThenReceive(
@@ -202,13 +232,18 @@ void OneWire::transmitThenReceive(
 	uint8_t* pData_rx, uint16_t rxSize,
 	dataCallback_f callbackFn
 ){
-	operation operation;
-	operation.operationType = EoperationType::TRANSMIT;
-	operation.pData = (uint8_t*) malloc(txSize);
-	memcpy(operation.pData, pData_tx, txSize);
-	operation.Size = txSize;
-	operation.free = true;
-	operations.push(operation);//transmit
+	if (txSize > ONEWIRE_MAX_DATA_SIZE) return;
+	
+	operation op;
+	op.operationType = EoperationType::TRANSMIT;
+	op.Size = txSize;
+	
+	// Copy data to internal buffer
+	memcpy(op.internalData, pData_tx, txSize);
+	op.pData = op.internalData;
+	op.useInternalBuffer = true;
+	
+	enqueueOperation(op); // transmit
 	receive(pData_rx, rxSize, callbackFn);
 }
 
@@ -224,37 +259,42 @@ void OneWire::transaction(
 	bool resetAfterTransaction
 ){
 	uint8_t Size;
-	operation operation;
+	operation op;
 
 	reset();
 
-	operation.operationType = EoperationType::TRANSMIT;
+	op.operationType = EoperationType::TRANSMIT;
 	if (address==NULL){
 		Size = 2;
 		if (txSize>0) Size += txSize;
-		operation.pData = (uint8_t*) malloc(Size);
-		*(operation.pData+0) = romCommand;
-		*(operation.pData+1) = functionCommand;
-		if (txSize>0) memcpy(operation.pData+Size, pData_tx, txSize);
+		
+		if (Size > ONEWIRE_MAX_DATA_SIZE) return;
+		
+		op.internalData[0] = romCommand;
+		op.internalData[1] = functionCommand;
+		if (txSize>0) memcpy(op.internalData+2, pData_tx, txSize);
+		op.pData = op.internalData;
 	} else {
 		Size=10;
 		if (txSize>0) Size += txSize;
-		operation.pData = (uint8_t*) malloc(Size);
-		*(operation.pData+0) = romCommand;
-		memcpy(operation.pData+1, address, 8);
-		*(operation.pData+9) = functionCommand;
-		if (txSize>0) memcpy(operation.pData+Size, pData_tx, txSize);
+		
+		if (Size > ONEWIRE_MAX_DATA_SIZE) return;
+		
+		op.internalData[0] = romCommand;
+		memcpy(op.internalData+1, address, 8);
+		op.internalData[9] = functionCommand;		if (txSize>0) memcpy(op.internalData+10, pData_tx, txSize);
+		op.pData = op.internalData;
 	}
-	operation.Size = Size;
-	operation.free = true;
-	operations.push(operation);
+	op.Size = Size;
+	op.useInternalBuffer = true;
+	enqueueOperation(op);
 
 	if (rxSize>0) receive(pData_rx, rxSize, callbackFn);
 	if (resetAfterTransaction) reset();
 }       
 
 uint16_t OneWire::queueSize() {
-	return operations.size();
+	return _operationCount;
 }
 
 bool OneWire::isDevicePresent() {
@@ -266,11 +306,14 @@ bool OneWire::isBusy() {
 }
 
 void OneWire::clearQueue() {
-	while(!operations.empty()) {
-		if(operations.front().free && operations.front().pData != nullptr) {
-			free(operations.front().pData);
-		}
-		operations.pop();
+	// Reset circular buffer
+	_operationHead = 0;
+	_operationTail = 0;
+	_operationCount = 0;
+	
+	// Mark all operations as inactive
+	for (uint8_t i = 0; i < ONEWIRE_MAX_OPERATIONS; i++) {
+		_operations[i].active = false;
 	}
 }
 

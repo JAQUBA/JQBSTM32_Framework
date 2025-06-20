@@ -35,14 +35,19 @@ void I2C::txInterrupt() {if(operationState == WAITING) {operationState = FINISH;
 void I2C::rxInterrupt() {if(operationState == WAITING) {operationState = FINISH;}}
 void I2C::errorInterrupt() {if (HAL_I2C_GetError(_pHandler) > HAL_I2C_ERROR_NONE) {operationState = FINISH;}}
 
-I2C::I2C(I2C_HandleTypeDef* pHandler) {
+I2C::I2C(I2C_HandleTypeDef* pHandler) : _operationHead(0), _operationTail(0), _operationCount(0) {
     _pHandler = pHandler;
 	_I2C_instances[_I2C_instancesNum++] = this;
+	
+	// Initialize operations array
+	for (uint8_t i = 0; i < I2C_MAX_OPERATIONS; i++) {
+	    _operations[i].active = false;
+	}
+	
 	addTaskMain(taskCallback {
 		switch(operationState) {
 			case IDLE: {
-				if(!operations.empty()) {
-					currentOperation = operations.front();
+				if(getNextOperation()) {
 					operationState = CHECK_FREE;
 				} else break;
 			}
@@ -109,64 +114,108 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 					);
 					operationState = CLEAR;
 					break;
-				}
-			}
+				}			}
 			case CLEAR: {
-				if(currentOperation.free) free(currentOperation.pData);
-				operations.pop();
+				// No need to free memory - using stack buffers or external pointers
 				operationState = IDLE;
 				break;
 			}
 		}
 	});
 }
-void I2C::transmit(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
-	operation operation;
-	operation.operationType = EoperationType::TRANSMIT;
-	operation.DevAddress = DevAddress;
-	operation.pData = (uint8_t*) malloc(Size);
-	operation.free = true;
-	memcpy(operation.pData, pData, Size);
-	operation.Size = Size;
-	operation.callback_f = callbackFn;
-	operations.push(operation);
+
+bool I2C::getNextOperation() {
+    if (_operationCount == 0) return false;
+    
+    currentOperation = _operations[_operationTail];
+    _operationTail = (_operationTail + 1) % I2C_MAX_OPERATIONS;
+    _operationCount--;
+    
+    return true;
 }
-void I2C::receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
-    operation operation;
-	operation.operationType = EoperationType::RECEIVE;
-	operation.DevAddress = DevAddress;
-	operation.pData = pData;
-	operation.Size = Size;
-	operation.callback_f = callbackFn;
-	operation.free = false;
-	operations.push(operation);
+
+bool I2C::enqueueOperation(const operation& op) {
+    if (_operationCount >= I2C_MAX_OPERATIONS) return false;
+    
+    _operations[_operationHead] = op;
+    _operations[_operationHead].active = true;
+    _operationHead = (_operationHead + 1) % I2C_MAX_OPERATIONS;
+    _operationCount++;
+    
+    return true;
 }
-void I2C::readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
-	operation operation;
-	operation.operationType = EoperationType::MEM_READ;
-	operation.DevAddress = DevAddress;
-	operation.MemAddress = MemAddress;
-	operation.MemAddSize = MemAddSize;
-	operation.pData = pData;
-	operation.Size = Size;
-	operation.callback_f = callbackFn;
-	operation.free = false;
-	operations.push(operation);
+
+bool I2C::transmit(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
+	if (Size > I2C_MAX_DATA_SIZE) return false;
+	
+	operation op;
+	op.operationType = EoperationType::TRANSMIT;
+	op.DevAddress = DevAddress;
+	op.Size = Size;
+	op.callback_f = callbackFn;
+	
+	// Copy data to internal buffer
+	memcpy(op.internalData, pData, Size);
+	op.pData = op.internalData;
+	op.useInternalBuffer = true;
+	
+	return enqueueOperation(op);
 }
-void I2C::writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
-	operation operation;
-	operation.operationType = EoperationType::MEM_WRITE;
-	operation.DevAddress = DevAddress;
-	operation.MemAddress = MemAddress;
-	operation.MemAddSize = MemAddSize;
-	operation.pData = (uint8_t*) malloc(Size);
-	operation.free = true;
-	memcpy(operation.pData, pData, Size);
-	operation.Size = Size;
-	operation.callback_f = callbackFn;
-	operations.push(operation);
+
+bool I2C::receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
+    operation op;
+	op.operationType = EoperationType::RECEIVE;
+	op.DevAddress = DevAddress;
+	op.pData = pData;
+	op.Size = Size;
+	op.callback_f = callbackFn;
+	op.useInternalBuffer = false;
+	
+	return enqueueOperation(op);
 }
+
+bool I2C::readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
+	operation op;
+	op.operationType = EoperationType::MEM_READ;
+	op.DevAddress = DevAddress;
+	op.MemAddress = MemAddress;
+	op.MemAddSize = MemAddSize;
+	op.pData = pData;
+	op.Size = Size;
+	op.callback_f = callbackFn;
+	op.useInternalBuffer = false;
+	
+	return enqueueOperation(op);
+}
+
+bool I2C::writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
+	if (Size > I2C_MAX_DATA_SIZE) return false;
+	
+	operation op;
+	op.operationType = EoperationType::MEM_WRITE;
+	op.DevAddress = DevAddress;
+	op.MemAddress = MemAddress;
+	op.MemAddSize = MemAddSize;
+	op.Size = Size;
+	op.callback_f = callbackFn;
+	
+	// Copy data to internal buffer
+	memcpy(op.internalData, pData, Size);
+	op.pData = op.internalData;
+	op.useInternalBuffer = true;
+	
+	return enqueueOperation(op);
+}
+
 uint16_t I2C::queueSize() {
-	return operations.size();
+	return _operationCount;
+}
+
+bool I2C::isQueueFull() {
+    return _operationCount >= I2C_MAX_OPERATIONS;
+}
+
+uint16_t I2C::getMaxQueueSize() {
+    return I2C_MAX_OPERATIONS;
 }
 #endif

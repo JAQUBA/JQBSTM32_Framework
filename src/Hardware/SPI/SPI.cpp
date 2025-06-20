@@ -36,14 +36,19 @@ void SPI::txInterrupt() {if(operationState == WAITING) { operationState = FINISH
 void SPI::rxInterrupt() {if(operationState == WAITING) { operationState = FINISH; } }
 void SPI::errorInterrupt() {if(HAL_SPI_GetError(_pHandler) > HAL_SPI_ERROR_NONE) { operationState = FINISH; }}
 
-SPI::SPI(SPI_HandleTypeDef *pHandler) {
+SPI::SPI(SPI_HandleTypeDef *pHandler) : _operationHead(0), _operationTail(0), _operationCount(0) {
      _pHandler = pHandler;
 	_SPI_instances[_SPI_instancesNum++] = this;
+	
+	// Initialize operations array
+	for (uint8_t i = 0; i < SPI_MAX_OPERATIONS; i++) {
+	    _operations[i].active = false;
+	}
+	
 	addTaskMain(taskCallback {
 		switch(operationState) {
 			case IDLE: {
-				if(!operations.empty()) {
-					currentOperation = operations.front();
+				if(getNextOperation()) {
 					operationState = CHECK_FREE;
 				} else break;
 			}
@@ -98,16 +103,35 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 					operationState = CLEAR;
 					break;
 				}
-			}
-			case CLEAR: {
+			}			case CLEAR: {
 				if(currentOperation._pinReset) HAL_GPIO_WritePin(currentOperation._CSPort, currentOperation._CSPin, GPIO_PIN_SET);
-				if(currentOperation.free) free(currentOperation.pData);
-				operations.pop();
+				// No need to free memory - using stack buffers
 				operationState = IDLE;
 				break;
 			}
 		}
 	}); 
+}
+
+bool SPI::getNextOperation() {
+    if (_operationCount == 0) return false;
+    
+    currentOperation = _operations[_operationTail];
+    _operationTail = (_operationTail + 1) % SPI_MAX_OPERATIONS;
+    _operationCount--;
+    
+    return true;
+}
+
+bool SPI::enqueueOperation(const operation& op) {
+    if (_operationCount >= SPI_MAX_OPERATIONS) return false;
+    
+    _operations[_operationHead] = op;
+    _operations[_operationHead].active = true;
+    _operationHead = (_operationHead + 1) % SPI_MAX_OPERATIONS;
+    _operationCount++;
+    
+    return true;
 }
 
 void SPI::transmit(
@@ -122,24 +146,43 @@ void SPI::transmit(
 	operation.pData = (uint8_t*) malloc(Size);
 	memcpy(operation.pData, pData, Size);
 	operation.Size = Size;
-	operation.free = true;
-	operation.callback_f = callbackFn;
-	operations.push(operation);
-}
-void SPI::receive(
+	operation.free = true;bool SPI::transmit(
 	GPIO_TypeDef* CSPort, uint16_t CSPin, 
 	uint8_t *pData, uint16_t Size, 
 	dataCallback_f callbackFn
 ) {
-    operation operation;
-	operation.operationType = EoperationType::RECEIVE;
-    operation._CSPort = CSPort;
-    operation._CSPin = CSPin;
-	operation.pData = pData;
-	operation.Size = Size;
-	operation.free = false;
-	operation.callback_f = callbackFn;
-	operations.push(operation);
+	if (Size > SPI_MAX_DATA_SIZE) return false;
+	
+	operation op;
+	op.operationType = EoperationType::TRANSMIT;
+	op._CSPort = CSPort;
+    op._CSPin = CSPin;
+	op.Size = Size;
+	op.callback_f = callbackFn;
+	
+	// Copy data to internal buffer
+	memcpy(op.internalData, pData, Size);
+	op.pData = op.internalData;
+	op.useInternalBuffer = true;
+	
+	return enqueueOperation(op);
+}
+
+bool SPI::receive(
+	GPIO_TypeDef* CSPort, uint16_t CSPin, 
+	uint8_t *pData, uint16_t Size, 
+	dataCallback_f callbackFn
+) {
+    operation op;
+	op.operationType = EoperationType::RECEIVE;
+    op._CSPort = CSPort;
+    op._CSPin = CSPin;
+	op.pData = pData;
+	op.Size = Size;
+	op.useInternalBuffer = false;
+	op.callback_f = callbackFn;
+	
+	return enqueueOperation(op);
 }
 void SPI::transmitThenReceive(
 	GPIO_TypeDef* CSPort, uint16_t CSPin,
