@@ -182,8 +182,8 @@ bool SPI::transmitThenReceive(
 		return false;
 	}
 	
-	SPIOperation op;
-	op.type = SPIOperation::TRANSMIT;
+	operation op;
+	op.operationType = EoperationType::TRANSMIT;
 	op._CSPort = CSPort;
 	op._CSPin = CSPin;
 	op._pinReset = false;
