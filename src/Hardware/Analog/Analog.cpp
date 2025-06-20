@@ -42,27 +42,23 @@ Analog* Analog::getInstance(ADC_HandleTypeDef *pHandler) {
 Analog::Analog(ADC_HandleTypeDef *pHandler) : _pHandler(pHandler), bufferSize(pHandler->Init.NbrOfConversion) {
     _Analog_instances[_Analog_instancesNum++] = this;
 
-    // Buffer initialization
-    adcDMABuffer = new uint32_t[bufferSize * ADC_DMA_BUFFER_SIZE];
-    adcSamples = new uint32_t*[bufferSize];
-    adcAverage = new uint32_t[bufferSize];
-    adcFiltered = new float[bufferSize];
-    adcValue = new uint16_t[bufferSize];
-    
-    for(size_t i = 0; i < bufferSize; i++) {
-        adcSamples[i] = new uint32_t[ADC_SAMPLES_COUNT];
+    // Limit bufferSize to maximum supported channels
+    if (bufferSize > ANALOG_MAX_CHANNELS) {
+        bufferSize = ANALOG_MAX_CHANNELS;
     }
 
-    // Calibration initialization
-    offsets = new uint16_t[bufferSize];
-    multipliers = new uint16_t[bufferSize];
-    
-    for(size_t i = 0; i < bufferSize; i++) {
+    // Initialize static buffers
+    for(size_t i = 0; i < ANALOG_MAX_CHANNELS; i++) {
         offsets[i] = 0;
         multipliers[i] = ADC_DEFAULT_MULTIPLIER;
         adcFiltered[i] = 0.0f;
         adcAverage[i] = 0;
         adcValue[i] = 0;
+        
+        // Initialize sample buffers
+        for(size_t j = 0; j < ADC_SAMPLES_COUNT; j++) {
+            adcSamples[i][j] = 0;
+        }
     }
 
     // Control variables initialization
@@ -95,7 +91,7 @@ void Analog::convHalfCpltCallback() {
 }
 
 void Analog::processDMAData(uint32_t* data) {
-    for(size_t channel = 0; channel < bufferSize; channel++) {
+    for(size_t channel = 0; channel < bufferSize && channel < ANALOG_MAX_CHANNELS; channel++) {
         adcSamples[channel][sampleIndex] = data[channel];
     }
     
@@ -107,7 +103,7 @@ void Analog::processDMAData(uint32_t* data) {
 }
 
 void Analog::processData() {
-    for(size_t channel = 0; channel < bufferSize; channel++) {
+    for(size_t channel = 0; channel < bufferSize && channel < ANALOG_MAX_CHANNELS; channel++) {
         // Sample averaging
         uint32_t sum = 0;
         for(size_t i = 0; i < ADC_SAMPLES_COUNT; i++) {
@@ -131,28 +127,28 @@ void Analog::processData() {
 }
 
 uint16_t Analog::getValue(uint8_t channel) {
-    if (channel < bufferSize) {
+    if (channel < bufferSize && channel < ANALOG_MAX_CHANNELS) {
         return adcValue[channel];
     }
     return 0;
 }
 
 uint16_t Analog::getRawValue(uint8_t channel) {
-    if (channel < bufferSize) {
+    if (channel < bufferSize && channel < ANALOG_MAX_CHANNELS) {
         return (uint16_t)adcAverage[channel];
     }
     return 0;
 }
 
 float Analog::getFilteredValue(uint8_t channel) {
-    if (channel < bufferSize) {
+    if (channel < bufferSize && channel < ANALOG_MAX_CHANNELS) {
         return adcFiltered[channel];
     }
     return 0.0f;
 }
 
 void Analog::configureChannel(uint8_t channel, uint16_t *offset, uint16_t *multiplier) {
-    if (channel < bufferSize) {
+    if (channel < bufferSize && channel < ANALOG_MAX_CHANNELS) {
         offsets[channel] = *offset;
         multipliers[channel] = *multiplier;
     }
@@ -163,7 +159,7 @@ bool Analog::isDataReady() {
 }
 
 void Analog::resetFilters() {
-    for(size_t i = 0; i < bufferSize; i++) {
+    for(size_t i = 0; i < bufferSize && i < ANALOG_MAX_CHANNELS; i++) {
         adcFiltered[i] = 0.0f;
     }
 }

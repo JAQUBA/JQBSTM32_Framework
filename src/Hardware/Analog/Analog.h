@@ -25,6 +25,14 @@
 #define ANALOG_MAX_INSTANCES 1 ///< Maximum number of ADC instances
 #endif
 
+#ifndef ANALOG_MAX_CHANNELS
+#define ANALOG_MAX_CHANNELS 8 ///< Maximum number of ADC channels per instance
+#endif
+
+#ifndef ANALOG_MAX_CHANNELS
+#define ANALOG_MAX_CHANNELS 8 ///< Maximum number of ADC channels per instance
+#endif
+
 /**
  * @brief ADC configuration constants
  * @details Configuration parameters for analog input processing
@@ -133,20 +141,20 @@ private:
     
     /**
      * @brief ADC data buffers
-     * @details Various buffers for ADC data processing pipeline
+     * @details Static buffers for ADC data processing pipeline
      */
-    uint32_t *adcDMABuffer;       ///< Double DMA buffer
-    uint32_t **adcSamples;        ///< Sample buffer for each channel
-    uint32_t *adcAverage;         ///< Averaged values
-    float *adcFiltered;           ///< Values after filtering
-    uint16_t *adcValue;           ///< Final processed values
+    uint32_t adcDMABuffer[ANALOG_MAX_CHANNELS * ADC_DMA_BUFFER_SIZE]; ///< Double DMA buffer
+    uint32_t adcSamples[ANALOG_MAX_CHANNELS][ADC_SAMPLES_COUNT];      ///< Sample buffer for each channel
+    uint32_t adcAverage[ANALOG_MAX_CHANNELS];                         ///< Averaged values
+    float adcFiltered[ANALOG_MAX_CHANNELS];                           ///< Values after filtering
+    uint16_t adcValue[ANALOG_MAX_CHANNELS];                           ///< Final processed values
     
     /**
      * @brief Calibration parameters
      * @details Offset and multiplier arrays for channel calibration
      */
-    uint16_t *offsets;            ///< Offset values for each channel
-    uint16_t *multipliers;        ///< Multiplier values for each channel
+    uint16_t offsets[ANALOG_MAX_CHANNELS];                            ///< Offset values for each channel
+    uint16_t multipliers[ANALOG_MAX_CHANNELS];                        ///< Multiplier values for each channel
     
     /**
      * @brief Process control variables
