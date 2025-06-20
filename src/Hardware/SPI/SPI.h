@@ -55,9 +55,7 @@ class SPI : public IBus {
          * @param pHandler Pointer to HAL SPI handler
          * @return SPI* Pointer to SPI instance
          */
-        static SPI *getInstance(SPI_HandleTypeDef *pHandler);
-
-        /**
+        static SPI *getInstance(SPI_HandleTypeDef *pHandler);        /**
          * @brief Transmit data via SPI
          * @details Sends data through SPI with automatic CS control
          * @param CSPort GPIO port for Chip Select pin
@@ -65,14 +63,14 @@ class SPI : public IBus {
          * @param pData Pointer to data buffer to transmit
          * @param Size Number of bytes to transmit
          * @param callbackFn Optional callback function called after transmission (default: nullptr)
+         * @return bool True if operation was queued successfully, false if queue is full
          */
-        void transmit(
+        bool transmit(
             GPIO_TypeDef* CSPort, uint16_t CSPin,
             uint8_t *pData, uint16_t Size,
             dataCallback_f callbackFn = nullptr
         );
-        
-        /**
+          /**
          * @brief Receive data via SPI
          * @details Receives data through SPI with automatic CS control
          * @param CSPort GPIO port for Chip Select pin
@@ -80,14 +78,14 @@ class SPI : public IBus {
          * @param pData Pointer to buffer for received data
          * @param Size Number of bytes to receive
          * @param callbackFn Optional callback function called after reception (default: nullptr)
+         * @return bool True if operation was queued successfully, false if queue is full
          */
-        void receive(
+        bool receive(
             GPIO_TypeDef* CSPort, uint16_t CSPin,
             uint8_t *pData, uint16_t Size,
             dataCallback_f callbackFn = nullptr
         );
-        
-        /**
+          /**
          * @brief Transmit then receive data via SPI
          * @details First transmits data, then receives data in separate operations
          * @param CSPort GPIO port for Chip Select pin
@@ -97,14 +95,14 @@ class SPI : public IBus {
          * @param pData_rx Pointer to receive data buffer
          * @param rxSize Number of bytes to receive
          * @param callbackFn Optional callback function called after operation (default: nullptr)
+         * @return bool True if operation was queued successfully, false if queue is full
          */
-        void transmitThenReceive(GPIO_TypeDef* CSPort, uint16_t CSPin,
+        bool transmitThenReceive(GPIO_TypeDef* CSPort, uint16_t CSPin,
             uint8_t *pData_tx, uint16_t txSize,
             uint8_t *pData_rx, uint16_t rxSize,
             dataCallback_f callbackFn = nullptr
         );
-        
-        /**
+          /**
          * @brief Simultaneous transmit and receive via SPI
          * @details Performs full-duplex SPI communication (transmit and receive simultaneously)
          * @param CSPort GPIO port for Chip Select pin
@@ -113,8 +111,9 @@ class SPI : public IBus {
          * @param pDataRx Pointer to receive data buffer
          * @param Size Number of bytes to transmit/receive
          * @param callbackFn Optional callback function called after operation (default: nullptr)
+         * @return bool True if operation was queued successfully, false if queue is full
          */
-        void transmitReceive(
+        bool transmitReceive(
             GPIO_TypeDef* CSPort, uint16_t CSPin,
             uint8_t *pDataTx, uint8_t *pDataRx,
             uint16_t Size,

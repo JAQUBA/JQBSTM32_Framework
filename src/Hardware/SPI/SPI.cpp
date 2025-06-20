@@ -172,41 +172,43 @@ bool SPI::receive(
 	
 	return enqueueOperation(op);
 }
-void SPI::transmitThenReceive(
+bool SPI::transmitThenReceive(
 	GPIO_TypeDef* CSPort, uint16_t CSPin,
 	uint8_t *pData_tx, uint16_t txSize,
 	uint8_t *pData_rx, uint16_t rxSize,
 	dataCallback_f callbackFn
 ) {
-	if (txSize > SPI_MAX_DATA_SIZE) return;
+	if (isQueueFull() || txSize > SPI_MAX_DATA_SIZE) {
+		return false;
+	}
 	
-	operation op;
-	op.operationType = EoperationType::TRANSMIT;
+	SPIOperation op;
+	op.type = SPIOperation::TRANSMIT;
 	op._CSPort = CSPort;
-    op._CSPin = CSPin;
+	op._CSPin = CSPin;
 	op._pinReset = false;
 	op.Size = txSize;
-	op.callback_f = nullptr;
+	op.callback_f = nullptr; // No callback for intermediate operation
 	
-	// Copy data to internal buffer
+	// Copy transmit data to internal buffer
 	memcpy(op.internalData, pData_tx, txSize);
 	op.pData = op.internalData;
 	op.useInternalBuffer = true;
-	operation.pData = (uint8_t*) malloc(txSize);
-	memcpy(operation.pData, pData_tx, txSize);
-	operation.Size = txSize;
-	operation.free = true;	enqueueOperation(op);
-	receive(CSPort, CSPin, pData_rx, rxSize, callbackFn);
+	
+	enqueueOperation(op);
+	
+	// Then queue receive operation with the original callback
+	return receive(CSPort, CSPin, pData_rx, rxSize, callbackFn);
 }
 
-void SPI::transmitReceive(
+bool SPI::transmitReceive(
 	GPIO_TypeDef* CSPort, uint16_t CSPin,
 	uint8_t *pDataTx, uint8_t *pDataRx, uint16_t Size,
 	dataCallback_f callbackFn
 ) {
 	// This would require full-duplex operation - not implemented yet
 	// For now, perform sequential transmit then receive
-	transmitThenReceive(CSPort, CSPin, pDataTx, Size, pDataRx, Size, callbackFn);
+	return transmitThenReceive(CSPort, CSPin, pDataTx, Size, pDataRx, Size, callbackFn);
 }
 
 uint16_t SPI::queueSize() {
