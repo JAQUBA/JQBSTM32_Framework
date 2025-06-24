@@ -1,5 +1,5 @@
-﻿/*
- * JQBSTM32 Framework - Analog.cpp Implementation
+/*
+ * JQBSTM32 Framework - Analog.cpp AVR-style Implementation
  * Copyright (C) 2024 JAQUBA (kjakubowski0492@gmail.com)
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -16,10 +16,10 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 #include "Analog.h"
+#include <string.h>
 #ifdef __ANALOG_H_
 
-// Static variables for instance management
-Analog *_Analog_instances[ANALOG_MAX_INSTANCES];
+Analog* _Analog_instances[ANALOG_MAX_INSTANCES];
 uint8_t _Analog_instancesNum = 0;
 
 // HAL callback functions
@@ -31,99 +31,119 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 }
 
 Analog* Analog::getInstance(ADC_HandleTypeDef *pHandler) {
+    const ADC_TypeDef* targetInstance = pHandler->Instance;
     for (uint8_t i = 0; i < _Analog_instancesNum; i++) {
-        if(_Analog_instances[i]->_pHandler->Instance == pHandler->Instance) {
+        if(_Analog_instances[i]->_pHandler->Instance == targetInstance) {
             return _Analog_instances[i];
         }
     }
     return nullptr;
 }
 
-Analog::Analog(ADC_HandleTypeDef *pHandler) : 
+void Analog::configureChannel(uint8_t channel, uint16_t *offset, uint16_t *divider) {
+    if (channel < ANALOG_MAX_CHANNELS) {
+        _channels[channel].offset = offset;
+        _channels[channel].divider = divider;
+    }
+}
+
+Analog::Analog(ADC_HandleTypeDef *pHandler, uint16_t vref) : 
     _pHandler(pHandler), 
     _channelCount(pHandler->Init.NbrOfConversion),
-    _dataReady(false) {
+    _vref(vref) {
     
-    // Register this instance
     if (_Analog_instancesNum < ANALOG_MAX_INSTANCES) {
         _Analog_instances[_Analog_instancesNum++] = this;
     }
-      // Initialize buffers and calibration
-    for (uint8_t i = 0; i < ANALOG_MAX_CHANNELS; i++) {
-        _adcBuffer[i] = 0;
-        _offsets[i] = nullptr;        // Default: no calibration configured
-        _multipliers[i] = nullptr;    // Default: no calibration configured
+
+    // Wyzeruj wszystkie kanały jedną operacją
+    memset(_channels, 0, sizeof(_channels));
+
+    // Zoptymalizowane obliczanie _maxAdcValue - bezpośrednie przypisanie
+    switch (_pHandler->Init.Resolution) {
+        case ADC_RESOLUTION_6B:   _maxAdcValue = 63; break;
+        case ADC_RESOLUTION_8B:   _maxAdcValue = 255; break;
+        case ADC_RESOLUTION_10B:  _maxAdcValue = 1023; break;
+        case ADC_RESOLUTION_12B:  _maxAdcValue = 4095; break;
+        #ifdef ADC_RESOLUTION_14B
+        case ADC_RESOLUTION_14B:  _maxAdcValue = 16383; break;
+        #endif
+        #ifdef ADC_RESOLUTION_16B
+        case ADC_RESOLUTION_16B:  _maxAdcValue = 65535; break;
+        #endif
+        default:                  _maxAdcValue = 4095; break;  // 12-bit default
     }
     
-    // Calibrate ADC
     HAL_ADCEx_Calibration_Start(_pHandler);
     
-    // Start ADC with DMA
-    start();
-}
-
-void Analog::convCpltCallback() {
-    _dataReady = true;
-}
-
-uint16_t Analog::getRawValue(uint8_t channel) {
-    if (channel < _channelCount && channel < ANALOG_MAX_CHANNELS) {
-        return _adcBuffer[channel];
-    }
-    return 0;
-}
-
-uint16_t Analog::getValue(uint8_t channel) {
-    if (channel < _channelCount && channel < ANALOG_MAX_CHANNELS) {
-        uint16_t raw = _adcBuffer[channel];
-        
-        // Check if calibration is configured
-        if (_offsets[channel] == nullptr || _multipliers[channel] == nullptr) {
-            return raw; // Return raw value if no calibration
-        }
-        
-        // Apply calibration with bit shift optimization (equivalent to /16384)
-        // Formula: ((raw * multiplier) >> 14) - offset
-        uint32_t scaled = ((uint32_t)raw * (*_multipliers[channel])) >> 10; 
-        
-        // Subtract offset with underflow protection
-        if (scaled >= (*_offsets[channel])) {
-            uint32_t calibrated = scaled - (*_offsets[channel]);
-            // Clamp to valid range
-            if (calibrated > 65535) calibrated = 65535;
-            return (uint16_t)calibrated;
-        } else {
-            return 0; // Underflow protection
-        }
-    }
-    return 0;
-}
-
-uint16_t Analog::getVoltage(uint8_t channel, uint16_t vref) {
-    if (channel < _channelCount && channel < ANALOG_MAX_CHANNELS) {
-        // Convert raw ADC value to voltage (before calibration)
-        // For 10-bit ADC: (ADC_value * Vref) / 1023
-        uint32_t voltage = ((uint32_t)_adcBuffer[channel] * vref) / 1023;
-        return (uint16_t)voltage;
-    }
-    return 0;
-}
-
-void Analog::configureChannel(uint8_t channel, uint16_t *offset, uint16_t *multiplier) {
-    if (channel < ANALOG_MAX_CHANNELS) {
-        _offsets[channel] = offset;
-        _multipliers[channel] = multiplier;
-    }
-}
-
-void Analog::start() {
     if (HAL_ADC_Start_DMA(_pHandler, (uint32_t*)_adcBuffer, _channelCount) != HAL_OK) {
         Error_Handler();
     }
 }
-
-void Analog::stop() {
+Analog::~Analog() {
     HAL_ADC_Stop_DMA(_pHandler);
 }
+
+void Analog::convCpltCallback() {
+    const uint8_t channels = (_channelCount < ANALOG_MAX_CHANNELS) ? _channelCount : ANALOG_MAX_CHANNELS;
+    
+    for (uint8_t ch = 0; ch < channels; ++ch) {
+        ChannelData& cd = _channels[ch];
+        const uint16_t sample = _adcBuffer[ch];
+        const uint8_t idx = cd.filterIndex;
+
+        // Zaktualizuj sumę: odejmij starą, dodaj nową próbkę
+        cd.filterSum += sample - cd.filterBuffer[idx];
+        cd.filterBuffer[idx] = sample;
+
+        // Przesuń indeks cyklicznie (optymalizacja modulo)
+        const uint8_t nextIdx = idx + 1;
+        cd.filterIndex = (nextIdx == ANALOG_FILTER_SIZE) ? 0 : nextIdx;
+
+        // Ustaw gotowość filtra po pełnym cyklu
+        if (!cd.filterReady && cd.filterIndex == 0) {
+            cd.filterReady = true;
+        }
+    }
+}
+
+uint16_t Analog::getRawValue(uint8_t channel) {
+    return (channel < _channelCount) ? _adcBuffer[channel] : 0;
+}
+
+uint16_t Analog::getVoltage(uint8_t channel) {
+    if (channel >= _channelCount) return 0;
+    
+    const ChannelData& channelData = _channels[channel];
+    uint16_t adcValue = channelData.filterReady 
+        ? (uint16_t)(channelData.filterSum / ANALOG_FILTER_SIZE)
+        : _adcBuffer[channel];
+    return (uint16_t)(((uint32_t)adcValue * _vref) / _maxAdcValue);
+}
+
+uint16_t Analog::getValue(uint8_t channel) {
+    if (channel >= _channelCount) return 0;
+    
+    const ChannelData& channelData = _channels[channel];
+    
+    // Sprawdź czy kalibracja jest skonfigurowana
+    if (!channelData.divider || !channelData.offset) {
+        return channelData.filterReady 
+            ? (uint16_t)(channelData.filterSum / ANALOG_FILTER_SIZE)
+            : _adcBuffer[channel];
+    }
+    
+    uint16_t adcValue = channelData.filterReady 
+        ? (uint16_t)(channelData.filterSum / ANALOG_FILTER_SIZE)
+        : _adcBuffer[channel];
+    
+    // Zastosuj skalowanie (dzielenie przez 1024 jako przesunięcie bitowe)
+    uint32_t scaled = ((uint32_t)adcValue * (*channelData.divider)) >> 10;
+    
+    // Zastosuj offset z zabezpieczeniem przed underflow
+    uint32_t offset = *channelData.offset;
+    return (scaled >= offset) ? (uint16_t)(scaled - offset) : 0;
+}
+
 
 #endif // __ANALOG_H_

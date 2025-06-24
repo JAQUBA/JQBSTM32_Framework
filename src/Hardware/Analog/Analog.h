@@ -29,6 +29,10 @@
 #define ANALOG_MAX_CHANNELS 8 ///< Maximum number of ADC channels
 #endif
 
+#ifndef ANALOG_FILTER_SIZE
+#define ANALOG_FILTER_SIZE 16 ///< Size of moving average filter buffer
+#endif
+
 /**
  * @brief Simple Analog/ADC input processing class with calibration
  * @details Provides analog input reading with DMA and channel calibration
@@ -40,13 +44,17 @@ public:
      * @param pHandler Pointer to HAL ADC handler
      * @return Analog* Pointer to ADC instance
      */
-    static Analog* getInstance(ADC_HandleTypeDef *pHandler);
-    
-    /**
+    static Analog* getInstance(ADC_HandleTypeDef *pHandler);    /**
      * @brief Analog constructor
      * @param pHandler Pointer to HAL ADC handler
+     * @param vref Reference voltage in millivolts (default 3300mV)
      */
-    Analog(ADC_HandleTypeDef *pHandler);
+    Analog(ADC_HandleTypeDef *pHandler, uint16_t vref = 3300);
+    
+    /**
+     * @brief Analog destructor - automatically stops ADC conversion
+     */
+    ~Analog();
     
     /**
      * @brief ADC conversion complete callback
@@ -70,36 +78,42 @@ public:
     /**
      * @brief Get voltage for channel
      * @param channel ADC channel number (0-7)
-     * @param vref Reference voltage in millivolts (default 3300mV)
      * @return uint16_t Voltage in millivolts
      */
-    uint16_t getVoltage(uint8_t channel, uint16_t vref = 3300);
-      /**
+    uint16_t getVoltage(uint8_t channel);
+
+    /**
+     * @brief Get maximum ADC value for current resolution
+     * @return Maximum ADC value (cached for performance)
+     */
+    uint32_t getMaxValue() const { return _maxAdcValue; }
+    
+    /**
      * @brief Configure channel calibration
      * @param channel ADC channel number (0-7)
      * @param offset Pointer to offset value (dynamically updated, subtracted from raw ADC)
-     * @param multiplier Pointer to multiplier value (dynamically updated, multiplied by 1000, e.g., 1000 = 1.0x)
+     * @param divider Pointer to divider value (dynamically updated, raw value is divided by this)
      */
-    void configureChannel(uint8_t channel, uint16_t *offset, uint16_t *multiplier);
+    void configureChannel(uint8_t channel, uint16_t *offset, uint16_t *divider);
+private:    /**
+     * @brief Channel configuration and state structure (optimized)
+     */
+    struct ChannelData {
+        uint16_t *offset;                                           ///< Pointer to offset value (dynamically updated)
+        uint16_t *divider;                                          ///< Pointer to divider value (dynamically updated)
+        uint16_t filterBuffer[ANALOG_FILTER_SIZE];                  ///< Circular buffer for moving average
+        uint32_t filterSum;                                         ///< Sum of values in buffer
+        uint8_t filterIndex;                                        ///< Current index in circular buffer
+        bool filterReady : 1;                                       ///< Filter ready flag (1 bit)
+    };
     
-    /**
-     * @brief Start ADC conversion
-     */
-    void start();
-    
-    /**
-     * @brief Stop ADC conversion
-     */
-    void stop();
-
-private:
     ADC_HandleTypeDef *_pHandler;    ///< HAL ADC handler pointer
     uint8_t _channelCount;           ///< Number of configured channels
+    uint16_t _vref;                  ///< Reference voltage in millivolts
+    uint32_t _maxAdcValue;           ///< Maximum ADC value based on resolution (cached)
     uint16_t _adcBuffer[ANALOG_MAX_CHANNELS]; ///< DMA buffer for ADC values
-    volatile bool _dataReady;        ///< Data ready flag
-      // Calibration parameters
-    uint16_t *_offsets[ANALOG_MAX_CHANNELS];     ///< Pointers to offset values for each channel
-    uint16_t *_multipliers[ANALOG_MAX_CHANNELS]; ///< Pointers to multiplier values for each channel (x1000)
+    
+    ChannelData _channels[ANALOG_MAX_CHANNELS]; ///< Channel configuration and state data
 };
 
 #endif // __ANALOG_H_

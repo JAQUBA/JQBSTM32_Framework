@@ -30,130 +30,85 @@
 #endif
 
 #ifndef CT_FILTER_ALPHA
-#define CT_FILTER_ALPHA 0.1f    ///< Współczynnik filtracji dolnoprzepustowej (0.1 = mocna filtracja)
-#endif
-
-#ifndef CT_VREF_MV
-#define CT_VREF_MV 3300         ///< Napięcie referencyjne w mV
+#define CT_FILTER_ALPHA 0.1f    ///< Współczynnik filtracji dolnoprzepustowej (0.3 = szybsza filtracja)
 #endif
 
 /**
- * @brief Klasa do obsługi przekładników prądowych AC z prostowaniem dwupołówkowym
- * @details Oblicza wartość RMS prądu z dwóch kanałów: dodatniej i ujemnej połówki
+ * @brief Klasa do obsługi przekładników prądowych AC z pomiarem różnicowym
+ * @details Mierzy różnicę napięć między dwoma kanałami ADC i oblicza wartość RMS
+ *          dla pomiarów prądu AC przez przekładnik prądowy. Zapewnia:
+ *          - Automatyczne próbkowanie różnicy między kanałami
+ *          - Obliczanie wartości szczytowej i RMS
+ *          - Kalibrację offset/multiplier dla przeliczenia na jednostki prądu
+ *          - Filtrację sygnału dla stabilnych pomiarów
+ * 
+ * @example Przykład użycia:
+ * @code
+ * Analog* adc = new Analog(&hadc1, 3300);  // 3.3V Vref * CurrentTransformer* ct = new CurrentTransformer(adc, 0, 1, 3300);  // Kanały 0,1 i 3.3V Vref
+ * 
+ * uint16_t offset = 100;     // Offset kalibracji
+ * uint16_t multiplier = 2048; // Mnożnik kalibracji (*1024)
+ * ct->configureChannel(&offset, &multiplier);
+ *  * // W pętli głównej:
+ * uint16_t calibrated_value = ct->getValue();  // Skalibrowana wartość
+ * uint16_t voltage_mv = ct->getVoltage();      // Napięcie RMS w mV
+ * uint16_t raw_peak = ct->getRawValue();       // Surowa wartość szczytowa
+ * @endcode
  */
 class CurrentTransformer {
-public:    /**
-     * @brief Konstruktor przekładnika prądowego z prostowaniem dwupołówkowym
+  public:
+    /**
+     * @brief Konstruktor przekładnika prądowego z pomiarem różnicowym
      * @param analog Wskaźnik do instancji klasy Analog
-     * @param channel_pos Kanał ADC dla dodatniej połówki sygnału
-     * @param channel_neg Kanał ADC dla ujemnej połówki sygnału
-     * @param ratio Przekładnia przekładnika (np. 1000 dla 1000:1)
-     * @param burden_ohm Rezystancja obciążenia w ohm (np. 33 dla 33Ω)
-     * @note Pomiar uruchamia się automatycznie po utworzeniu instancji
+     * @param channel_pos Kanał ADC dla sygnału dodatniego
+     * @param channel_neg Kanał ADC dla sygnału ujemnego
+     * @param vref_mv Napięcie referencyjne w milivolach (domyślnie 3300mV)
+     * @note Pomiar różnicy między kanałami uruchamia się automatycznie po utworzeniu instancji
      */
-    CurrentTransformer(Analog *analog, uint8_t channel_pos, uint8_t channel_neg, uint16_t ratio, uint16_t burden_ohm);
-      /**
-     * @brief Uruchomienie pomiaru prądu
-     * @details Rozpoczyna cykliczne próbkowanie sygnału AC z obu kanałów
-     * @note Wywołane automatycznie w konstruktorze, można używać do ponownego uruchomienia
-     */
-    void start();
+    CurrentTransformer(Analog *analog, uint8_t channel_pos, uint8_t channel_neg, uint16_t vref_mv = 3300);
     
     /**
-     * @brief Zatrzymanie pomiaru prądu
-     */
-    void stop();
-    
-    /**
-     * @brief Pobieranie próbki sygnału AC z obu kanałów
-     * @details Funkcja wywoływana cyklicznie do zbierania próbek
-     */
-    void sample();
-    
-    /**
-     * @brief Obliczenie wartości RMS prądu
-     * @return float Wartość RMS prądu w amperach
-     */
-    float getCurrentRMS();
-    
-    /**
-     * @brief Pobieranie surowej wartości ADC kanału dodatniego
-     * @return uint16_t Aktualna wartość ADC kanału dodatniego
-     */
-    uint16_t getRawValuePos();
-    
-    /**
-     * @brief Pobieranie surowej wartości ADC kanału ujemnego
-     * @return uint16_t Aktualna wartość ADC kanału ujemnego
-     */
-    uint16_t getRawValueNeg();
-    
-    /**
-     * @brief Pobieranie napięcia AC na przekładniku
-     * @return float Napięcie RMS w wolt
-     */
-    float getVoltageRMS();
-    
-    /**
-     * @brief Sprawdzenie czy pomiar jest gotowy
-     * @return bool True jeśli zebrano wystarczająco próbek
-     */
-    bool isReady();
-      /**
-     * @brief Reset bufora próbek
-     */
-    void reset();    /**
      * @brief Konfiguracja kalibracji przekładnika
-     * @param offset Wskaźnik do wartości offsetu (w jednostkach *1000, dynamicznie aktualizowana)
-     * @param multiplier Wskaźnik do mnożnika kalibracyjnego (w jednostkach *1000, dynamicznie aktualizowany)
+     * @param offset Wskaźnik do wartości offset (dynamicznie aktualizowane)
+     * @param multiplier Wskaźnik do wartości multiplier (dynamicznie aktualizowane, *1024)
      */
-    void setCalibration(uint16_t *offset, uint16_t *multiplier);
+    void configureChannel(uint16_t *offset, uint16_t *multiplier);
     
     /**
-     * @brief Pobieranie skalibrowanej wartości RMS prądu
-     * @return float Skalibrowana wartość RMS prądu w amperach
+     * @brief Pobieranie surowej wartości RMS (przed kalibracją)
+     * @return uint16_t Surowa wartość RMS w jednostkach ADC
      */
-    float getCalibratedCurrentRMS();
-      /**
-     * @brief Pobieranie skalibrowanej wartości w zakresie 0-1000
-     * @return uint16_t Wartość 0-1000 odpowiadająca prądowi (po kalibracji)
-     */
-    uint16_t getCalibratedValue1000();
+    uint16_t getRawValue();
     
     /**
-     * @brief Pobieranie surowej (nieprzefiltrowanej) wartości RMS
-     * @return float Surowa wartość RMS bez filtracji
+     * @brief Pobieranie skalibrowanej wartości szczytowej
+     * @return uint16_t Skalibrowana wartość szczytowa po zastosowaniu offset i multiplier
      */
-    float getRawRMS();
+    uint16_t getValue();
 
-private:
-    Analog *_analog;              ///< Wskaźnik do klasy Analog
-    uint8_t _channel_pos;         ///< Kanał ADC dla dodatniej połówki
-    uint8_t _channel_neg;         ///< Kanał ADC dla ujemnej połówki
-    uint16_t _ratio;              ///< Przekładnia przekładnika
-    uint16_t _burden_ohm;         ///< Rezystancja obciążenia w ohm
-    
-    uint16_t _samples_pos[CT_SAMPLES_COUNT]; ///< Bufor próbek ADC kanału dodatniego
-    uint16_t _samples_neg[CT_SAMPLES_COUNT]; ///< Bufor próbek ADC kanału ujemnego
-    uint16_t _sampleIndex;        ///< Indeks aktualnej próbki
-    bool _bufferFull;             ///< Flaga pełnego bufora
-    bool _isRunning;              ///< Flaga działania
-      uint16_t _vref_half;          ///< Połowa napięcia referencyjnego w jednostkach ADC
-    
-    // Parametry kalibracji
-    uint16_t *_calibration_offset;    ///< Wskaźnik do offsetu kalibracyjnego (*1000)
-    uint16_t *_calibration_multiplier; ///< Wskaźnik do mnożnika kalibracyjnego (*1000)
-    
-    // Filtracja i uśrednianie
-    float _filtered_rms;          ///< Przefiltrowana wartość RMS
-    uint8_t _measurement_count;   ///< Licznik pomiarów dla uśredniania
-    float _rms_buffer[8];         ///< Bufor ostatnich pomiarów RMS do uśredniania
-    
     /**
-     * @brief Obliczenie wartości RMS z buforów próbek obu kanałów
-     * @return float Wartość RMS napięcia w mV
+     * @brief Pobieranie napięcia RMS w milivolach
+     * @return uint16_t Napięcie RMS w milivolach (mV)
      */
-    float calculateRMS();
+    uint16_t getVoltage();
+
+  private:
+    Analog *_analog = nullptr;              ///< Wskaźnik do klasy Analog
+    uint8_t _channel_pos = 0;               ///< Kanał ADC dla sygnału dodatniego
+    uint8_t _channel_neg = 0;               ///< Kanał ADC dla sygnału ujemnego
+    
+    // Kalibracja
+    uint16_t *_offset = nullptr;            ///< Wskaźnik do wartości offset
+    uint16_t *_multiplier = nullptr;        ///< Wskaźnik do wartości multiplier (*1024)
+    uint16_t _vref_mv = 3300;               ///< Napięcie referencyjne w milivolach
+      uint16_t _buffer_samples_peak[CT_SAMPLES_COUNT]; ///< Bufor różnic między kanałami
+    uint16_t _bufferIndex = 0;              ///< Indeks aktualnej próbki
+    uint16_t _peak_value = 0;               ///< Aktualna wartość szczytowa z bufora próbek
+    float _filtered_rms = 0.0f;             ///< Przefiltrowana wartość RMS
+    uint32_t _rms_accumulator = 0;          ///< Akumulator dla RMS (32-bit wystarczy)
+    uint8_t _rms_counter = 0;               ///< Licznik dla obliczania RMS co N próbek
+    bool _bufferFull : 1;                   ///< Flaga pełnego bufora (1 bit)
+    bool _rms_initialized : 1;              ///< Flaga inicjalizacji RMS (1 bit)
 };
 
 #endif // __CURRENT_TRANSFORMER_H_
