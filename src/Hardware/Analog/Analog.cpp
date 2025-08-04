@@ -40,13 +40,6 @@ Analog* Analog::getInstance(ADC_HandleTypeDef *pHandler) {
     return nullptr;
 }
 
-void Analog::configureChannel(uint8_t channel, uint16_t *offset, uint16_t *divider) {
-    if (channel < ANALOG_MAX_CHANNELS) {
-        _channels[channel].offset = offset;
-        _channels[channel].divider = divider;
-    }
-}
-
 Analog::Analog(ADC_HandleTypeDef *pHandler, uint16_t vref) : 
     _pHandler(pHandler), 
     _channelCount(pHandler->Init.NbrOfConversion),
@@ -87,63 +80,43 @@ Analog::~Analog() {
 void Analog::convCpltCallback() {
     const uint8_t channels = (_channelCount < ANALOG_MAX_CHANNELS) ? _channelCount : ANALOG_MAX_CHANNELS;
     
-    for (uint8_t ch = 0; ch < channels; ++ch) {
-        ChannelData& cd = _channels[ch];
+    for (uint8_t ch = 0; ch < channels; ch++) {
+        ChannelData& channelData = _channels[ch];
         const uint16_t sample = _adcBuffer[ch];
-        const uint8_t idx = cd.filterIndex;
 
-        // Zaktualizuj sumę: odejmij starą, dodaj nową próbkę
-        cd.filterSum += sample - cd.filterBuffer[idx];
-        cd.filterBuffer[idx] = sample;
-
-        // Przesuń indeks cyklicznie (optymalizacja modulo)
-        const uint8_t nextIdx = idx + 1;
-        cd.filterIndex = (nextIdx == ANALOG_FILTER_SIZE) ? 0 : nextIdx;
-
-        // Ustaw gotowość filtra po pełnym cyklu
-        if (!cd.filterReady && cd.filterIndex == 0) {
-            cd.filterReady = true;
+        // Szybki algorytm moving average z przesunięciami bitowymi
+        if (channelData.filterIndex < ANALOG_FILTER_SIZE) {
+            // Faza inicjalizacji - dodawanie próbek
+            channelData.filterSum += sample;
+            channelData.filterIndex++;
+            channelData.filteredValue = channelData.filterSum >> ANALOG_FILTER_SHIFT; // Dzielenie przez przesunięcie
+        } else {
+            // Faza ustabilizowana - sliding window average
+            // Odejmij najstarszą próbkę i dodaj nową (aproksymacja)
+            channelData.filterSum = channelData.filterSum - (channelData.filteredValue) + sample;
+            channelData.filteredValue = channelData.filterSum >> ANALOG_FILTER_SHIFT; // Dzielenie przez przesunięcie
         }
     }
 }
 
-uint16_t Analog::getRawValue(uint8_t channel) {
-    return (channel < _channelCount) ? _adcBuffer[channel] : 0;
-}
-
 uint16_t Analog::getVoltage(uint8_t channel) {
     if (channel >= _channelCount) return 0;
-    
-    const ChannelData& channelData = _channels[channel];
-    uint16_t adcValue = channelData.filterReady 
-        ? (uint16_t)(channelData.filterSum / ANALOG_FILTER_SIZE)
-        : _adcBuffer[channel];
-    return (uint16_t)(((uint32_t)adcValue * _vref) / _maxAdcValue);
-}
-
-uint16_t Analog::getValue(uint8_t channel) {
-    if (channel >= _channelCount) return 0;
-    
     const ChannelData& channelData = _channels[channel];
     
-    // Sprawdź czy kalibracja jest skonfigurowana
-    if (!channelData.divider || !channelData.offset) {
-        return channelData.filterReady 
-            ? (uint16_t)(channelData.filterSum / ANALOG_FILTER_SIZE)
-            : _adcBuffer[channel];
+    // Optymalizacja: użyj przesunięć bitowych dla popularnych rozdzielczości
+    uint32_t voltage;
+    if (_maxAdcValue == 4095) {        // 12-bit ADC
+        voltage = (channelData.filteredValue * _vref) >> 12;
+    } else if (_maxAdcValue == 1023) { // 10-bit ADC  
+        voltage = (channelData.filteredValue * _vref) >> 10;
+    } else if (_maxAdcValue == 255) {  // 8-bit ADC
+        voltage = (channelData.filteredValue * _vref) >> 8;
+    } else {
+        // Fallback dla innych rozdzielczości
+        voltage = (channelData.filteredValue * _vref) / _maxAdcValue;
     }
     
-    uint16_t adcValue = channelData.filterReady 
-        ? (uint16_t)(channelData.filterSum / ANALOG_FILTER_SIZE)
-        : _adcBuffer[channel];
-    
-    // Zastosuj skalowanie (dzielenie przez 1024 jako przesunięcie bitowe)
-    uint32_t scaled = ((uint32_t)adcValue * (*channelData.divider)) >> 10;
-    
-    // Zastosuj offset z zabezpieczeniem przed underflow
-    uint32_t offset = *channelData.offset;
-    return (scaled >= offset) ? (uint16_t)(scaled - offset) : 0;
+    return (uint16_t)voltage;
 }
-
 
 #endif // __ANALOG_H_

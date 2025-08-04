@@ -30,7 +30,11 @@
 #endif
 
 #ifndef ANALOG_FILTER_SIZE
-#define ANALOG_FILTER_SIZE 16 ///< Size of moving average filter buffer
+#define ANALOG_FILTER_SIZE 64 ///< Size of moving average filter buffer (power of 2 for bit shifting)
+#endif
+
+#ifndef ANALOG_FILTER_SHIFT
+#define ANALOG_FILTER_SHIFT 6 ///< Bit shift for division by ANALOG_FILTER_SIZE (2^6 = 64)
 #endif
 
 /**
@@ -66,14 +70,21 @@ public:
      * @param channel ADC channel number (0-7)
      * @return uint16_t Raw ADC value (0-1023 for 10-bit ADC)
      */
-    uint16_t getRawValue(uint8_t channel);
+    inline uint16_t getRawValue(uint8_t channel) {
+        return (channel < _channelCount) ? _adcBuffer[channel] : 0;
+    }
     
     /**
      * @brief Get calibrated ADC value for channel
      * @param channel ADC channel number (0-7)
      * @return uint16_t Calibrated value after offset and multiplier
      */
-    uint16_t getValue(uint8_t channel);
+    inline uint16_t getValue(uint8_t channel) {
+        if (channel >= _channelCount) return 0;
+        const ChannelData& channelData = _channels[channel];
+        const uint16_t offset = channelData.offset ? *channelData.offset : 0;
+        return (channelData.filteredValue >= offset) ? (uint16_t)(channelData.filteredValue - offset) : 0;
+    }
     
     /**
      * @brief Get voltage for channel
@@ -94,17 +105,22 @@ public:
      * @param offset Pointer to offset value (dynamically updated, subtracted from raw ADC)
      * @param divider Pointer to divider value (dynamically updated, raw value is divided by this)
      */
-    void configureChannel(uint8_t channel, uint16_t *offset, uint16_t *divider);
+    inline void configureChannel(uint8_t channel, uint16_t *offset, uint16_t *divider) {
+        if (channel < ANALOG_MAX_CHANNELS) {
+            _channels[channel].offset = offset;
+            _channels[channel].divider = divider;
+        }
+    }
 private:    /**
      * @brief Channel configuration and state structure (optimized)
      */
     struct ChannelData {
         uint16_t *offset;                                           ///< Pointer to offset value (dynamically updated)
         uint16_t *divider;                                          ///< Pointer to divider value (dynamically updated)
-        uint16_t filterBuffer[ANALOG_FILTER_SIZE];                  ///< Circular buffer for moving average
+
         uint32_t filterSum;                                         ///< Sum of values in buffer
-        uint8_t filterIndex;                                        ///< Current index in circular buffer
-        bool filterReady : 1;                                       ///< Filter ready flag (1 bit)
+        uint16_t filterIndex;                                       ///< Current index in circular buffer
+        uint32_t filteredValue;                                     ///< Filtered value (cached) 
     };
     
     ADC_HandleTypeDef *_pHandler;    ///< HAL ADC handler pointer
