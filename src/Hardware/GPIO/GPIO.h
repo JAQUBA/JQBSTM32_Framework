@@ -21,6 +21,13 @@
 #ifndef __GPIO_H_
 #define __GPIO_H_
 
+#include <array>
+
+// Configuration: Maximum number of GPIO interrupts
+#ifndef MAX_GPIO_INTERRUPTS
+#define MAX_GPIO_INTERRUPTS 16
+#endif
+
 #define HIGH GPIO_PIN_SET ///< Logic high state
 #define LOW GPIO_PIN_RESET ///< Logic low state
 
@@ -30,6 +37,12 @@
  */
 class HardwareGPIO {
   public:
+    /**
+     * @brief Constructor
+     * @details Initializes GPIO hardware abstraction
+     */
+    HardwareGPIO() : interruptCount(0) {}
+    
     /**
      * @brief Setup GPIO pin with specified mode
      * @details Configures a GPIO pin with the specified mode (INPUT, OUTPUT, etc.)
@@ -90,8 +103,27 @@ class HardwareGPIO {
      * @param GPIOx GPIO port (GPIOA, GPIOB, etc.)
      * @param GPIO_Pin GPIO pin number (GPIO_PIN_0, GPIO_PIN_1, etc.)
      * @param callback Function to be called on interrupt
+     * @return true if interrupt was attached successfully
      */
-    void attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidCallback_f callback);
+    bool attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidCallback_f callback);
+    
+    /**
+     * @brief Detach interrupt from GPIO pin
+     * @details Removes interrupt callback from the specified pin
+     * @param GPIOx GPIO port (GPIOA, GPIOB, etc.)
+     * @param GPIO_Pin GPIO pin number (GPIO_PIN_0, GPIO_PIN_1, etc.)
+     * @return true if interrupt was detached successfully
+     */
+    bool detachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
+    
+    /**
+     * @brief Get interrupt statistics
+     * @details Returns number of times interrupt was triggered for specific pin
+     * @param GPIOx GPIO port (GPIOA, GPIOB, etc.)
+     * @param GPIO_Pin GPIO pin number (GPIO_PIN_0, GPIO_PIN_1, etc.)
+     * @return Number of interrupt triggers
+     */
+    uint32_t getInterruptCount(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
     
     /**
      * @brief Internal interrupt callback handler
@@ -102,15 +134,37 @@ class HardwareGPIO {
 
     private:
       /**
-       * @brief Interrupt configuration structure
-       * @details Structure holding interrupt configuration for a GPIO pin
+       * @brief Enhanced interrupt configuration structure
+       * @details Structure holding interrupt configuration for a GPIO pin with statistics
        */
       struct interrupt {
         GPIO_TypeDef* GPIOx;     ///< GPIO port
         uint16_t GPIO_Pin;       ///< GPIO pin number
         voidCallback_f callback; ///< Callback function
+        bool active;             ///< Interrupt active flag
+        uint32_t triggerCount;   ///< Number of times triggered
+        uint32_t lastTriggerTime;///< Last trigger timestamp
+        
+        interrupt() : GPIOx(nullptr), GPIO_Pin(0), active(false), 
+                     triggerCount(0), lastTriggerTime(0) {}
       };
-      std::list<interrupt> interrupts; ///< List of registered interrupts
+      
+      std::array<interrupt, MAX_GPIO_INTERRUPTS> interrupts; ///< Fixed-size array of interrupts
+      uint8_t interruptCount; ///< Number of active interrupts
+      
+      /**
+       * @brief Find interrupt slot for given pin
+       * @param GPIOx GPIO port
+       * @param GPIO_Pin GPIO pin number
+       * @return Index of interrupt slot or MAX_GPIO_INTERRUPTS if not found
+       */
+      uint8_t findInterruptSlot(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
+      
+      /**
+       * @brief Find free interrupt slot
+       * @return Index of free slot or MAX_GPIO_INTERRUPTS if none available
+       */
+      uint8_t findFreeInterruptSlot();
 };
 
 /**
