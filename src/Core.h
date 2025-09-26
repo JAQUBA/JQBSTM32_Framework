@@ -42,6 +42,10 @@ struct GPIO_Pin {
 #define __weak __attribute__((weak))
 #endif
 
+#ifndef INIT
+#define INIT(x) MX_##x##_Init()
+#endif
+
 /**
  * @brief Core framework class
  * @details Main framework initialization class providing basic system setup
