@@ -73,7 +73,17 @@ Analog::~Analog() {
 }
 
 void Analog::convCpltCallback() {
+    for (auto& callback : _callbacks) {
+        if (callback) {
+            callback();
+        }
+    }
 
+}
+void Analog::attachInterrupt(voidCallback_f callback) {
+    if (callback) {
+        _callbacks.push_back(callback);
+    }
 }
 
 uint16_t Analog::getValue(uint8_t channel) {

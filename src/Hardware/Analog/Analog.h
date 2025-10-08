@@ -17,6 +17,7 @@
  */
 #include "../../Core.h"
 #ifdef HAL_ADC_MODULE_ENABLED
+#include <list>
 
 #ifndef __ANALOG_H_
 #define __ANALOG_H_
@@ -59,6 +60,12 @@ public:
      * @brief ADC conversion complete callback
      */
     void convCpltCallback();
+
+    /**
+     * @brief Attach user callback for ADC conversion complete interrupt
+     * @param callback Function to call on ADC conversion complete
+     */
+    void attachInterrupt(voidCallback_f callback);
     
     /**
      * @brief Get calibrated ADC value for channel
@@ -87,6 +94,8 @@ private:
     uint16_t _vref;                  ///< Reference voltage in millivolts
     uint8_t _channelCount;           ///< Number of configured channels
     uint32_t _maxAdcValue;           ///< Maximum ADC value based on resolution (cached)
+
+    std::list<voidCallback_f> _callbacks; ///< List of user callbacks for ADC conversion complete
     
 };
 
