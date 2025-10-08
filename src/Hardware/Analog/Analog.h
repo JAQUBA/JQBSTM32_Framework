@@ -65,7 +65,7 @@ public:
      * @brief Attach user callback for ADC conversion complete interrupt
      * @param callback Function to call on ADC conversion complete
      */
-    void attachInterrupt(voidCallback_f callback);
+    void attachInterrupt(std::function<void(uint16_t*)> callback);
     
     /**
      * @brief Get calibrated ADC value for channel
@@ -89,14 +89,15 @@ public:
     
 private:
     ADC_HandleTypeDef *_pHandler;    ///< HAL ADC handler pointer
-    uint16_t _adcBuffer[ANALOG_MAX_CHANNELS]; ///< DMA buffer for ADC values
+    // uint16_t _adcBuffer[ANALOG_MAX_CHANNELS]; ///< DMA buffer for ADC values
+
+    uint16_t *_adcBuffer;
 
     uint16_t _vref;                  ///< Reference voltage in millivolts
     uint8_t _channelCount;           ///< Number of configured channels
     uint32_t _maxAdcValue;           ///< Maximum ADC value based on resolution (cached)
 
-    std::list<voidCallback_f> _callbacks; ///< List of user callbacks for ADC conversion complete
-    
+    std::list<std::function<void(uint16_t*)>> _callbacks; ///< List of user callbacks for ADC conversion complete
 };
 
 #endif // __ANALOG_H_

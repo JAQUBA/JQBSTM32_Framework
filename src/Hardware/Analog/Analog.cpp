@@ -63,6 +63,7 @@ Analog::Analog(ADC_HandleTypeDef *pHandler, uint16_t vref) :
     }
     
     HAL_ADCEx_Calibration_Start(_pHandler);
+    _adcBuffer = new uint16_t[_channelCount];
     
     if (HAL_ADC_Start_DMA(_pHandler, (uint32_t*)_adcBuffer, _channelCount) != HAL_OK) {
         Error_Handler();
@@ -75,12 +76,12 @@ Analog::~Analog() {
 void Analog::convCpltCallback() {
     for (auto& callback : _callbacks) {
         if (callback) {
-            callback();
+            callback(_adcBuffer);
         }
     }
 
 }
-void Analog::attachInterrupt(voidCallback_f callback) {
+void Analog::attachInterrupt(std::function<void(uint16_t*)> callback) {
     if (callback) {
         _callbacks.push_back(callback);
     }
@@ -89,6 +90,7 @@ void Analog::attachInterrupt(voidCallback_f callback) {
 uint16_t Analog::getValue(uint8_t channel) {
     if (channel >= _channelCount) return 0;
     return _adcBuffer[channel];
+    return 0;
 }
 
 uint16_t Analog::getVoltage(uint8_t channel) {
