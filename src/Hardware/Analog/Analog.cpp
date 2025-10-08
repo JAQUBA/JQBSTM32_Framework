@@ -16,7 +16,6 @@
  * along with this program. If not, see <https://www.gnu.org/licenses/>.
  */
 #include "Analog.h"
-#include <string.h>
 #ifdef __ANALOG_H_
 
 Analog* _Analog_instances[ANALOG_MAX_INSTANCES];
@@ -31,9 +30,8 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 }
 
 Analog* Analog::getInstance(ADC_HandleTypeDef *pHandler) {
-    const ADC_TypeDef* targetInstance = pHandler->Instance;
     for (uint8_t i = 0; i < _Analog_instancesNum; i++) {
-        if(_Analog_instances[i]->_pHandler->Instance == targetInstance) {
+        if(_Analog_instances[i]->_pHandler->Instance == pHandler->Instance) {
             return _Analog_instances[i];
         }
     }
@@ -42,15 +40,12 @@ Analog* Analog::getInstance(ADC_HandleTypeDef *pHandler) {
 
 Analog::Analog(ADC_HandleTypeDef *pHandler, uint16_t vref) : 
     _pHandler(pHandler), 
-    _channelCount(pHandler->Init.NbrOfConversion),
-    _vref(vref) {
+    _vref(vref),
+    _channelCount(pHandler->Init.NbrOfConversion) {
     
     if (_Analog_instancesNum < ANALOG_MAX_INSTANCES) {
         _Analog_instances[_Analog_instancesNum++] = this;
     }
-
-    // Wyzeruj wszystkie kanały jedną operacją
-    memset(_channels, 0, sizeof(_channels));
 
     // Zoptymalizowane obliczanie _maxAdcValue - bezpośrednie przypisanie
     switch (_pHandler->Init.Resolution) {
@@ -78,45 +73,16 @@ Analog::~Analog() {
 }
 
 void Analog::convCpltCallback() {
-    const uint8_t channels = (_channelCount < ANALOG_MAX_CHANNELS) ? _channelCount : ANALOG_MAX_CHANNELS;
-    
-    for (uint8_t ch = 0; ch < channels; ch++) {
-        ChannelData& channelData = _channels[ch];
-        const uint16_t sample = _adcBuffer[ch];
 
-        // Szybki algorytm moving average z przesunięciami bitowymi
-        if (channelData.filterIndex < ANALOG_FILTER_SIZE) {
-            // Faza inicjalizacji - dodawanie próbek
-            channelData.filterSum += sample;
-            channelData.filterIndex++;
-            channelData.filteredValue = channelData.filterSum >> ANALOG_FILTER_SHIFT; // Dzielenie przez przesunięcie
-        } else {
-            // Faza ustabilizowana - sliding window average
-            // Odejmij najstarszą próbkę i dodaj nową (aproksymacja)
-            channelData.filterSum = channelData.filterSum - (channelData.filteredValue) + sample;
-            channelData.filteredValue = channelData.filterSum >> ANALOG_FILTER_SHIFT; // Dzielenie przez przesunięcie
-        }
-    }
+}
+
+uint16_t Analog::getValue(uint8_t channel) {
+    if (channel >= _channelCount) return 0;
+    return _adcBuffer[channel];
 }
 
 uint16_t Analog::getVoltage(uint8_t channel) {
-    if (channel >= _channelCount) return 0;
-    const ChannelData& channelData = _channels[channel];
-    
-    // Optymalizacja: użyj przesunięć bitowych dla popularnych rozdzielczości
-    uint32_t voltage;
-    if (_maxAdcValue == 4095) {        // 12-bit ADC
-        voltage = (channelData.filteredValue * _vref) >> 12;
-    } else if (_maxAdcValue == 1023) { // 10-bit ADC  
-        voltage = (channelData.filteredValue * _vref) >> 10;
-    } else if (_maxAdcValue == 255) {  // 8-bit ADC
-        voltage = (channelData.filteredValue * _vref) >> 8;
-    } else {
-        // Fallback dla innych rozdzielczości
-        voltage = (channelData.filteredValue * _vref) / _maxAdcValue;
-    }
-    
-    return (uint16_t)voltage;
+    return (uint16_t)((getValue(channel) * _vref) / _maxAdcValue);
 }
 
 #endif // __ANALOG_H_

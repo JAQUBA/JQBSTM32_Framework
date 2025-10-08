@@ -29,13 +29,6 @@
 #define ANALOG_MAX_CHANNELS 8 ///< Maximum number of ADC channels
 #endif
 
-#ifndef ANALOG_FILTER_SIZE
-#define ANALOG_FILTER_SIZE 64 ///< Size of moving average filter buffer (power of 2 for bit shifting)
-#endif
-
-#ifndef ANALOG_FILTER_SHIFT
-#define ANALOG_FILTER_SHIFT 6 ///< Bit shift for division by ANALOG_FILTER_SIZE (2^6 = 64)
-#endif
 
 /**
  * @brief Simple Analog/ADC input processing class with calibration
@@ -48,7 +41,9 @@ public:
      * @param pHandler Pointer to HAL ADC handler
      * @return Analog* Pointer to ADC instance
      */
-    static Analog* getInstance(ADC_HandleTypeDef *pHandler);    /**
+    static Analog* getInstance(ADC_HandleTypeDef *pHandler);
+
+    /**
      * @brief Analog constructor
      * @param pHandler Pointer to HAL ADC handler
      * @param vref Reference voltage in millivolts (default 3300mV)
@@ -66,25 +61,11 @@ public:
     void convCpltCallback();
     
     /**
-     * @brief Get raw ADC value for channel
-     * @param channel ADC channel number (0-7)
-     * @return uint16_t Raw ADC value (0-1023 for 10-bit ADC)
-     */
-    inline uint16_t getRawValue(uint8_t channel) {
-        return (channel < _channelCount) ? _adcBuffer[channel] : 0;
-    }
-    
-    /**
      * @brief Get calibrated ADC value for channel
      * @param channel ADC channel number (0-7)
      * @return uint16_t Calibrated value after offset and multiplier
      */
-    inline uint16_t getValue(uint8_t channel) {
-        if (channel >= _channelCount) return 0;
-        const ChannelData& channelData = _channels[channel];
-        const uint16_t offset = channelData.offset ? *channelData.offset : 0;
-        return (channelData.filteredValue >= offset) ? (uint16_t)(channelData.filteredValue - offset) : 0;
-    }
+    uint16_t getValue(uint8_t channel);
     
     /**
      * @brief Get voltage for channel
@@ -99,37 +80,14 @@ public:
      */
     uint32_t getMaxValue() const { return _maxAdcValue; }
     
-    /**
-     * @brief Configure channel calibration
-     * @param channel ADC channel number (0-7)
-     * @param offset Pointer to offset value (dynamically updated, subtracted from raw ADC)
-     * @param divider Pointer to divider value (dynamically updated, raw value is divided by this)
-     */
-    inline void configureChannel(uint8_t channel, uint16_t *offset, uint16_t *divider) {
-        if (channel < ANALOG_MAX_CHANNELS) {
-            _channels[channel].offset = offset;
-            _channels[channel].divider = divider;
-        }
-    }
-private:    /**
-     * @brief Channel configuration and state structure (optimized)
-     */
-    struct ChannelData {
-        uint16_t *offset;                                           ///< Pointer to offset value (dynamically updated)
-        uint16_t *divider;                                          ///< Pointer to divider value (dynamically updated)
-
-        uint32_t filterSum;                                         ///< Sum of values in buffer
-        uint16_t filterIndex;                                       ///< Current index in circular buffer
-        uint32_t filteredValue;                                     ///< Filtered value (cached) 
-    };
-    
+private:
     ADC_HandleTypeDef *_pHandler;    ///< HAL ADC handler pointer
-    uint8_t _channelCount;           ///< Number of configured channels
-    uint16_t _vref;                  ///< Reference voltage in millivolts
-    uint32_t _maxAdcValue;           ///< Maximum ADC value based on resolution (cached)
     uint16_t _adcBuffer[ANALOG_MAX_CHANNELS]; ///< DMA buffer for ADC values
+
+    uint16_t _vref;                  ///< Reference voltage in millivolts
+    uint8_t _channelCount;           ///< Number of configured channels
+    uint32_t _maxAdcValue;           ///< Maximum ADC value based on resolution (cached)
     
-    ChannelData _channels[ANALOG_MAX_CHANNELS]; ///< Channel configuration and state data
 };
 
 #endif // __ANALOG_H_
