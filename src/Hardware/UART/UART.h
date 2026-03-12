@@ -17,6 +17,7 @@
  */
 #include "../../Core.h"
 #ifdef HAL_UART_MODULE_ENABLED
+#include <usart.h>
 
 #ifndef __UART_H_
 #define __UART_H_

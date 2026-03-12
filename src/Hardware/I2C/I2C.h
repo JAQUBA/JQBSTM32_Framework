@@ -17,6 +17,7 @@
  */
 #include "../../Core.h"
 #ifdef HAL_I2C_MODULE_ENABLED
+#include <i2c.h>
 
 #ifndef __I2C_H_
 #define __I2C_H_

@@ -18,6 +18,7 @@
 #include "../../Core.h"
 #ifdef HAL_ADC_MODULE_ENABLED
 #include <list>
+#include <adc.h>
 
 #ifndef __ANALOG_H_
 #define __ANALOG_H_
