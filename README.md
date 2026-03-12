@@ -86,6 +86,31 @@ git submodule add https://github.com/JAQUBA/JQBSTM32_Framework.git lib/JQBSTM32
 git submodule update --init --recursive
 ```
 
+## Quick Start
+
+```cpp
+#include "Core.h"
+#include "Hardware/GPIO/GPIO.h"
+
+#define LED GPIOC, GPIO_PIN_13
+
+void init() {
+    GPIO.setup(LED, GPIO_MODE_AF_PP);
+}
+
+void setup() {
+    GPIO.set(LED, HIGH);
+    addTaskMain(taskCallback {
+        GPIO.toggle(LED);
+    }, 500);  // Toggle LED every 500ms
+}
+```
+
+Three functions to implement:
+- **`init()`** — CubeMX peripheral initialization (`MX_xxx_Init()`)
+- **`setup()`** — Application setup, register tasks
+- **`loop()`** — Optional main loop (prefer tasks)
+
 
 ## Technical Support
 
@@ -96,7 +121,17 @@ Issues can be reported through [GitHub Issues](https://github.com/JAQUBA/JQBSTM3
 Questions and discussions: [GitHub Discussions](https://github.com/JAQUBA/JQBSTM32_Framework/discussions)
 
 ### Documentation
-Detailed documentation available in the `docs/` folder and on [GitHub Wiki](https://github.com/JAQUBA/JQBSTM32_Framework/wiki)
+Detailed documentation available in the `docs/` folder:
+
+| Document | Description |
+|----------|-------------|
+| [Core & Scheduler](docs/Core.md) | Entry points, task system, global functions, bit macros, HAL callbacks |
+| [Hardware Abstraction](docs/Hardware.md) | GPIO, UART, I2C, SPI, Timer, PWM, ADC, CAN, FDCAN, OneWire, Encoder, Flash, USB_CDC |
+| [Device Drivers](docs/Devices.md) | DS18B20, PCF8583, EEP24C04, EEP24C256, FM25V05, TMC2209, DFR0646, SED1520 |
+| [Utilities & Interfaces](docs/Utilities.md) | Modbus RTU, RegisterBank, MemoryBlock, SimpleMenu, Math, Interfaces |
+| [Build System](docs/BuildSystem.md) | PlatformIO integration, CubeMX setup, scripts, bootloader support |
+
+Also see [GitHub Wiki](https://github.com/JAQUBA/JQBSTM32_Framework/wiki)
 
 ## Contributing
 
