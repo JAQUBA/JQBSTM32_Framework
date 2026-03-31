@@ -2,7 +2,7 @@
     "name": "JQBSTM32",
     "version": "1.0.0",
     "description": "Production-ready framework for rapid STM32 application development with CubeMX and PlatformIO",
-    "keywords": "stm32, platformio, cubemx",
+    "keywords": "stm32, stm32f1, stm32f4, stm32h7, stm32g0, platformio, stm32cube, cubemx, embedded, embedded-c, embedded-cpp, microcontroller, arm, cortex-m, hal, hardware-abstraction-layer, modbus, uart, spi, i2c, can, fdcan, adc, pwm, gpio, onewire, usb-cdc, ds18b20, temperature-sensor, eeprom, fram, rtc, lcd, stepper-motor, tmc2209, scheduler, rtos, register-bank, memory-management",
     "repository":
     {
       "type": "git",
