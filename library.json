@@ -18,7 +18,7 @@
         "maintainer": true
       }
     ],
-    "license": "GPL-3.0-or-later",
+    "license": "LGPL-3.0-or-later",
     "frameworks": "stm32cube",
     "platforms": "ststm32",
     "build": {
