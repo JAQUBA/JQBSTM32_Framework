@@ -4,12 +4,12 @@ Thank you for your interest in contributing to the development of JQBSTM32 Frame
 
 ## License and Copyright
 
-JQBSTM32 Framework is licensed under the GNU General Public License v3.0 or later. By submitting code to this project, you accept the following terms:
+JQBSTM32 Framework is licensed under the GNU Lesser General Public License v3.0 or later. By submitting code to this project, you accept the following terms:
 
 ### Contribution Requirements
 
-1. **GPL v3.0 Compliance**: All contributions must be compatible with GPL v3.0 license
-2. **Copyright**: You retain copyright to your code, but license it under GPL v3.0 terms
+1. **LGPL v3.0 Compliance**: All contributions must be compatible with LGPL v3.0 license
+2. **Copyright**: You retain copyright to your code, but license it under LGPL v3.0 terms
 3. **Copyright headers**: Each new file must contain appropriate copyright header
 
 ### Copyright Header Template for New Files
@@ -20,18 +20,18 @@ JQBSTM32 Framework is licensed under the GNU General Public License v3.0 or late
  * Copyright (C) [Year] [Your Name] ([email])
  * Copyright (C) 2024 JAQUBA (kjakubowski0492@gmail.com)
  * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  * 
- * This program is distributed in the hope that it will be useful,
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library. If not, see <https://www.gnu.org/licenses/>.
  */
 ```
 
@@ -113,7 +113,7 @@ All contributors will be listed in the ACKNOWLEDGMENTS file and in release notes
 ## Important Legal Notes
 
 - Do not submit copyrighted code without proper license
-- Do not use code from licenses incompatible with GPL v3.0
+- Do not use code from licenses incompatible with LGPL v3.0
 - In case of license doubts, contact the maintainer
 
 ---

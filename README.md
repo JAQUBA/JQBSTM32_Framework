@@ -1,7 +1,7 @@
 # JQBSTM32 Framework
 
 ![Version](https://img.shields.io/badge/version-v1.0.0-brightgreen)
-![License](https://img.shields.io/badge/license-GPL--3.0--or--later-blue)
+![License](https://img.shields.io/badge/license-LGPL--3.0--or--later-blue)
 ![Platform](https://img.shields.io/badge/platform-STM32-green)
 ![Framework](https://img.shields.io/badge/framework-PlatformIO-orange)
 ![Build](https://img.shields.io/badge/build-passing-brightgreen)
@@ -16,7 +16,7 @@
 - **⚡ High Performance** - Optimized algorithms and memory management
 - **🔧 Modularity** - Use only the components you need
 - **📚 Complete Documentation** - Detailed examples and API reference
-- **🛡️ GPL v3.0 Compliance** - Legally verified implementation
+- **🛡️ LGPL v3.0 Compliance** - Legally verified implementation
 - **🔄 Easy Integration** - Works with STM32CubeMX and PlatformIO
 
 ## Features
@@ -108,22 +108,22 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) to learn how to
 
 ## License
 
-This project is licensed under the **GNU General Public License v3.0** or later.
+This project is licensed under the **GNU Lesser General Public License v3.0** or later.
 See the [LICENSE](LICENSE) file for detailed information.
 
-### GPL v3.0 Compliance
+### LGPL v3.0 Compliance
 - All source files contain appropriate copyright headers
 - Used standard algorithms are properly documented
-- Framework can be freely used, modified and distributed according to GPL terms
+- Framework can be freely used, modified and distributed according to LGPL terms
 - See [ACKNOWLEDGMENTS](ACKNOWLEDGMENTS) file for information about used standards
 
 ### Note for Developers
-If you use this framework in your project, remember that GPL v3.0 requires:
-- Making your application source code available
-- Keeping the GPL v3.0 license for the entire project
-- Including license and copyright information
+If you use this framework in your project, remember that LGPL v3.0 allows:
+- Linking against this library without requiring your application source code to be GPL/LGPL
+- Keeping your application under a proprietary or other license
+- Modifications to the library itself must still be released under LGPL v3.0
 
-More information: https://www.gnu.org/licenses/gpl-3.0.html
+More information: https://www.gnu.org/licenses/lgpl-3.0.html
 
 ## Authors
 
