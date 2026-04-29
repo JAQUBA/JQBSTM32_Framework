@@ -30,7 +30,7 @@ void loop();    // Called continuously in while(1) — prefer tasks over loop co
 ### Execution Flow
 
 ```
-Power-on → SystemInit → Core constructor → init() → HAL_Init → setup()
+Power-on → SystemInit → Core constructor → HAL_Init() → init() → setup()
     → while(1) { mainTasks.execute(); loop(); }
 ```
 

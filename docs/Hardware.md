@@ -67,7 +67,7 @@ uint32_t getInterruptCount(GPIO_TypeDef *GPIOx, uint16_t pin);
 ```cpp
 #define HIGH  GPIO_PIN_SET
 #define LOW   GPIO_PIN_RESET
-#define MAX_GPIO_INTERRUPTS 16  // Configurable via GPIO_MAX_INTERRUPTS
+#define MAX_GPIO_INTERRUPTS 16  // Override by defining MAX_GPIO_INTERRUPTS (or GPIO_MAX_INTERRUPTS)
 ```
 
 ### Usage
@@ -332,16 +332,21 @@ Analog(ADC_HandleTypeDef *pHandler, uint16_t vref = 3300);  // vref in mV
 ```cpp
 static Analog *getInstance(ADC_HandleTypeDef *pHandler);
 
-uint16_t getValue(uint8_t channel);      // Calibrated raw ADC value
-uint16_t getVoltage(uint8_t channel);    // Voltage in mV
+uint16_t getRawValue(uint8_t channel);      // Raw (unfiltered) ADC value from DMA buffer
+uint16_t getFilteredValue(uint8_t channel); // EMA-filtered ADC value
+uint16_t getVoltage(uint8_t channel);       // Voltage in mV (from filtered value)
+
+void setFilterShift(uint8_t shift);                 // Set EMA shift for all channels
+void setFilterShift(uint8_t channel, uint8_t shift); // Set EMA shift for one channel
 
 void attachInterrupt(std::function<void(uint16_t*)> callback);
 void convCpltCallback();  // Called from DMA ISR
 ```
 
-### Calibration
+### Filter Configuration
 
-Per-channel offset and multiplier stored externally (e.g., in RegisterBank).
+Per-channel EMA (Exponential Moving Average) filter. Offset/multiplier calibration belongs
+to the application layer (e.g., using RegisterBank).
 
 ### Usage
 
@@ -349,7 +354,8 @@ Per-channel offset and multiplier stored externally (e.g., in RegisterBank).
 Analog adc(&hadc1, 3300);
 
 addTaskMain(taskCallback {
-    uint16_t raw = adc.getValue(0);
+    uint16_t raw = adc.getRawValue(0);
+    uint16_t filtered = adc.getFilteredValue(0);
     uint16_t voltage = adc.getVoltage(0);  // mV
 }, 100);
 ```

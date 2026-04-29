@@ -138,7 +138,7 @@ All HAL modules follow:
 | SPI        | `SPI`           | `transmit()`, `receive()`, `transmitThenReceive()`         |
 | Timer      | `Timer`         | `attachInterrupt()`, `setPeriod()`                         |
 | PWM        | `PWM`           | `set()`, `get()` (inherits Timer)                          |
-| Analog     | `Analog`        | `getValue()`, `getVoltage()`, `attachInterrupt()`          |
+| Analog     | `Analog`        | `getRawValue()`, `getFilteredValue()`, `getVoltage()`, `attachInterrupt()` |
 | CAN        | `CAN`           | `send()`, `onPacket()`                                     |
 | FDCAN      | `FDCAN`         | `send()`, `onPacket()`                                     |
 | OneWire    | `OneWire`       | `reset()`, `transmit()`, `receive()`, `completeTransaction()` |
@@ -156,7 +156,7 @@ All HAL modules follow:
 #define SPI_MAX_INSTANCES   2
 #define ANALOG_MAX_INSTANCES 1
 #define ANALOG_MAX_CHANNELS  8
-#define GPIO_MAX_INTERRUPTS 16
+#define MAX_GPIO_INTERRUPTS 16
 ```
 
 ---

@@ -170,7 +170,7 @@ build_flags =
     -DTIMER_MAX_INSTANCES=8
     -DANALOG_MAX_INSTANCES=2
     -DANALOG_MAX_CHANNELS=16
-    -DGPIO_MAX_INTERRUPTS=8
+    -DMAX_GPIO_INTERRUPTS=8
 ```
 
 ---
@@ -228,7 +228,8 @@ lib_deps =
 #define LED GPIOC, GPIO_PIN_13
 
 void init() {
-    GPIO.setup(LED, GPIO_MODE_AF_PP);
+    INIT(GPIO);  // Calls MX_GPIO_Init() — enables GPIO clocks
+    GPIO.setup(LED, GPIO_MODE_OUTPUT_PP);
 }
 
 void setup() {
@@ -242,7 +243,7 @@ void setup() {
 
 ### What happens:
 
-1. `init()` — Configures PC13 as push-pull output
+1. `init()` — Enables GPIO clocks via `MX_GPIO_Init()`, configures PC13 as push-pull output
 2. `setup()` — Turns LED on, registers a 200ms periodic task
 3. Task toggles LED every cycle, increasing delay by 1 tick each time
 4. `loop()` — Not defined (optional, defaults to empty)

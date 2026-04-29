@@ -61,8 +61,17 @@ Analog::Analog(ADC_HandleTypeDef *pHandler, uint16_t vref) :
         default:                  _maxAdcValue = 4095; break;
     }
 
+    if (_channelCount > ANALOG_MAX_CHANNELS) {
+        _channelCount = ANALOG_MAX_CHANNELS;
+    }
+
     for (uint8_t i = 0; i < ANALOG_MAX_CHANNELS; i++) {
         _filters[i] = { 0, ANALOG_DEFAULT_FILTER_SHIFT, false };
+    }
+
+    if (_channelCount == 0) {
+        _adcBuffer = nullptr;
+        return;
     }
 
     HAL_ADCEx_Calibration_Start(_pHandler);
@@ -74,6 +83,8 @@ Analog::Analog(ADC_HandleTypeDef *pHandler, uint16_t vref) :
 }
 Analog::~Analog() {
     HAL_ADC_Stop_DMA(_pHandler);
+    delete[] _adcBuffer;
+    _adcBuffer = nullptr;
 }
 
 void Analog::convCpltCallback() {
