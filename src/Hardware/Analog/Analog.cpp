@@ -1,5 +1,5 @@
 /*
- * JQBSTM32 Framework - Analog.cpp AVR-style Implementation
+ * JQBSTM32 Framework - Analog.cpp
  * Copyright (C) 2024 JAQUBA (kjakubowski0492@gmail.com)
  * 
  * This program is free software: you can redistribute it and/or modify
@@ -47,7 +47,6 @@ Analog::Analog(ADC_HandleTypeDef *pHandler, uint16_t vref) :
         _Analog_instances[_Analog_instancesNum++] = this;
     }
 
-    // Zoptymalizowane obliczanie _maxAdcValue - bezpośrednie przypisanie
     switch (_pHandler->Init.Resolution) {
         case ADC_RESOLUTION_6B:   _maxAdcValue = 63; break;
         case ADC_RESOLUTION_8B:   _maxAdcValue = 255; break;
@@ -59,9 +58,13 @@ Analog::Analog(ADC_HandleTypeDef *pHandler, uint16_t vref) :
         #ifdef ADC_RESOLUTION_16B
         case ADC_RESOLUTION_16B:  _maxAdcValue = 65535; break;
         #endif
-        default:                  _maxAdcValue = 4095; break;  // 12-bit default
+        default:                  _maxAdcValue = 4095; break;
     }
-    
+
+    for (uint8_t i = 0; i < ANALOG_MAX_CHANNELS; i++) {
+        _filters[i] = { 0, ANALOG_DEFAULT_FILTER_SHIFT, false };
+    }
+
     HAL_ADCEx_Calibration_Start(_pHandler);
     _adcBuffer = new uint16_t[_channelCount];
     
@@ -74,27 +77,62 @@ Analog::~Analog() {
 }
 
 void Analog::convCpltCallback() {
+    for (uint8_t i = 0; i < _channelCount; i++) {
+        ChannelFilter& f = _filters[i];
+        uint16_t raw = _adcBuffer[i];
+
+        if (!f.initialized) {
+            f.accumulator = (uint32_t)raw << f.shift;
+            f.initialized = true;
+        } else {
+            f.accumulator += (int32_t)raw - (int32_t)(f.accumulator >> f.shift);
+        }
+    }
+
     for (auto& callback : _callbacks) {
         if (callback) {
             callback(_adcBuffer);
         }
     }
-
 }
+
 void Analog::attachInterrupt(std::function<void(uint16_t*)> callback) {
     if (callback) {
         _callbacks.push_back(callback);
     }
 }
 
-uint16_t Analog::getValue(uint8_t channel) {
+void Analog::setFilterShift(uint8_t shift) {
+    if (shift < 1) shift = 1;
+    if (shift > 8) shift = 8;
+    for (uint8_t i = 0; i < ANALOG_MAX_CHANNELS; i++) {
+        _filters[i].shift = shift;
+        _filters[i].accumulator = 0;
+        _filters[i].initialized = false;
+    }
+}
+
+void Analog::setFilterShift(uint8_t channel, uint8_t shift) {
+    if (channel >= ANALOG_MAX_CHANNELS) return;
+    if (shift < 1) shift = 1;
+    if (shift > 8) shift = 8;
+    _filters[channel].shift = shift;
+    _filters[channel].accumulator = 0;
+    _filters[channel].initialized = false;
+}
+
+uint16_t Analog::getRawValue(uint8_t channel) {
+    return (channel < _channelCount) ? _adcBuffer[channel] : 0;
+}
+
+uint16_t Analog::getFilteredValue(uint8_t channel) {
     if (channel >= _channelCount) return 0;
-    return _adcBuffer[channel];
-    return 0;
+    return (uint16_t)(_filters[channel].accumulator >> _filters[channel].shift);
 }
 
 uint16_t Analog::getVoltage(uint8_t channel) {
-    return (uint16_t)((getValue(channel) * _vref) / _maxAdcValue);
+    uint16_t filtered = getFilteredValue(channel);
+    return (uint16_t)((uint32_t)filtered * _vref / _maxAdcValue);
 }
 
 #endif // __ANALOG_H_
