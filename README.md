@@ -137,8 +137,34 @@ git submodule add https://github.com/JAQUBA/JQBSTM32_Framework.git lib/JQBSTM32
 git submodule update --init --recursive
 ```
 
-<<<<<<< HEAD
-## Quick Start
+Then reference the library path in `platformio.ini`:
+
+```ini
+lib_extra_dirs = lib
+```
+
+### Option 3 — Direct URL
+
+```ini
+lib_deps =
+    https://github.com/JAQUBA/JQBSTM32_Framework.git
+```
+
+---
+
+## 🚀 Quick Start
+
+### 1. Configure your STM32 project with STM32CubeMX
+
+Generate initialization code (HAL-based) for your target board.
+
+### 2. Include the framework
+
+```cpp
+#include <Core.h>
+```
+
+### 3. Example — Blink LED with the Scheduler
 
 ```cpp
 #include "Core.h"
@@ -157,76 +183,36 @@ void setup() {
         GPIO.toggle(LED);
     }, 500);  // Toggle LED every 500ms
 }
-```
-
-Three functions to implement:
-- **`init()`** — CubeMX peripheral initialization (`MX_xxx_Init()`)
-- **`setup()`** — Application setup, register tasks
-- **`loop()`** — Optional main loop (prefer tasks)
-
-=======
-Then reference the library path in `platformio.ini`:
->>>>>>> origin/master
-
-```ini
-lib_extra_dirs = lib
-```
-
-### Option 3 — Direct URL
-
-```ini
-lib_deps =
-    https://github.com/JAQUBA/JQBSTM32_Framework.git
-```
-
-<<<<<<< HEAD
-### Documentation
-Detailed documentation available in the `docs/` folder:
-
-| Document | Description |
-|----------|-------------|
-| [Core & Scheduler](docs/Core.md) | Entry points, task system, global functions, bit macros, HAL callbacks |
-| [Hardware Abstraction](docs/Hardware.md) | GPIO, UART, I2C, SPI, Timer, PWM, ADC, CAN, FDCAN, OneWire, Encoder, Flash, USB_CDC |
-| [Device Drivers](docs/Devices.md) | DS18B20, PCF8583, EEP24C04, EEP24C256, FM25V05, TMC2209, DFR0646, SED1520 |
-| [Utilities & Interfaces](docs/Utilities.md) | Modbus RTU, RegisterBank, MemoryBlock, SimpleMenu, Math, Interfaces |
-| [Build System](docs/BuildSystem.md) | PlatformIO integration, CubeMX setup, scripts, bootloader support |
-
-Also see [GitHub Wiki](https://github.com/JAQUBA/JQBSTM32_Framework/wiki)
-=======
----
->>>>>>> origin/master
-
-## 🚀 Quick Start
-
-### 1. Configure your STM32 project with STM32CubeMX
-
-Generate initialization code (HAL-based) for your target board.
-
-### 2. Include the framework
-
-```cpp
-#include <Core.h>
-```
-
-### 3. Example — Blink LED with the Scheduler
-
-```cpp
-#include <Core.h>
-
-void setup() {
-    // Called once at startup
-}
 
 void loop() {
     // Called repeatedly — cooperative scheduler handles task execution
 }
 ```
 
+Three entry-point functions to implement:
+- **`init()`** — CubeMX peripheral initialization (`MX_xxx_Init()`)
+- **`setup()`** — Application setup, register tasks
+- **`loop()`** — Optional main loop (prefer tasks)
+
 See the [`examples/`](examples/) directory for more complete usage examples.
 
 ---
 
 ## 📚 Documentation
+
+### API & Module Guides
+
+Detailed documentation available in the `docs/` folder:
+
+| Document | Description |
+|---|---|
+| [Core & Scheduler](docs/Core.md) | Entry points, task system, global functions, bit macros, HAL callbacks |
+| [Hardware Abstraction](docs/Hardware.md) | GPIO, UART, I2C, SPI, Timer, PWM, ADC, CAN, FDCAN, OneWire, Encoder, Flash, USB_CDC |
+| [Device Drivers](docs/Devices.md) | DS18B20, PCF8583, EEP24C04, EEP24C256, FM25V05, TMC2209, DFR0646, SED1520 |
+| [Utilities & Interfaces](docs/Utilities.md) | Modbus RTU, RegisterBank, MemoryBlock, SimpleMenu, Math, Interfaces |
+| [Build System](docs/BuildSystem.md) | PlatformIO integration, CubeMX setup, scripts, bootloader support |
+
+### Other Resources
 
 | Resource | Link |
 |---|---|

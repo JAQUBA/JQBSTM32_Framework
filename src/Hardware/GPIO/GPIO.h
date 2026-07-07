@@ -24,14 +24,11 @@
 #include <array>
 
 // Configuration: Maximum number of GPIO interrupts
-<<<<<<< HEAD
 // Support the documented GPIO_MAX_INTERRUPTS name while preserving
 // backwards compatibility with the existing MAX_GPIO_INTERRUPTS name.
 #if defined(GPIO_MAX_INTERRUPTS) && !defined(MAX_GPIO_INTERRUPTS)
 #define MAX_GPIO_INTERRUPTS GPIO_MAX_INTERRUPTS
 #endif
-=======
->>>>>>> origin/master
 #ifndef MAX_GPIO_INTERRUPTS
 #define MAX_GPIO_INTERRUPTS 16
 #endif
