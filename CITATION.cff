@@ -1,0 +1,44 @@
+cff-version: 1.2.0
+message: "If you use this software in your project, please cite it as below."
+type: software
+title: "JQBSTM32 Framework"
+abstract: >
+  Production-ready C++ framework for rapid STM32 embedded application
+  development with PlatformIO and STM32CubeMX. Provides hardware abstraction
+  layers, device drivers (DS18B20, EEPROM, FRAM, RTC, LCD, stepper motors),
+  and utility libraries (Modbus RTU/ASCII, cooperative scheduler, register bank)
+  for ARM Cortex-M microcontrollers.
+authors:
+  - family-names: "Jakubowski"
+    given-names: "Kacper"
+    alias: "JAQUBA"
+    email: kjakubowski0492@gmail.com
+repository-code: "https://github.com/JAQUBA/JQBSTM32_Framework"
+url: "https://github.com/JAQUBA/JQBSTM32_Framework"
+license: LGPL-3.0-or-later
+version: "1.0.0"
+date-released: "2024-12-08"
+keywords:
+  - stm32
+  - embedded
+  - c++
+  - arm
+  - cortex-m
+  - platformio
+  - stm32cube
+  - cubemx
+  - hal
+  - microcontroller
+  - modbus
+  - uart
+  - spi
+  - i2c
+  - can
+  - adc
+  - pwm
+  - scheduler
+  - rtos
+  - ds18b20
+  - temperature-sensor
+  - stepper-motor
+  - tmc2209
