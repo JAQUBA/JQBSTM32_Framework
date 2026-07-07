@@ -22,8 +22,8 @@
 #define ONEWIRE_H
 
 #include "../../Core.h"
-#include "Interface/IBus.h"
-#include "Hardware/Timer/Timer.h"
+#include "../../Interface/IBus.h"
+#include "../Timer/Timer.h"
 
 /**
  * @brief OneWire communication protocol class

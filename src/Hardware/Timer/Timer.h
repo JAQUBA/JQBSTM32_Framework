@@ -17,6 +17,7 @@
  */
 #include "../../Core.h"
 #ifdef HAL_TIM_MODULE_ENABLED
+#include <tim.h>
 
 #ifndef __TIMER_H_
 #define __TIMER_H_

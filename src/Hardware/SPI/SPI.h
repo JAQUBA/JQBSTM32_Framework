@@ -17,6 +17,7 @@
  */
 #include "../../Core.h"
 #ifdef HAL_SPI_MODULE_ENABLED
+#include <spi.h>
 
 #ifndef __SPI_H_
 #define __SPI_H_

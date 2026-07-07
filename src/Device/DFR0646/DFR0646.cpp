@@ -18,7 +18,7 @@
 #include "DFR0646.h"
 #ifdef __DFR0646_H_
 
-#include "fl_bit.h"
+#include "../../fl_bit.h"
 
 #define CMD_HT16K33_ON          0x01  /**< Turn ON  */
 #define CMD_HT16K33_OSCOFF      0x20  /**< Turn OFF the clock */

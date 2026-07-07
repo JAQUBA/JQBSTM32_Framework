@@ -17,8 +17,8 @@
  */
 #ifndef _MEMORYBLOCK_H
 #define _MEMORYBLOCK_H
-#include "Core.h"
-#include "Interface/IExternalMemory.h"
+#include "../../Core.h"
+#include "../../Interface/IExternalMemory.h"
 
 /**
  * @class MemoryBlock
