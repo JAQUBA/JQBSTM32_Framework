@@ -2,18 +2,18 @@
  * JQBSTM32 Framework - GPIO.h Header
  * Copyright (C) 2024 JAQUBA (kjakubowski0492@gmail.com)
  * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
+ * This library is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  * 
- * This program is distributed in the hope that it will be useful,
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  * 
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library. If not, see <https://www.gnu.org/licenses/>.
  */
 #include "../../Core.h"
 #ifdef HAL_GPIO_MODULE_ENABLED
@@ -24,11 +24,14 @@
 #include <array>
 
 // Configuration: Maximum number of GPIO interrupts
+<<<<<<< HEAD
 // Support the documented GPIO_MAX_INTERRUPTS name while preserving
 // backwards compatibility with the existing MAX_GPIO_INTERRUPTS name.
 #if defined(GPIO_MAX_INTERRUPTS) && !defined(MAX_GPIO_INTERRUPTS)
 #define MAX_GPIO_INTERRUPTS GPIO_MAX_INTERRUPTS
 #endif
+=======
+>>>>>>> origin/master
 #ifndef MAX_GPIO_INTERRUPTS
 #define MAX_GPIO_INTERRUPTS 16
 #endif
