@@ -17,7 +17,6 @@
  */
 #include "../../Core.h"
 #ifdef HAL_ADC_MODULE_ENABLED
-#include <list>
 #include <adc.h>
 
 #ifndef __ANALOG_H_
@@ -31,72 +30,84 @@
 #define ANALOG_MAX_CHANNELS 8
 #endif
 
-#ifndef ANALOG_DEFAULT_FILTER_SHIFT
-#define ANALOG_DEFAULT_FILTER_SHIFT 3
-#endif
-
 /**
- * @brief Universal ADC input class with per-channel EMA filtering
- * @details Provides raw and filtered analog readings via DMA.
- *          No application-level calibration — offset/multiplier belongs
- *          to the application layer.
+ * @brief Universal ADC input class exposing raw DMA ADC readings
+ * @details Provides raw analog samples and voltage conversion.
+ *          Filtering, calibration, and unit scaling belong to
+ *          higher-level application modules.
  */
 class Analog {
 public:
+    /**
+     * @brief Intrusive receiver for ADC conversion-complete notifications.
+     * @note The receiver owns its list storage, so registration has no fixed
+     *       capacity and requires no heap allocation.
+     */
+    class InterruptListener {
+        friend class Analog;
+
+    public:
+        using Callback = void (*)(InterruptListener* listener, uint16_t* buffer);
+
+        explicit InterruptListener(Callback callback)
+            : _callback(callback), _next(nullptr) {
+        }
+
+        InterruptListener(const InterruptListener&) = delete;
+        InterruptListener& operator=(const InterruptListener&) = delete;
+
+    private:
+        Callback _callback;
+        InterruptListener* _next;
+    };
+
     static Analog* getInstance(ADC_HandleTypeDef *pHandler);
 
     Analog(ADC_HandleTypeDef *pHandler, uint16_t vref = 3300);
     ~Analog();
 
     void convCpltCallback();
-    void attachInterrupt(std::function<void(uint16_t*)> callback);
+    /**
+     * @brief Register a callback invoked from the ADC conversion complete interrupt context.
+     * @note Keep the callback short and non-blocking.
+        * @param listener Receiver embedded in the object that processes samples.
+        * @return True if the listener was registered or was already present.
+     */
+        bool attachInterrupt(InterruptListener* listener);
 
     /**
-     * @brief Set EMA filter shift for all channels
-     * @param shift Filter shift (1-8). Filter factor = 1/(1<<shift). Higher = smoother/slower.
+     * @brief Unregister a previously attached interrupt callback.
+        * @return True if the listener was removed.
      */
-    void setFilterShift(uint8_t shift);
+        bool detachInterrupt(InterruptListener* listener);
 
     /**
-     * @brief Set EMA filter shift for specific channel
+     * @brief Remove all interrupt callbacks.
      */
-    void setFilterShift(uint8_t channel, uint8_t shift);
+    void clearInterrupts();
 
     /**
-     * @brief Get raw ADC value from DMA buffer (unfiltered)
+     * @brief Get raw ADC value from DMA buffer
      */
-    uint16_t getRawValue(uint8_t channel);
+    uint16_t getValue(uint8_t channel) const;
 
     /**
-     * @brief Get EMA-filtered ADC value
+        * @brief Get voltage in millivolts (from raw value)
      */
-    uint16_t getFilteredValue(uint8_t channel);
-
-    /**
-     * @brief Get voltage in millivolts (from filtered value)
-     */
-    uint16_t getVoltage(uint8_t channel);
+    uint16_t getVoltage(uint8_t channel) const;
 
     uint8_t getChannelCount() const { return _channelCount; }
     uint32_t getMaxValue() const { return _maxAdcValue; }
     uint16_t getVref() const { return _vref; }
 
 private:
-    struct ChannelFilter {
-        uint32_t accumulator;
-        uint8_t shift;
-        bool initialized;
-    };
-
     ADC_HandleTypeDef *_pHandler;
     uint16_t *_adcBuffer;
-    ChannelFilter _filters[ANALOG_MAX_CHANNELS];
 
     uint16_t _vref;
     uint8_t _channelCount;
     uint32_t _maxAdcValue;
-
-    std::list<std::function<void(uint16_t*)>> _callbacks;
+    InterruptListener* _interruptListeners;
 };
 
 #endif // __ANALOG_H_

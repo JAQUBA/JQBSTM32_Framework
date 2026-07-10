@@ -18,6 +18,8 @@
 #include "Analog.h"
 #ifdef __ANALOG_H_
 
+#include <cstring>
+
 Analog* _Analog_instances[ANALOG_MAX_INSTANCES];
 uint8_t _Analog_instancesNum = 0;
 
@@ -30,8 +32,14 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
 }
 
 Analog* Analog::getInstance(ADC_HandleTypeDef *pHandler) {
+    if (pHandler == nullptr) {
+        return nullptr;
+    }
+
     for (uint8_t i = 0; i < _Analog_instancesNum; i++) {
-        if(_Analog_instances[i]->_pHandler->Instance == pHandler->Instance) {
+        if (_Analog_instances[i] != nullptr &&
+            _Analog_instances[i]->_pHandler != nullptr &&
+            _Analog_instances[i]->_pHandler->Instance == pHandler->Instance) {
             return _Analog_instances[i];
         }
     }
@@ -40,11 +48,22 @@ Analog* Analog::getInstance(ADC_HandleTypeDef *pHandler) {
 
 Analog::Analog(ADC_HandleTypeDef *pHandler, uint16_t vref) : 
     _pHandler(pHandler), 
+    _adcBuffer(nullptr),
     _vref(vref),
-    _channelCount(pHandler->Init.NbrOfConversion) {
+    _channelCount(pHandler != nullptr ? pHandler->Init.NbrOfConversion : 0),
+    _maxAdcValue(0),
+    _interruptListeners(nullptr) {
+
+    if (_pHandler == nullptr) {
+        Error_Handler();
+        return;
+    }
     
     if (_Analog_instancesNum < ANALOG_MAX_INSTANCES) {
         _Analog_instances[_Analog_instancesNum++] = this;
+    } else {
+        Error_Handler();
+        return;
     }
 
     switch (_pHandler->Init.Resolution) {
@@ -65,10 +84,6 @@ Analog::Analog(ADC_HandleTypeDef *pHandler, uint16_t vref) :
         _channelCount = ANALOG_MAX_CHANNELS;
     }
 
-    for (uint8_t i = 0; i < ANALOG_MAX_CHANNELS; i++) {
-        _filters[i] = { 0, ANALOG_DEFAULT_FILTER_SHIFT, false };
-    }
-
     if (_channelCount == 0) {
         _adcBuffer = nullptr;
         return;
@@ -82,68 +97,99 @@ Analog::Analog(ADC_HandleTypeDef *pHandler, uint16_t vref) :
     }
 }
 Analog::~Analog() {
-    HAL_ADC_Stop_DMA(_pHandler);
+    if (_pHandler != nullptr) {
+        HAL_ADC_Stop_DMA(_pHandler);
+    }
+
     delete[] _adcBuffer;
     _adcBuffer = nullptr;
+
+    for (uint8_t i = 0; i < _Analog_instancesNum; i++) {
+        if (_Analog_instances[i] == this) {
+            if (i + 1 < _Analog_instancesNum) {
+                std::memmove(&_Analog_instances[i],
+                             &_Analog_instances[i + 1],
+                             (_Analog_instancesNum - i - 1) * sizeof(_Analog_instances[0]));
+            }
+            _Analog_instances[--_Analog_instancesNum] = nullptr;
+            break;
+        }
+    }
 }
 
 void Analog::convCpltCallback() {
-    for (uint8_t i = 0; i < _channelCount; i++) {
-        ChannelFilter& f = _filters[i];
-        uint16_t raw = _adcBuffer[i];
+    if (_adcBuffer == nullptr) {
+        return;
+    }
 
-        if (!f.initialized) {
-            f.accumulator = (uint32_t)raw << f.shift;
-            f.initialized = true;
-        } else {
-            f.accumulator += (int32_t)raw - (int32_t)(f.accumulator >> f.shift);
+    InterruptListener* listener = _interruptListeners;
+    while (listener != nullptr) {
+        InterruptListener* next = listener->_next;
+        if (listener->_callback != nullptr) {
+            listener->_callback(listener, _adcBuffer);
+        }
+        listener = next;
+    }
+}
+
+bool Analog::attachInterrupt(InterruptListener* listener) {
+    if (listener == nullptr || listener->_callback == nullptr) {
+        return false;
+    }
+
+    for (InterruptListener* current = _interruptListeners;
+         current != nullptr;
+         current = current->_next) {
+        if (current == listener) {
+            return true;
         }
     }
 
-    for (auto& callback : _callbacks) {
-        if (callback) {
-            callback(_adcBuffer);
+    listener->_next = _interruptListeners;
+    _interruptListeners = listener;
+    return true;
+}
+
+bool Analog::detachInterrupt(InterruptListener* listener) {
+    if (listener == nullptr) {
+        return false;
+    }
+
+    InterruptListener** current = &_interruptListeners;
+    while (*current != nullptr) {
+        if (*current == listener) {
+            *current = listener->_next;
+            listener->_next = nullptr;
+            return true;
         }
+        current = &((*current)->_next);
+    }
+
+    return false;
+}
+
+void Analog::clearInterrupts() {
+    InterruptListener* listener = _interruptListeners;
+    _interruptListeners = nullptr;
+
+    while (listener != nullptr) {
+        InterruptListener* next = listener->_next;
+        listener->_next = nullptr;
+        listener = next;
     }
 }
 
-void Analog::attachInterrupt(std::function<void(uint16_t*)> callback) {
-    if (callback) {
-        _callbacks.push_back(callback);
+uint16_t Analog::getValue(uint8_t channel) const {
+    return (_adcBuffer != nullptr && channel < _channelCount) ? _adcBuffer[channel] : 0;
+}
+
+uint16_t Analog::getVoltage(uint8_t channel) const {
+    if (_maxAdcValue == 0) {
+        return 0;
     }
-}
 
-void Analog::setFilterShift(uint8_t shift) {
-    if (shift < 1) shift = 1;
-    if (shift > 8) shift = 8;
-    for (uint8_t i = 0; i < ANALOG_MAX_CHANNELS; i++) {
-        _filters[i].shift = shift;
-        _filters[i].accumulator = 0;
-        _filters[i].initialized = false;
-    }
-}
-
-void Analog::setFilterShift(uint8_t channel, uint8_t shift) {
-    if (channel >= ANALOG_MAX_CHANNELS) return;
-    if (shift < 1) shift = 1;
-    if (shift > 8) shift = 8;
-    _filters[channel].shift = shift;
-    _filters[channel].accumulator = 0;
-    _filters[channel].initialized = false;
-}
-
-uint16_t Analog::getRawValue(uint8_t channel) {
-    return (channel < _channelCount) ? _adcBuffer[channel] : 0;
-}
-
-uint16_t Analog::getFilteredValue(uint8_t channel) {
-    if (channel >= _channelCount) return 0;
-    return (uint16_t)(_filters[channel].accumulator >> _filters[channel].shift);
-}
-
-uint16_t Analog::getVoltage(uint8_t channel) {
-    uint16_t filtered = getFilteredValue(channel);
-    return (uint16_t)((uint32_t)filtered * _vref / _maxAdcValue);
+    uint16_t raw = getValue(channel);
+    return (uint16_t)((uint32_t)raw * _vref / _maxAdcValue);
 }
 
 #endif // __ANALOG_H_
