@@ -102,6 +102,64 @@ rtc.writeToMemory(0x10, data, 2);
 
 ---
 
+## EEP24Cxx — Generic I2C EEPROM (24AA/24LC/24FC Family)
+
+**Header**: `Device/EEP24Cxx/EEP24Cxx.h`  
+**Bus**: I2C  
+**Implements**: `IExternalMemory`
+
+### Constructor
+
+```cpp
+EEP24Cxx(I2C *pInstance,
+         const EEP24Cxx::DeviceConfig &config,
+         uint16_t DevAddress = 0xA0,
+         uint32_t BaseAddress = 0x00);
+```
+
+### Built-in Device Configs
+
+```cpp
+EEP24Cxx::CONFIG_24AA02
+EEP24Cxx::CONFIG_24LC02B
+EEP24Cxx::CONFIG_24LC04B
+EEP24Cxx::CONFIG_24LC08B
+EEP24Cxx::CONFIG_24LC16B
+EEP24Cxx::CONFIG_24LC32A
+EEP24Cxx::CONFIG_24LC64
+EEP24Cxx::CONFIG_24LC128
+EEP24Cxx::CONFIG_24LC256
+EEP24Cxx::CONFIG_24LC512
+```
+
+Driver automatycznie:
+- Dzieli zapis na granicach stron EEPROM,
+- Dla małych układów (8-bit address + block bits) przełącza bity bloku w adresie urządzenia,
+- Wykonuje sekwencyjny odczyt/zapis dla dowolnego zakresu danych.
+
+### Usage (24AA02)
+
+```cpp
+I2C sys_i2c(&hi2c2);
+EEP24Cxx eeprom(&sys_i2c, EEP24Cxx::CONFIG_24AA02, 0xA0);
+
+uint8_t data[8] = {1,2,3,4,5,6,7,8};
+eeprom.writeToMemory(0x00, data, sizeof(data));
+```
+
+### Usage (24LC256)
+
+```cpp
+I2C sys_i2c(&hi2c2);
+EEP24Cxx eeprom(&sys_i2c, EEP24Cxx::CONFIG_24LC256, 0xA0);
+```
+
+### Backward Compatibility
+
+Istniejace klasy `EEP24C04` i `EEP24C256` pozostaja dostepne i korzystaja wewnetrznie z `EEP24Cxx`.
+
+---
+
 ## EEP24C04 — I2C EEPROM (512 Bytes)
 
 **Header**: `Device/EEP24C04/EEP24C04.h`  
