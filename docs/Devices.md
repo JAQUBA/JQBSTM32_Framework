@@ -4,6 +4,8 @@
 
 The Device layer provides ready-to-use drivers for popular external ICs. Each driver wraps a Hardware bus module (I2C, SPI, OneWire) and provides a high-level, domain-specific API. Memory devices implement the `IExternalMemory` interface for uniform access.
 
+Bus-backed device constructors accept a final optional `timeoutMs` parameter. The value applies independently to each queued bus operation issued by that device, which lets devices sharing one bus use different limits. Existing constructor calls remain valid; `EEP24Cxx` uses 10 ms by default and all other drivers retain their transport defaults.
+
 ---
 
 ## DS18B20 — OneWire Temperature Sensor
@@ -15,7 +17,8 @@ The Device layer provides ready-to-use drivers for popular external ICs. Each dr
 ### Constructor
 
 ```cpp
-DS18B20(OneWire *oneWire);
+DS18B20(OneWire *oneWire,
+    uint32_t timeoutMs = OneWire::DEFAULT_TIMEOUT_MS);
 ```
 
 ### API
@@ -66,7 +69,8 @@ ds.readSingleDeviceROM([](uint64_t rom, bool success) {
 ```cpp
 PCF8583(I2C *pInstance,
         uint16_t DevAddress = 0xA0,
-        uint32_t BaseAddress = 0x00);
+    uint32_t BaseAddress = 0x00,
+    uint32_t timeoutMs = I2C::DEFAULT_TIMEOUT_MS);
 ```
 
 ### API (IExternalMemory)
@@ -114,7 +118,8 @@ rtc.writeToMemory(0x10, data, 2);
 EEP24Cxx(I2C *pInstance,
          const EEP24Cxx::DeviceConfig &config,
          uint16_t DevAddress = 0xA0,
-         uint32_t BaseAddress = 0x00);
+         uint32_t BaseAddress = 0x00,
+         uint32_t timeoutMs = EEP24Cxx::DEFAULT_TIMEOUT_MS);
 ```
 
 ### Built-in Device Configs
@@ -136,6 +141,8 @@ Driver automatycznie:
 - Dzieli zapis na granicach stron EEPROM,
 - Dla małych układów (8-bit address + block bits) przełącza bity bloku w adresie urządzenia,
 - Wykonuje sekwencyjny odczyt/zapis dla dowolnego zakresu danych.
+
+Domyślny timeout `EEP24Cxx::DEFAULT_TIMEOUT_MS` wynosi **10 ms** i jest stosowany osobno do każdego odczytu oraz każdej strony zapisu.
 
 ### Usage (24AA02)
 
@@ -259,7 +266,8 @@ RegisterBank params(0, 32, new MemoryBlock(&eeprom, 0x0000));
 ### Constructor
 
 ```cpp
-FM25V05(SPI *pInstance, GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin);
+FM25V05(SPI *pInstance, GPIO_TypeDef *GPIOx, uint16_t GPIO_Pin,
+    uint32_t timeoutMs = SPI::DEFAULT_TIMEOUT_MS);
 ```
 
 The GPIO pin serves as the chip select (CS) line.
@@ -367,7 +375,8 @@ stepper.step(200);  // One full rotation (200 steps @ full-step)
 ### Constructor
 
 ```cpp
-DFR0646(I2C *pInstance, uint8_t DevAddress);
+DFR0646(I2C *pInstance, uint8_t DevAddress,
+    uint32_t timeoutMs = I2C::DEFAULT_TIMEOUT_MS);
 ```
 
 ### API
@@ -405,7 +414,7 @@ display.printLed(text, 0b0100);  // Show "12.34" (dot on digit 2)
 ### Constructor
 
 ```cpp
-SED1520(I2C *i2c);
+SED1520(I2C *i2c, uint32_t timeoutMs = I2C::DEFAULT_TIMEOUT_MS);
 ```
 
 ### API

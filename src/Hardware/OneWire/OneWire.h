@@ -32,6 +32,8 @@
  */
 class OneWire : public IBus {
 	public:
+		static constexpr uint32_t DEFAULT_TIMEOUT_MS = 40U;
+
 		/**
 		 * @brief OneWire constructor
 		 * @details Initializes OneWire interface with timer and GPIO configuration
@@ -44,8 +46,9 @@ class OneWire : public IBus {
 		/**
 		 * @brief Reset OneWire bus
 		 * @details Performs bus reset sequence and checks for device presence
+		 * @param timeoutMs Maximum duration of this operation after it starts (default: 40 ms)
 		 */
-		void reset();
+		void reset(uint32_t timeoutMs = DEFAULT_TIMEOUT_MS);
 
 		/**
 		 * @brief Transmit data via OneWire
@@ -53,10 +56,12 @@ class OneWire : public IBus {
 		 * @param pData Pointer to data buffer to transmit
 		 * @param size Number of bytes to transmit
 		 * @param callbackFn Optional callback function called after transmission (default: nullptr)
+		 * @param timeoutMs Maximum duration of this operation after it starts (default: 40 ms)
 		 */
 		void transmit(
 			const uint8_t* pData, uint16_t size,
-			dataCallback_f callbackFn = nullptr
+			dataCallback_f callbackFn = nullptr,
+			uint32_t timeoutMs = DEFAULT_TIMEOUT_MS
 		);
 
 		/**
@@ -65,10 +70,12 @@ class OneWire : public IBus {
 		 * @param pData Pointer to buffer for received data
 		 * @param size Number of bytes to receive
 		 * @param callbackFn Optional callback function called after reception (default: nullptr)
+		 * @param timeoutMs Maximum duration of this operation after it starts (default: 40 ms)
 		 */
 		void receive(
 			uint8_t* pData, uint16_t size,
-			dataCallback_f callbackFn = nullptr
+			dataCallback_f callbackFn = nullptr,
+			uint32_t timeoutMs = DEFAULT_TIMEOUT_MS
 		);
 
 		/**
@@ -79,11 +86,13 @@ class OneWire : public IBus {
 		 * @param pData_rx Pointer to receive data buffer
 		 * @param rxSize Number of bytes to receive
 		 * @param callbackFn Optional callback function called after operation (default: nullptr)
+		 * @param timeoutMs Maximum duration of each queued operation after it starts (default: 40 ms)
 		 */
 		void transmitThenReceive(
 			const uint8_t* pData_tx, uint16_t txSize,
 			uint8_t* pData_rx, uint16_t rxSize,
-			dataCallback_f callbackFn = nullptr
+			dataCallback_f callbackFn = nullptr,
+			uint32_t timeoutMs = DEFAULT_TIMEOUT_MS
 		);
 
 		/**
@@ -98,6 +107,7 @@ class OneWire : public IBus {
 		 * @param rxSize Number of bytes to receive (default: 0)
 		 * @param callbackFn Optional callback function (default: nullptr)
 		 * @param resetAfterTransaction Reset bus after transaction (default: false)
+		 * @param timeoutMs Maximum duration of each queued operation after it starts (default: 40 ms)
 		 */
 		void transaction(
 			uint8_t romCommand,
@@ -108,7 +118,8 @@ class OneWire : public IBus {
 			uint8_t* pData_rx = nullptr,
 			uint16_t rxSize = 0,
 			dataCallback_f callbackFn = nullptr,
-			bool resetAfterTransaction = false
+			bool resetAfterTransaction = false,
+			uint32_t timeoutMs = DEFAULT_TIMEOUT_MS
 		);
 				/**
 		 * @brief Get operation queue size
@@ -220,6 +231,7 @@ class OneWire : public IBus {
 			EoperationType  operationType; ///< Type of operation
 			uint8_t         *pData;       ///< Pointer to data buffer
 			uint16_t        Size;         ///< Size of data
+			uint32_t        timeoutMs = DEFAULT_TIMEOUT_MS; ///< Timeout duration in ms
 			bool            free = false; ///< Operation slot availability flag
 			dataCallback_f  callback_f = nullptr; ///< Callback function
 		} currentOperation;

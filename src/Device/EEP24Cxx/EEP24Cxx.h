@@ -43,11 +43,22 @@ class EEP24Cxx : public IExternalMemory {
         static const DeviceConfig CONFIG_24LC256;
         static const DeviceConfig CONFIG_24LC512;
 
+        static constexpr uint32_t DEFAULT_TIMEOUT_MS = 10U;
+
+        /**
+         * @brief Creates an EEPROM driver with a per-operation I2C timeout.
+         * @param pInstance I2C instance used by the EEPROM.
+         * @param config EEPROM geometry and addressing configuration.
+         * @param DevAddress Base I2C device address (default: 0xA0).
+         * @param BaseAddress Memory offset applied to each request (default: 0x00).
+         * @param timeoutMs Maximum duration of each I2C operation after it starts (default: 10 ms).
+         */
         EEP24Cxx(
             I2C *pInstance,
             const DeviceConfig &config,
             uint16_t DevAddress = 0xA0,
-            uint32_t BaseAddress = 0x00
+            uint32_t BaseAddress = 0x00,
+            uint32_t timeoutMs = DEFAULT_TIMEOUT_MS
         );
 
         void readFromMemory(
@@ -66,6 +77,7 @@ class EEP24Cxx : public IExternalMemory {
         I2C      *_pInstance;
         uint16_t  _DevAddress;
         uint32_t  _BaseAddress;
+        uint32_t  _timeoutMs;
 
         uint32_t _sizeBytes;
         uint16_t _pageSize;

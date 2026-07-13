@@ -61,7 +61,7 @@ UART::UART(UART_HandleTypeDef *pHandler, GPIO_TypeDef *dirPort, uint16_t dirPin)
 				break;
 			}
 			case WORK: {
-				operationTimeout = millis()+200;
+				operationTimeout = millis() + currentOperation.timeoutMs;
 				if(currentOperation.operationType == EoperationType::SEND) {
 					if(_dirPort) HAL_GPIO_WritePin(_dirPort, _dirPin, GPIO_PIN_SET);
 					if(HAL_UART_Transmit_DMA(
@@ -128,9 +128,10 @@ void UART::onReceiveHandler(dataCallback_f onReceive) {fpOnReceive = onReceive;}
 void UART::onTransmitHandler(voidCallback_f onTransmit) {fpOnTransmit = onTransmit;}
 
 
-void UART::transmit(uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
+void UART::transmit(uint8_t *pData, uint16_t Size, dataCallback_f callbackFn, uint32_t timeoutMs) {
     operation operation;
 	operation.operationType = EoperationType::SEND;
+	operation.timeoutMs = timeoutMs;
 	operation.pData = (uint8_t*) malloc(Size);
 	memcpy(operation.pData, pData, Size);
 	operation.Size = Size;

@@ -123,7 +123,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
 				break;
 			}
 			case WORK: {
-				operationTimeout = millis()+40;
+				operationTimeout = millis() + currentOperation.timeoutMs;
 				if(currentOperation.operationType == EoperationType::RESET) {
 					is_device_presence = false;
 					operationProgress = OPERATION_PROGRESS_RESET;
@@ -164,18 +164,21 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
 	});
 }
 
-void OneWire::reset() {
+void OneWire::reset(uint32_t timeoutMs) {
 	operation operation;
 	operation.operationType = EoperationType::RESET;
+	operation.timeoutMs = timeoutMs;
 	operation.free = false;
 	operations.push(operation);
 }
 void OneWire::transmit(
 	const uint8_t* pData, uint16_t size,
-	dataCallback_f callbackFn
+	dataCallback_f callbackFn,
+	uint32_t timeoutMs
 ){
 	operation operation;
 	operation.operationType = EoperationType::TRANSMIT;
+	operation.timeoutMs = timeoutMs;
 	operation.pData = (uint8_t*) malloc(size);
 	memcpy(operation.pData, pData, size);
 	operation.Size = size;
@@ -186,10 +189,12 @@ void OneWire::transmit(
 
 void OneWire::receive(
 	uint8_t* pData, uint16_t size,
-	dataCallback_f callbackFn
+	dataCallback_f callbackFn,
+	uint32_t timeoutMs
 ){
 	operation operation;
 	operation.operationType = EoperationType::RECEIVE;
+	operation.timeoutMs = timeoutMs;
 	operation.pData = pData;
 	operation.Size = size;
 	operation.free = false;
@@ -200,16 +205,18 @@ void OneWire::receive(
 void OneWire::transmitThenReceive(
 	const uint8_t* pData_tx, uint16_t txSize,
 	uint8_t* pData_rx, uint16_t rxSize,
-	dataCallback_f callbackFn
+	dataCallback_f callbackFn,
+	uint32_t timeoutMs
 ){
 	operation operation;
 	operation.operationType = EoperationType::TRANSMIT;
+	operation.timeoutMs = timeoutMs;
 	operation.pData = (uint8_t*) malloc(txSize);
 	memcpy(operation.pData, pData_tx, txSize);
 	operation.Size = txSize;
 	operation.free = true;
 	operations.push(operation);//transmit
-	receive(pData_rx, rxSize, callbackFn);
+	receive(pData_rx, rxSize, callbackFn, timeoutMs);
 }
 
 void OneWire::transaction(
@@ -221,14 +228,16 @@ void OneWire::transaction(
 	uint8_t* pData_rx,
 	uint16_t rxSize,
 	dataCallback_f callbackFn,
-	bool resetAfterTransaction
+	bool resetAfterTransaction,
+	uint32_t timeoutMs
 ){
 	uint8_t Size;
 	operation operation;
 
-	reset();
+	reset(timeoutMs);
 
 	operation.operationType = EoperationType::TRANSMIT;
+	operation.timeoutMs = timeoutMs;
 	if (address==NULL){
 		Size = 2;
 		if (txSize>0) Size += txSize;
@@ -249,8 +258,8 @@ void OneWire::transaction(
 	operation.free = true;
 	operations.push(operation);
 
-	if (rxSize>0) receive(pData_rx, rxSize, callbackFn);
-	if (resetAfterTransaction) reset();
+	if (rxSize>0) receive(pData_rx, rxSize, callbackFn, timeoutMs);
+	if (resetAfterTransaction) reset(timeoutMs);
 }       
 
 uint16_t OneWire::queueSize() {

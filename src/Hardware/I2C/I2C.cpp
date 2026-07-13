@@ -52,7 +52,7 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 				} else break;
 			}
 			case WORK: {
-				operationTimeout = millis()+4;
+				operationTimeout = millis() + currentOperation.timeoutMs;
 				operationState = WAITING;
 				if(currentOperation.operationType == EoperationType::TRANSMIT) {
 					if(HAL_I2C_Master_Transmit_DMA(
@@ -120,9 +120,10 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 		}
 	});
 }
-void I2C::transmit(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
+void I2C::transmit(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn, uint32_t timeoutMs) {
 	operation operation;
 	operation.operationType = EoperationType::TRANSMIT;
+	operation.timeoutMs = timeoutMs;
 	operation.DevAddress = DevAddress;
 	operation.pData = (uint8_t*) malloc(Size);
 	operation.free = true;
@@ -131,9 +132,10 @@ void I2C::transmit(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallb
 	operation.callback_f = callbackFn;
 	operations.push(operation);
 }
-void I2C::receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
+void I2C::receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn, uint32_t timeoutMs) {
     operation operation;
 	operation.operationType = EoperationType::RECEIVE;
+	operation.timeoutMs = timeoutMs;
 	operation.DevAddress = DevAddress;
 	operation.pData = pData;
 	operation.Size = Size;
@@ -141,9 +143,10 @@ void I2C::receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallba
 	operation.free = false;
 	operations.push(operation);
 }
-void I2C::readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
+void I2C::readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn, uint32_t timeoutMs) {
 	operation operation;
 	operation.operationType = EoperationType::MEM_READ;
+	operation.timeoutMs = timeoutMs;
 	operation.DevAddress = DevAddress;
 	operation.MemAddress = MemAddress;
 	operation.MemAddSize = MemAddSize;
@@ -153,9 +156,10 @@ void I2C::readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemA
 	operation.free = false;
 	operations.push(operation);
 }
-void I2C::writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
+void I2C::writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn, uint32_t timeoutMs) {
 	operation operation;
 	operation.operationType = EoperationType::MEM_WRITE;
+	operation.timeoutMs = timeoutMs;
 	operation.DevAddress = DevAddress;
 	operation.MemAddress = MemAddress;
 	operation.MemAddSize = MemAddSize;

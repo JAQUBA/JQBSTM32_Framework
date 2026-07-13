@@ -49,7 +49,7 @@ USB_CDC::USB_CDC() {
 				break;
 			}
 			case WORK: {
-				operationTimeout = millis()+50;
+				operationTimeout = millis() + currentOperation.timeoutMs;
 				if(currentOperation.operationType == EoperationType::SEND) {
 					uint8_t result = CDC_Transmit_FS(
 						currentOperation.pData,
@@ -107,9 +107,10 @@ void USB_CDC::txInterrupt(uint8_t *Buf, uint32_t *Len, uint8_t epnum) {
 void USB_CDC::onReceiveHandler(dataCallback_f onReceive) {fpOnReceive = onReceive;}
 void USB_CDC::onTransmitHandler(voidCallback_f onTransmit) {fpOnTransmit = onTransmit;}
 
-void USB_CDC::send(uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
+void USB_CDC::send(uint8_t *pData, uint16_t Size, dataCallback_f callbackFn, uint32_t timeoutMs) {
 	operation operation;
 	operation.operationType = EoperationType::SEND;
+	operation.timeoutMs = timeoutMs;
 	operation.pData = (uint8_t*) malloc(Size);
 	memcpy(operation.pData, pData, Size);
 	operation.Size = Size;
@@ -117,13 +118,13 @@ void USB_CDC::send(uint8_t *pData, uint16_t Size, dataCallback_f callbackFn) {
 	operations.push(operation);
 }
 
-void USB_CDC::send(const char *buf) {
+void USB_CDC::send(const char *buf, uint32_t timeoutMs) {
 	uint16_t Len = strlen(buf);
 	uint8_t Buf[Len];
 	for (int i = 0; i < Len; i++) {
 		Buf[i] = static_cast<uint8_t>(buf[i]);
 	}
-	send(Buf, Len);
+	send(Buf, Len, nullptr, timeoutMs);
 }
 
 uint16_t USB_CDC::queueSize() {

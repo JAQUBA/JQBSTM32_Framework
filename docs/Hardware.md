@@ -10,7 +10,7 @@ Each module is conditionally compiled based on STM32CubeMX HAL defines (`#ifdef 
 
 ### State Machine
 
-All bus-based modules (UART, I2C, SPI) use this operation lifecycle:
+All queued bus modules (UART, I2C, SPI, OneWire, USB CDC) use this operation lifecycle:
 
 ```
 IDLE → CHECK_FREE → WORK → WAITING → FINISH → CLEAR
@@ -31,7 +31,22 @@ Operations are queued in `std::queue<operation>` and processed sequentially. Dat
 
 ### Timeout Recovery
 
-Bus operations have a default **4ms timeout**. If the HAL peripheral doesn't respond within this window, the state machine transitions to FINISH to recover.
+Each queued operation stores its own timeout. The timeout begins when the operation enters `WORK`, so time spent waiting in the queue does not reduce its limit. The existing recovery behavior of each transport is preserved when its timeout expires.
+
+| Transport | Default timeout |
+|-----------|-----------------|
+| I2C       | 4 ms            |
+| SPI       | 4 ms            |
+| OneWire   | 40 ms           |
+| UART      | 200 ms          |
+| USB CDC   | 50 ms           |
+
+All queueing methods accept `uint32_t timeoutMs` as their last optional argument. This keeps existing calls source-compatible. When overriding the timeout while no completion callback is needed, pass `nullptr` before the timeout:
+
+```cpp
+uint8_t value = 0x01;
+sys_i2c.transmit(0x70, &value, 1, nullptr, 4U);
+```
 
 ---
 
@@ -112,7 +127,9 @@ UART(UART_HandleTypeDef *pHandler,
 static UART *getInstance(UART_HandleTypeDef *pHandler);
 
 // Transmit data asynchronously
-void transmit(uint8_t *pData, uint16_t Size, dataCallback_f callback = nullptr);
+void transmit(uint8_t *pData, uint16_t Size,
+              dataCallback_f callback = nullptr,
+              uint32_t timeoutMs = UART::DEFAULT_TIMEOUT_MS);
 
 // Register receive callback (called when data arrives)
 void onReceiveHandler(dataCallback_f onReceive);
@@ -167,15 +184,21 @@ static I2C *getInstance(I2C_HandleTypeDef *pHandler);
 
 // Direct transmit/receive
 void transmit(uint16_t devAddr, uint8_t *pData, uint16_t size,
-              dataCallback_f cb = nullptr);
+        dataCallback_f cb = nullptr,
+        uint32_t timeoutMs = I2C::DEFAULT_TIMEOUT_MS);
 void receive(uint16_t devAddr, uint8_t *pData, uint16_t size,
-             dataCallback_f cb = nullptr);
+          dataCallback_f cb = nullptr,
+          uint32_t timeoutMs = I2C::DEFAULT_TIMEOUT_MS);
 
 // Memory-mapped read/write (EEPROM, RTC, etc.)
 void readFromMemory(uint16_t devAddr, uint16_t memAddr, uint16_t memAddrSize,
-                    uint8_t *pData, uint16_t size, dataCallback_f cb = nullptr);
+              uint8_t *pData, uint16_t size,
+              dataCallback_f cb = nullptr,
+              uint32_t timeoutMs = I2C::DEFAULT_TIMEOUT_MS);
 void writeToMemory(uint16_t devAddr, uint16_t memAddr, uint16_t memAddrSize,
-                   uint8_t *pData, uint16_t size, dataCallback_f cb = nullptr);
+             uint8_t *pData, uint16_t size,
+             dataCallback_f cb = nullptr,
+             uint32_t timeoutMs = I2C::DEFAULT_TIMEOUT_MS);
 ```
 
 ### Memory Address Sizes
@@ -218,13 +241,18 @@ SPI(SPI_HandleTypeDef *pHandler);
 static SPI *getInstance(SPI_HandleTypeDef *pHandler);
 
 void transmit(GPIO_TypeDef *csPort, uint16_t csPin,
-              uint8_t *pData, uint16_t size, dataCallback_f cb = nullptr);
+              uint8_t *pData, uint16_t size,
+              dataCallback_f cb = nullptr,
+              uint32_t timeoutMs = SPI::DEFAULT_TIMEOUT_MS);
 void receive(GPIO_TypeDef *csPort, uint16_t csPin,
-             uint8_t *pData, uint16_t size, dataCallback_f cb = nullptr);
+             uint8_t *pData, uint16_t size,
+             dataCallback_f cb = nullptr,
+             uint32_t timeoutMs = SPI::DEFAULT_TIMEOUT_MS);
 void transmitThenReceive(GPIO_TypeDef *csPort, uint16_t csPin,
                          uint8_t *tx, uint16_t txSize,
                          uint8_t *rx, uint16_t rxSize,
-                         dataCallback_f cb = nullptr);
+                         dataCallback_f cb = nullptr,
+                         uint32_t timeoutMs = SPI::DEFAULT_TIMEOUT_MS);
 ```
 
 CS pin is automatically driven LOW during transfer, HIGH after completion.
@@ -378,15 +406,23 @@ Uses a hardware timer for precise µs-level bit-banging on a single GPIO pin.
 ### API
 
 ```cpp
-void reset();
-void transmit(const uint8_t *pData, uint16_t size, dataCallback_f cb = nullptr);
-void receive(uint8_t *pData, uint16_t size, dataCallback_f cb = nullptr);
+void reset(uint32_t timeoutMs = OneWire::DEFAULT_TIMEOUT_MS);
+void transmit(const uint8_t *pData, uint16_t size,
+              dataCallback_f cb = nullptr,
+              uint32_t timeoutMs = OneWire::DEFAULT_TIMEOUT_MS);
+void receive(uint8_t *pData, uint16_t size,
+             dataCallback_f cb = nullptr,
+             uint32_t timeoutMs = OneWire::DEFAULT_TIMEOUT_MS);
 void transmitThenReceive(const uint8_t *tx, uint16_t txSize,
-                         uint8_t *rx, uint16_t rxSize, dataCallback_f cb = nullptr);
-void completeTransaction(uint8_t romCmd, uint8_t *address, uint8_t funcCmd,
-                         uint8_t *tx, uint16_t txSize,
                          uint8_t *rx, uint16_t rxSize,
-                         dataCallback_f cb = nullptr, bool resetAfter = false);
+                         dataCallback_f cb = nullptr,
+                         uint32_t timeoutMs = OneWire::DEFAULT_TIMEOUT_MS);
+void transaction(uint8_t romCmd, const uint8_t *address, uint8_t funcCmd,
+                         const uint8_t *tx, uint16_t txSize,
+                         uint8_t *rx, uint16_t rxSize,
+                         dataCallback_f cb = nullptr,
+                         bool resetAfter = false,
+                         uint32_t timeoutMs = OneWire::DEFAULT_TIMEOUT_MS);
 ```
 
 ### Usage
@@ -492,8 +528,10 @@ Same API pattern as CAN but supports FD frames (up to 64 bytes).
 USB_CDC();
 static USB_CDC *getInstance();
 
-void send(uint8_t *pData, uint16_t Size, dataCallback_f cb = nullptr);
-void send(const char *buf);
+void send(uint8_t *pData, uint16_t Size,
+          dataCallback_f cb = nullptr,
+          uint32_t timeoutMs = USB_CDC::DEFAULT_TIMEOUT_MS);
+void send(const char *buf, uint32_t timeoutMs = USB_CDC::DEFAULT_TIMEOUT_MS);
 void onReceiveHandler(dataCallback_f onReceive);
 void onTransmitHandler(voidCallback_f onTransmit);
 uint16_t queueSize();

@@ -53,7 +53,7 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 				} else break;
 			}
 			case WORK: {
-				operationTimeout = millis()+4;
+				operationTimeout = millis() + currentOperation.timeoutMs;
 				HAL_GPIO_WritePin(currentOperation._CSPort, currentOperation._CSPin, GPIO_PIN_RESET);
 				operationState = WAITING;
 				if(currentOperation.operationType == EoperationType::TRANSMIT) {
@@ -113,10 +113,12 @@ SPI::SPI(SPI_HandleTypeDef *pHandler) {
 void SPI::transmit(
 	GPIO_TypeDef* CSPort, uint16_t CSPin, 
 	uint8_t *pData, uint16_t Size, 
-	dataCallback_f callbackFn
+	dataCallback_f callbackFn,
+	uint32_t timeoutMs
 ) {
 	operation operation;
 	operation.operationType = EoperationType::TRANSMIT;
+	operation.timeoutMs = timeoutMs;
 	operation._CSPort = CSPort;
     operation._CSPin = CSPin;
 	operation.pData = (uint8_t*) malloc(Size);
@@ -129,10 +131,12 @@ void SPI::transmit(
 void SPI::receive(
 	GPIO_TypeDef* CSPort, uint16_t CSPin, 
 	uint8_t *pData, uint16_t Size, 
-	dataCallback_f callbackFn
+	dataCallback_f callbackFn,
+	uint32_t timeoutMs
 ) {
     operation operation;
 	operation.operationType = EoperationType::RECEIVE;
+	operation.timeoutMs = timeoutMs;
     operation._CSPort = CSPort;
     operation._CSPin = CSPin;
 	operation.pData = pData;
@@ -145,10 +149,12 @@ void SPI::transmitThenReceive(
 	GPIO_TypeDef* CSPort, uint16_t CSPin,
 	uint8_t *pData_tx, uint16_t txSize,
 	uint8_t *pData_rx, uint16_t rxSize,
-	dataCallback_f callbackFn
+	dataCallback_f callbackFn,
+	uint32_t timeoutMs
 ) {
 	operation operation;
 	operation.operationType = EoperationType::TRANSMIT;
+	operation.timeoutMs = timeoutMs;
 	operation._CSPort = CSPort;
     operation._CSPin = CSPin;
 	operation._pinReset = false;
@@ -157,7 +163,7 @@ void SPI::transmitThenReceive(
 	operation.Size = txSize;
 	operation.free = true;
 	operations.push(operation);
-	receive(CSPort, CSPin, pData_rx, rxSize, callbackFn);
+	receive(CSPort, CSPin, pData_rx, rxSize, callbackFn, timeoutMs);
 }
 void SPI::transmitReceive(
 	GPIO_TypeDef* CSPort, uint16_t CSPin,

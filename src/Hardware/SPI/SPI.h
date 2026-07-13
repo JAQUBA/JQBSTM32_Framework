@@ -35,6 +35,8 @@
  */
 class SPI : public IBus {
     public:
+        static constexpr uint32_t DEFAULT_TIMEOUT_MS = 4U;
+
         /**
          * @brief SPI constructor
          * @details Initializes SPI instance with the specified HAL handler
@@ -58,11 +60,13 @@ class SPI : public IBus {
          * @param pData Pointer to data buffer to transmit
          * @param Size Number of bytes to transmit
          * @param callbackFn Optional callback function called after transmission (default: nullptr)
+         * @param timeoutMs Maximum duration of this operation after it starts (default: 4 ms)
          */
         void transmit(
             GPIO_TypeDef* CSPort, uint16_t CSPin,
             uint8_t *pData, uint16_t Size,
-            dataCallback_f callbackFn = nullptr
+            dataCallback_f callbackFn = nullptr,
+            uint32_t timeoutMs = DEFAULT_TIMEOUT_MS
         );
         
         /**
@@ -73,11 +77,13 @@ class SPI : public IBus {
          * @param pData Pointer to buffer for received data
          * @param Size Number of bytes to receive
          * @param callbackFn Optional callback function called after reception (default: nullptr)
+         * @param timeoutMs Maximum duration of this operation after it starts (default: 4 ms)
          */
         void receive(
             GPIO_TypeDef* CSPort, uint16_t CSPin,
             uint8_t *pData, uint16_t Size,
-            dataCallback_f callbackFn = nullptr
+            dataCallback_f callbackFn = nullptr,
+            uint32_t timeoutMs = DEFAULT_TIMEOUT_MS
         );
         
         /**
@@ -90,11 +96,13 @@ class SPI : public IBus {
          * @param pData_rx Pointer to receive data buffer
          * @param rxSize Number of bytes to receive
          * @param callbackFn Optional callback function called after operation (default: nullptr)
+         * @param timeoutMs Maximum duration of each queued operation after it starts (default: 4 ms)
          */
         void transmitThenReceive(GPIO_TypeDef* CSPort, uint16_t CSPin,
             uint8_t *pData_tx, uint16_t txSize,
             uint8_t *pData_rx, uint16_t rxSize,
-            dataCallback_f callbackFn = nullptr
+            dataCallback_f callbackFn = nullptr,
+            uint32_t timeoutMs = DEFAULT_TIMEOUT_MS
         );
         
         /**
@@ -177,6 +185,7 @@ class SPI : public IBus {
             bool            _pinReset = true; ///< CS pin reset flag
             uint8_t         *pData;       ///< Pointer to data buffer
             uint16_t        Size;         ///< Size of data
+            uint32_t        timeoutMs = DEFAULT_TIMEOUT_MS; ///< Timeout duration in ms
             bool            free = false; ///< Operation slot availability flag
             
             dataCallback_f  callback_f = nullptr; ///< Callback function

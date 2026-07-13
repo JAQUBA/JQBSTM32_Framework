@@ -30,6 +30,8 @@
  */
 class USB_CDC : public IBus {
     public:
+        static constexpr uint32_t DEFAULT_TIMEOUT_MS = 50U;
+
         /**
          * @brief USB_CDC constructor
          * @details Initializes USB CDC communication interface
@@ -49,15 +51,22 @@ class USB_CDC : public IBus {
          * @param pData Pointer to data buffer to send
          * @param Size Number of bytes to send
          * @param callbackFn Optional callback function called after transmission (default: nullptr)
+         * @param timeoutMs Maximum duration of this operation after it starts (default: 50 ms)
          */
-        void send(uint8_t *pData, uint16_t Size, dataCallback_f callbackFn = nullptr);
+        void send(
+            uint8_t *pData,
+            uint16_t Size,
+            dataCallback_f callbackFn = nullptr,
+            uint32_t timeoutMs = DEFAULT_TIMEOUT_MS
+        );
         
         /**
          * @brief Send string via USB CDC
          * @details Transmits null-terminated string through USB virtual serial port
          * @param buf Pointer to null-terminated string buffer
+         * @param timeoutMs Maximum duration of this operation after it starts (default: 50 ms)
          */
-        void send(const char *buf);
+        void send(const char *buf, uint32_t timeoutMs = DEFAULT_TIMEOUT_MS);
 
         /**
          * @brief Set receive callback handler
@@ -124,6 +133,7 @@ class USB_CDC : public IBus {
             uint8_t *pData;              ///< Pointer to data buffer
             uint16_t Size;               ///< Size of data
             dataCallback_f callback_f;   ///< Callback function
+            uint32_t timeoutMs = DEFAULT_TIMEOUT_MS; ///< Timeout duration in ms
             bool free = true;            ///< Operation slot availability flag
         } currentOperation;
         

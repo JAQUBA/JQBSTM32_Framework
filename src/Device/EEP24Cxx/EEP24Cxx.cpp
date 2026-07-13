@@ -33,11 +33,13 @@ EEP24Cxx::EEP24Cxx(
     I2C *pInstance,
     const DeviceConfig &config,
     uint16_t DevAddress,
-    uint32_t BaseAddress
+    uint32_t BaseAddress,
+    uint32_t timeoutMs
 ) {
     _pInstance = pInstance;
     _DevAddress = DevAddress;
     _BaseAddress = BaseAddress;
+    _timeoutMs = timeoutMs;
 
     _sizeBytes = config.sizeBytes;
     _pageSize = config.pageSize;
@@ -106,7 +108,7 @@ void EEP24Cxx::readFromMemory(
             chunk = blockRemaining;
         }
 
-        _pInstance->readFromMemory(devAddress, internalAddress, _memAddSize, &pData[transferred], chunk);
+        _pInstance->readFromMemory(devAddress, internalAddress, _memAddSize, &pData[transferred], chunk, nullptr, _timeoutMs);
         transferred = (uint16_t)(transferred + chunk);
     }
 }
@@ -137,7 +139,7 @@ void EEP24Cxx::writeToMemory(
             chunk = blockRemaining;
         }
 
-        _pInstance->writeToMemory(devAddress, internalAddress, _memAddSize, &pData[transferred], chunk);
+        _pInstance->writeToMemory(devAddress, internalAddress, _memAddSize, &pData[transferred], chunk, nullptr, _timeoutMs);
         transferred = (uint16_t)(transferred + chunk);
     }
 }

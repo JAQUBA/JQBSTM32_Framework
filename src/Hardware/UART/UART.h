@@ -35,6 +35,8 @@
  */
 class UART : public IBus {
     public:
+        static constexpr uint32_t DEFAULT_TIMEOUT_MS = 200U;
+
         /**
          * @brief UART constructor
          * @details Initializes UART instance with optional direction control for RS485
@@ -76,10 +78,12 @@ class UART : public IBus {
          * @param pData Pointer to data buffer to transmit
          * @param Size Number of bytes to transmit
          * @param callbackFn Optional callback function called after transmission (default: nullptr)
+         * @param timeoutMs Maximum duration of this operation after it starts (default: 200 ms)
          */
         void transmit(
             uint8_t *pData, uint16_t Size,
-            dataCallback_f callbackFn = nullptr
+            dataCallback_f callbackFn = nullptr,
+            uint32_t timeoutMs = DEFAULT_TIMEOUT_MS
         );
         
         /**
@@ -134,6 +138,7 @@ class UART : public IBus {
             uint8_t *pData;              ///< Pointer to data buffer
             uint16_t Size;               ///< Size of data
             dataCallback_f callback_f;   ///< Callback function
+            uint32_t timeoutMs = DEFAULT_TIMEOUT_MS; ///< Timeout duration in ms
             bool free = true;            ///< Operation slot availability flag
         } currentOperation;
         
