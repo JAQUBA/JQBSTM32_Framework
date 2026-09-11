@@ -37,6 +37,15 @@
 #define LOW GPIO_PIN_RESET ///< Logic low state
 
 /**
+ * @brief GPIO Pin structure for pairing port and pin
+ * @details Structure containing GPIO port and pin information for easy GPIO handling
+ */
+struct GPIO_Pin {
+    GPIO_TypeDef* port; ///< GPIO port pointer
+    uint16_t pin;       ///< GPIO pin number
+};
+
+/**
  * @brief Hardware GPIO abstraction class
  * @details Provides high-level GPIO operations including setup, read, write, and interrupt handling
  */
