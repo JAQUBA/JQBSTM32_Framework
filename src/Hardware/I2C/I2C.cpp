@@ -28,11 +28,11 @@ I2C *I2C::getInstance(I2C_HandleTypeDef *pHandler) {
     }
     return nullptr;
 }
-void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c) { if (I2C::getInstance(hi2c) != nullptr) I2C::getInstance(hi2c)->rxInterrupt(); }
-void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c) { if (I2C::getInstance(hi2c) != nullptr) I2C::getInstance(hi2c)->txInterrupt(); }
-void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c) { if (I2C::getInstance(hi2c) != nullptr) I2C::getInstance(hi2c)->rxInterrupt(); }
-void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *hi2c) { if (I2C::getInstance(hi2c) != nullptr) I2C::getInstance(hi2c)->txInterrupt(); }
-void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) { if (I2C::getInstance(hi2c) != nullptr) I2C::getInstance(hi2c)->errorInterrupt(); }
+void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c) { I2C *instance = I2C::getInstance(hi2c); if (instance != nullptr) instance->rxInterrupt(); }
+void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c) { I2C *instance = I2C::getInstance(hi2c); if (instance != nullptr) instance->txInterrupt(); }
+void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c) { I2C *instance = I2C::getInstance(hi2c); if (instance != nullptr) instance->rxInterrupt(); }
+void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *hi2c) { I2C *instance = I2C::getInstance(hi2c); if (instance != nullptr) instance->txInterrupt(); }
+void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) { I2C *instance = I2C::getInstance(hi2c); if (instance != nullptr) instance->errorInterrupt(); }
 void I2C::txInterrupt() {if(operationState == WAITING) {operationState = FINISH;}}
 void I2C::rxInterrupt() {if(operationState == WAITING) {operationState = FINISH;}}
 void I2C::errorInterrupt() {if (HAL_I2C_GetError(_pHandler) > HAL_I2C_ERROR_NONE) {operationState = FINISH;}}

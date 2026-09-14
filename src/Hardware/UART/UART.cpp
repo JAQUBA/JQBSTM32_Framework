@@ -28,9 +28,9 @@ UART *UART::getInstance(UART_HandleTypeDef *pHandler) {
     }
     return nullptr;
 }
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) { if (UART::getInstance(huart) != nullptr) UART::getInstance(huart)->rxInterrupt(); }
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) { if (UART::getInstance(huart) != nullptr) UART::getInstance(huart)->txInterrupt(); }
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) { if (UART::getInstance(huart) != nullptr) UART::getInstance(huart)->errorInterrupt(); }
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) { UART *instance = UART::getInstance(huart); if (instance != nullptr) instance->rxInterrupt(); }
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) { UART *instance = UART::getInstance(huart); if (instance != nullptr) instance->txInterrupt(); }
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) { UART *instance = UART::getInstance(huart); if (instance != nullptr) instance->errorInterrupt(); }
 UART::UART(UART_HandleTypeDef *pHandler, GPIO_TypeDef *dirPort, uint16_t dirPin) {
     _pHandler = pHandler;
 	if (_pHandler == nullptr) {

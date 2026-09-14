@@ -28,7 +28,7 @@ void HardwareGPIO::_interruptCallback(uint16_t GPIO_Pin) {
     uint32_t currentTime = millis();
     
     for (uint8_t i = 0; i < MAX_GPIO_INTERRUPTS; i++) {
-        if (interrupts[i].active && interrupts[i].GPIO_Pin == GPIO_Pin) {
+        if (interrupts[i].active && interrupts[i].GPIOx != nullptr && interrupts[i].GPIO_Pin == GPIO_Pin) {
             if (!matchesInterruptMode(interrupts[i])) {
                 continue;
             }
@@ -45,6 +45,12 @@ void HardwareGPIO::_interruptCallback(uint16_t GPIO_Pin) {
 }
 
 bool HardwareGPIO::attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidCallback_f callback, uint8_t mode) {
+    for (uint8_t i = 0; i < MAX_GPIO_INTERRUPTS; i++) {
+        if (interrupts[i].active && interrupts[i].GPIO_Pin == GPIO_Pin && interrupts[i].GPIOx != GPIOx) {
+            return false;
+        }
+    }
+
     // Check if interrupt already exists for this pin
     uint8_t existingSlot = findInterruptSlot(GPIOx, GPIO_Pin);
     if (existingSlot < MAX_GPIO_INTERRUPTS) {
@@ -82,7 +88,10 @@ bool HardwareGPIO::detachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
         interrupts[slot].GPIOx = nullptr;
         interrupts[slot].GPIO_Pin = 0;
         interrupts[slot].callback = nullptr;
+        interrupts[slot].triggerMode = CHANGE;
         interrupts[slot].lastState = GPIO_PIN_RESET;
+        interrupts[slot].triggerCount = 0;
+        interrupts[slot].lastTriggerTime = 0;
         interruptCount--;
         return true;
     }

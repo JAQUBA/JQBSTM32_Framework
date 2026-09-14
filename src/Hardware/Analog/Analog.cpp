@@ -156,10 +156,14 @@ void Analog::dispatchPendingConversions(taskStruct *task) {
 }
 
 void Analog::notifyPendingConversions() {
-    while (_pendingCount > 0U) {
+    while (true) {
         uint16_t sampleBuffer[ANALOG_MAX_CHANNELS];
 
 		__disable_irq();
+        if (_pendingCount == 0U) {
+			__enable_irq();
+            break;
+        }
         const uint8_t sampleIndex = _pendingHead;
         for (uint8_t channel = 0U; channel < _channelCount; channel++) {
             sampleBuffer[channel] = _pendingBuffers[sampleIndex][channel];
