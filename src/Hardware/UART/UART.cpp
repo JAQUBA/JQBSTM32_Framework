@@ -49,17 +49,30 @@ UART::UART(UART_HandleTypeDef *pHandler, GPIO_TypeDef *dirPort, uint16_t dirPin)
     HAL_UART_Receive_IT(_pHandler, &Received_u1, 1);
 
     addTaskMain(taskCallback {
+        uint8_t overflowSnapshot[UART_RX_BUFFER_SIZE];
+        uint8_t receiveSnapshot[UART_RX_BUFFER_SIZE];
+        uint16_t overflowLength = 0U;
+        uint16_t receiveLength = 0U;
+        const uint32_t currentTime = millis();
+
+		__disable_irq();
         if (overflowPending) {
-            if (fpOnReceive) fpOnReceive(overflowBuffer, overflowSize);
+            overflowLength = overflowSize;
+            memcpy(overflowSnapshot, overflowBuffer, overflowLength);
             overflowPending = false;
-            overflowSize = 0;
+            overflowSize = 0U;
         }
 
-        if(received && millis() > lastReceivedByte + 2) {
-            if(fpOnReceive) fpOnReceive(rx_buffer, rx_data_index);
-            rx_data_index = 0;
+        if(received && currentTime > lastReceivedByte + 2U) {
+            receiveLength = rx_data_index;
+            memcpy(receiveSnapshot, rx_buffer, receiveLength);
+            rx_data_index = 0U;
             received = false;
         }
+		__enable_irq();
+
+        if (overflowLength > 0U && fpOnReceive) fpOnReceive(overflowSnapshot, overflowLength);
+        if (receiveLength > 0U && fpOnReceive) fpOnReceive(receiveSnapshot, receiveLength);
 
         switch(operationState) {
 			case IDLE: {

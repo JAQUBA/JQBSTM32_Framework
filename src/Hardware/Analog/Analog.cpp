@@ -22,7 +22,6 @@
 
 Analog* _Analog_instances[ANALOG_MAX_INSTANCES];
 uint8_t _Analog_instancesNum = 0;
-static volatile bool _analogDispatchTaskRegistered = false;
 
 // HAL callback functions
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
@@ -101,17 +100,7 @@ Analog::Analog(ADC_HandleTypeDef *pHandler, uint16_t vref) :
         Error_Handler();
     }
 
-    bool registerDispatchTask = false;
-    __disable_irq();
-    if (!_analogDispatchTaskRegistered) {
-        _analogDispatchTaskRegistered = true;
-        registerDispatchTask = true;
-    }
-    __enable_irq();
-
-    if (registerDispatchTask) {
-        addTaskMain(Analog::dispatchPendingConversions);
-    }
+    addTaskMain(Analog::dispatchPendingConversions);
 }
 Analog::~Analog() {
     if (_pHandler != nullptr) {
@@ -181,9 +170,13 @@ void Analog::notifyPendingConversions() {
         _pendingCount--;
 		__enable_irq();
 
+        __disable_irq();
         InterruptListener* listener = _interruptListeners;
+        __enable_irq();
         while (listener != nullptr) {
+            __disable_irq();
             InterruptListener* next = listener->_next;
+            __enable_irq();
             if (listener->_callback != nullptr) {
                 listener->_callback(listener, sampleBuffer);
             }
@@ -197,16 +190,19 @@ bool Analog::attachInterrupt(InterruptListener* listener) {
         return false;
     }
 
+    __disable_irq();
     for (InterruptListener* current = _interruptListeners;
          current != nullptr;
          current = current->_next) {
         if (current == listener) {
+            __enable_irq();
             return true;
         }
     }
 
     listener->_next = _interruptListeners;
     _interruptListeners = listener;
+    __enable_irq();
     return true;
 }
 
@@ -215,22 +211,27 @@ bool Analog::detachInterrupt(InterruptListener* listener) {
         return false;
     }
 
+    __disable_irq();
     InterruptListener** current = &_interruptListeners;
     while (*current != nullptr) {
         if (*current == listener) {
             *current = listener->_next;
             listener->_next = nullptr;
+            __enable_irq();
             return true;
         }
         current = &((*current)->_next);
     }
 
+    __enable_irq();
     return false;
 }
 
 void Analog::clearInterrupts() {
+    __disable_irq();
     InterruptListener* listener = _interruptListeners;
     _interruptListeners = nullptr;
+    __enable_irq();
 
     while (listener != nullptr) {
         InterruptListener* next = listener->_next;

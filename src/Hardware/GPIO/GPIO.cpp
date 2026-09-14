@@ -86,6 +86,35 @@ static bool matchesExtiSource(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
     return configuredPort == portIndex;
 }
 
+static uint8_t getExtiTriggerMask(uint16_t GPIO_Pin) {
+    uint8_t triggerMask = 0U;
+
+#if defined(EXTI)
+    #if defined(EXTI_RTSR1_RT0)
+    const uint32_t risingTriggerRegister = EXTI->RTSR1;
+    #else
+    const uint32_t risingTriggerRegister = EXTI->RTSR;
+    #endif
+
+    #if defined(EXTI_FTSR1_FT0)
+    const uint32_t fallingTriggerRegister = EXTI->FTSR1;
+    #else
+    const uint32_t fallingTriggerRegister = EXTI->FTSR;
+    #endif
+
+    if ((risingTriggerRegister & GPIO_Pin) != 0U) {
+        triggerMask |= RISING;
+    }
+    if ((fallingTriggerRegister & GPIO_Pin) != 0U) {
+        triggerMask |= FALLING;
+    }
+#else
+    triggerMask = CHANGE;
+#endif
+
+    return triggerMask;
+}
+
 void HardwareGPIO::_interruptCallback(uint16_t GPIO_Pin) {
     uint32_t currentTime = millis();
     
@@ -110,6 +139,15 @@ void HardwareGPIO::_interruptCallback(uint16_t GPIO_Pin) {
 }
 
 bool HardwareGPIO::attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidCallback_f callback, uint8_t mode) {
+    const uint8_t extiTriggerMask = getExtiTriggerMask(GPIO_Pin);
+    if (mode == RISING || mode == FALLING) {
+        if (extiTriggerMask != mode) {
+            return false;
+        }
+    } else if (extiTriggerMask == 0U) {
+        return false;
+    }
+
     // Check if interrupt already exists for this pin
     uint8_t existingSlot = findInterruptSlot(GPIOx, GPIO_Pin);
     if (existingSlot < MAX_GPIO_INTERRUPTS) {
@@ -181,18 +219,16 @@ uint32_t HardwareGPIO::getInterruptCount(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
 }
 
 bool HardwareGPIO::matchesInterruptMode(interrupt& interruptConfig) {
-    const GPIO_PinState previousState = interruptConfig.lastState;
-    const GPIO_PinState currentState = HAL_GPIO_ReadPin(interruptConfig.GPIOx, interruptConfig.GPIO_Pin);
-    interruptConfig.lastState = currentState;
+    const uint8_t extiTriggerMask = getExtiTriggerMask(interruptConfig.GPIO_Pin);
 
     switch (interruptConfig.triggerMode) {
         case RISING:
-            return previousState == GPIO_PIN_RESET && currentState == GPIO_PIN_SET;
+            return extiTriggerMask == RISING;
         case FALLING:
-            return previousState == GPIO_PIN_SET && currentState == GPIO_PIN_RESET;
+            return extiTriggerMask == FALLING;
         case CHANGE:
         default:
-            return previousState != currentState;
+            return extiTriggerMask != 0U;
     }
 }
 
