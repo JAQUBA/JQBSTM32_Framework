@@ -135,7 +135,9 @@ void HAL_IncTick(void) {
 	// Optimize interrupt handler - do minimal work
 	interruptTasks.poll();
 	interruptTasks.execute();
-	_mainTaskTicks++;
+	if (_mainTaskTicks != UINT32_MAX) {
+		_mainTaskTicks++;
+	}
 }
 
 // Enhanced map function with bounds checking and overflow protection

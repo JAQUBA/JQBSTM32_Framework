@@ -24,11 +24,76 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     GPIO._interruptCallback(GPIO_Pin);
 }
 
+static uint8_t getPortIndex(GPIO_TypeDef* GPIOx) {
+    if (GPIOx == nullptr) {
+        return 0xFFU;
+    }
+#ifdef GPIOA
+    if (GPIOx == GPIOA) return 0U;
+#endif
+#ifdef GPIOB
+    if (GPIOx == GPIOB) return 1U;
+#endif
+#ifdef GPIOC
+    if (GPIOx == GPIOC) return 2U;
+#endif
+#ifdef GPIOD
+    if (GPIOx == GPIOD) return 3U;
+#endif
+#ifdef GPIOE
+    if (GPIOx == GPIOE) return 4U;
+#endif
+#ifdef GPIOF
+    if (GPIOx == GPIOF) return 5U;
+#endif
+#ifdef GPIOG
+    if (GPIOx == GPIOG) return 6U;
+#endif
+#ifdef GPIOH
+    if (GPIOx == GPIOH) return 7U;
+#endif
+#ifdef GPIOI
+    if (GPIOx == GPIOI) return 8U;
+#endif
+    return 0xFFU;
+}
+
+static uint8_t getPinIndex(uint16_t GPIO_Pin) {
+    for (uint8_t i = 0U; i < 16U; i++) {
+        if (GPIO_Pin == (uint16_t)(1U << i)) {
+            return i;
+        }
+    }
+    return 0xFFU;
+}
+
+static bool matchesExtiSource(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
+    const uint8_t pinIndex = getPinIndex(GPIO_Pin);
+    const uint8_t portIndex = getPortIndex(GPIOx);
+    if (pinIndex >= 16U || portIndex == 0xFFU) {
+        return false;
+    }
+
+#if defined(SYSCFG)
+    const uint32_t extiConfig = SYSCFG->EXTICR[pinIndex / 4U];
+#elif defined(AFIO)
+    const uint32_t extiConfig = AFIO->EXTICR[pinIndex / 4U];
+#else
+    return true;
+#endif
+
+    const uint32_t configuredPort = (extiConfig >> ((pinIndex % 4U) * 4U)) & 0x0FU;
+    return configuredPort == portIndex;
+}
+
 void HardwareGPIO::_interruptCallback(uint16_t GPIO_Pin) {
     uint32_t currentTime = millis();
     
     for (uint8_t i = 0; i < MAX_GPIO_INTERRUPTS; i++) {
-        if (interrupts[i].active && interrupts[i].GPIOx != nullptr && interrupts[i].GPIO_Pin == GPIO_Pin) {
+        if (interrupts[i].active &&
+            interrupts[i].GPIOx != nullptr &&
+            interrupts[i].GPIO_Pin == GPIO_Pin &&
+            matchesExtiSource(interrupts[i].GPIOx, interrupts[i].GPIO_Pin)) {
             if (!matchesInterruptMode(interrupts[i])) {
                 continue;
             }
@@ -45,12 +110,6 @@ void HardwareGPIO::_interruptCallback(uint16_t GPIO_Pin) {
 }
 
 bool HardwareGPIO::attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidCallback_f callback, uint8_t mode) {
-    for (uint8_t i = 0; i < MAX_GPIO_INTERRUPTS; i++) {
-        if (interrupts[i].active && interrupts[i].GPIO_Pin == GPIO_Pin && interrupts[i].GPIOx != GPIOx) {
-            return false;
-        }
-    }
-
     // Check if interrupt already exists for this pin
     uint8_t existingSlot = findInterruptSlot(GPIOx, GPIO_Pin);
     if (existingSlot < MAX_GPIO_INTERRUPTS) {
@@ -59,6 +118,18 @@ bool HardwareGPIO::attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidC
         interrupts[existingSlot].triggerMode = mode;
         interrupts[existingSlot].lastState = HAL_GPIO_ReadPin(GPIOx, GPIO_Pin);
         return true;
+    }
+
+    for (uint8_t i = 0; i < MAX_GPIO_INTERRUPTS; i++) {
+        if (interrupts[i].active && interrupts[i].GPIO_Pin == GPIO_Pin) {
+            interrupts[i].GPIOx = GPIOx;
+            interrupts[i].callback = callback;
+            interrupts[i].triggerMode = mode;
+            interrupts[i].lastState = HAL_GPIO_ReadPin(GPIOx, GPIO_Pin);
+            interrupts[i].triggerCount = 0;
+            interrupts[i].lastTriggerTime = millis();
+            return true;
+        }
     }
     
     // Find free slot for new interrupt

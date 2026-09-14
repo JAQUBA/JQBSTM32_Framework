@@ -22,7 +22,7 @@
 
 Analog* _Analog_instances[ANALOG_MAX_INSTANCES];
 uint8_t _Analog_instancesNum = 0;
-static bool _analogDispatchTaskRegistered = false;
+static volatile bool _analogDispatchTaskRegistered = false;
 
 // HAL callback functions
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
@@ -101,9 +101,16 @@ Analog::Analog(ADC_HandleTypeDef *pHandler, uint16_t vref) :
         Error_Handler();
     }
 
+    bool registerDispatchTask = false;
+    __disable_irq();
     if (!_analogDispatchTaskRegistered) {
-        addTaskMain(Analog::dispatchPendingConversions);
         _analogDispatchTaskRegistered = true;
+        registerDispatchTask = true;
+    }
+    __enable_irq();
+
+    if (registerDispatchTask) {
+        addTaskMain(Analog::dispatchPendingConversions);
     }
 }
 Analog::~Analog() {
