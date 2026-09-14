@@ -139,6 +139,7 @@ void Analog::convCpltCallback() {
         return;
     }
 
+    const uint8_t channelCount = (_channelCount > ANALOG_MAX_CHANNELS) ? ANALOG_MAX_CHANNELS : _channelCount;
     uint8_t targetIndex = _pendingTail;
     if (_pendingCount >= ANALOG_PENDING_CONVERSIONS) {
         _pendingHead = (uint8_t)((_pendingHead + 1U) % ANALOG_PENDING_CONVERSIONS);
@@ -147,7 +148,7 @@ void Analog::convCpltCallback() {
         _pendingCount++;
     }
 
-    for (uint8_t channel = 0U; channel < _channelCount; channel++) {
+    for (uint8_t channel = 0U; channel < channelCount; channel++) {
         _pendingBuffers[targetIndex][channel] = _adcBuffer[channel];
     }
     _pendingTail = (uint8_t)((targetIndex + 1U) % ANALOG_PENDING_CONVERSIONS);
@@ -163,6 +164,7 @@ void Analog::dispatchPendingConversions(taskStruct *task) {
 }
 
 void Analog::notifyPendingConversions() {
+    const uint8_t channelCount = (_channelCount > ANALOG_MAX_CHANNELS) ? ANALOG_MAX_CHANNELS : _channelCount;
     while (true) {
         uint16_t sampleBuffer[ANALOG_MAX_CHANNELS];
 
@@ -172,7 +174,7 @@ void Analog::notifyPendingConversions() {
             break;
         }
         const uint8_t sampleIndex = _pendingHead;
-        for (uint8_t channel = 0U; channel < _channelCount; channel++) {
+        for (uint8_t channel = 0U; channel < channelCount; channel++) {
             sampleBuffer[channel] = _pendingBuffers[sampleIndex][channel];
         }
         _pendingHead = (uint8_t)((_pendingHead + 1U) % ANALOG_PENDING_CONVERSIONS);

@@ -86,6 +86,36 @@ static bool matchesExtiSource(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
     return configuredPort == portIndex;
 }
 
+static uint8_t getExtiTriggerMask(uint16_t GPIO_Pin) {
+    uint8_t triggerMask = 0U;
+
+#if defined(EXTI)
+    uint32_t risingTriggerRegister = 0U;
+    uint32_t fallingTriggerRegister = 0U;
+
+    #if defined(EXTI_RTSR1_RT0)
+    risingTriggerRegister = EXTI->RTSR1;
+    #else
+    risingTriggerRegister = EXTI->RTSR;
+    #endif
+
+    #if defined(EXTI_FTSR1_FT0)
+    fallingTriggerRegister = EXTI->FTSR1;
+    #else
+    fallingTriggerRegister = EXTI->FTSR;
+    #endif
+
+    if ((risingTriggerRegister & GPIO_Pin) != 0U) {
+        triggerMask |= RISING;
+    }
+    if ((fallingTriggerRegister & GPIO_Pin) != 0U) {
+        triggerMask |= FALLING;
+    }
+#endif
+
+    return triggerMask;
+}
+
 void HardwareGPIO::_interruptCallback(uint16_t GPIO_Pin) {
     uint32_t currentTime = millis();
     
@@ -122,13 +152,16 @@ bool HardwareGPIO::attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidC
 
     for (uint8_t i = 0; i < MAX_GPIO_INTERRUPTS; i++) {
         if (interrupts[i].active && interrupts[i].GPIO_Pin == GPIO_Pin) {
-            interrupts[i].GPIOx = GPIOx;
-            interrupts[i].callback = callback;
-            interrupts[i].triggerMode = mode;
-            interrupts[i].lastState = HAL_GPIO_ReadPin(GPIOx, GPIO_Pin);
-            interrupts[i].triggerCount = 0;
-            interrupts[i].lastTriggerTime = millis();
-            return true;
+            if (matchesExtiSource(GPIOx, GPIO_Pin)) {
+                interrupts[i].GPIOx = GPIOx;
+                interrupts[i].callback = callback;
+                interrupts[i].triggerMode = mode;
+                interrupts[i].lastState = HAL_GPIO_ReadPin(GPIOx, GPIO_Pin);
+                interrupts[i].triggerCount = 0;
+                interrupts[i].lastTriggerTime = millis();
+                return true;
+            }
+            return false;
         }
     }
     
@@ -178,18 +211,16 @@ uint32_t HardwareGPIO::getInterruptCount(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
 }
 
 bool HardwareGPIO::matchesInterruptMode(interrupt& interruptConfig) {
-    const GPIO_PinState previousState = interruptConfig.lastState;
-    const GPIO_PinState currentState = HAL_GPIO_ReadPin(interruptConfig.GPIOx, interruptConfig.GPIO_Pin);
-    interruptConfig.lastState = currentState;
+    const uint8_t extiTriggerMask = getExtiTriggerMask(interruptConfig.GPIO_Pin);
 
     switch (interruptConfig.triggerMode) {
         case RISING:
-            return previousState == GPIO_PIN_RESET && currentState == GPIO_PIN_SET;
+            return extiTriggerMask == RISING;
         case FALLING:
-            return previousState == GPIO_PIN_SET && currentState == GPIO_PIN_RESET;
+            return extiTriggerMask == FALLING;
         case CHANGE:
         default:
-            return previousState != currentState;
+            return extiTriggerMask != 0U;
     }
 }
 

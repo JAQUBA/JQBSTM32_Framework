@@ -30,6 +30,10 @@
 #define UART_RX_BUFFER_SIZE 256
 #endif
 
+#if UART_RX_BUFFER_SIZE > UINT16_MAX
+#error "UART_RX_BUFFER_SIZE must be less than or equal to UINT16_MAX"
+#endif
+
 #include "../../Interface/IBus.h"
 
 /**
