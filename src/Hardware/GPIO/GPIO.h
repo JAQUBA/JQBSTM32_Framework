@@ -36,6 +36,12 @@
 #define HIGH GPIO_PIN_SET ///< Logic high state
 #define LOW GPIO_PIN_RESET ///< Logic low state
 
+enum InterruptTriggerMode {
+    CHANGE = 0,
+    RISING = 1,
+    FALLING = 2
+};
+
 /**
  * @brief GPIO Pin structure for pairing port and pin
  * @details Structure containing GPIO port and pin information for easy GPIO handling
@@ -113,13 +119,15 @@ class HardwareGPIO {
 
     /**
      * @brief Attach interrupt callback to GPIO pin
-     * @details Registers a callback function to be called when an interrupt occurs on the specified pin
+     * @details Registers a callback function to be called when an interrupt occurs on the specified pin.
+     *          The optional trigger mode follows Arduino-style semantics: CHANGE, RISING, FALLING.
      * @param GPIOx GPIO port (GPIOA, GPIOB, etc.)
      * @param GPIO_Pin GPIO pin number (GPIO_PIN_0, GPIO_PIN_1, etc.)
      * @param callback Function to be called on interrupt
+     * @param mode Trigger mode (default CHANGE)
      * @return true if interrupt was attached successfully
      */
-    bool attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidCallback_f callback);
+    bool attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidCallback_f callback, uint8_t mode = CHANGE);
     
     /**
      * @brief Detach interrupt from GPIO pin
@@ -155,11 +163,12 @@ class HardwareGPIO {
         GPIO_TypeDef* GPIOx;     ///< GPIO port
         uint16_t GPIO_Pin;       ///< GPIO pin number
         voidCallback_f callback; ///< Callback function
+        uint8_t triggerMode;     ///< Trigger mode: CHANGE / RISING / FALLING
         bool active;             ///< Interrupt active flag
         uint32_t triggerCount;   ///< Number of times triggered
         uint32_t lastTriggerTime;///< Last trigger timestamp
         
-        interrupt() : GPIOx(nullptr), GPIO_Pin(0), active(false), 
+        interrupt() : GPIOx(nullptr), GPIO_Pin(0), callback(nullptr), triggerMode(CHANGE), active(false), 
                      triggerCount(0), lastTriggerTime(0) {}
       };
       
@@ -173,6 +182,15 @@ class HardwareGPIO {
        * @return Index of interrupt slot or MAX_GPIO_INTERRUPTS if not found
        */
       uint8_t findInterruptSlot(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin);
+
+      /**
+       * @brief Check whether the current pin level matches the configured trigger mode
+       * @param GPIOx GPIO port
+       * @param GPIO_Pin GPIO pin number
+       * @param mode Trigger mode to evaluate
+       * @return true if callback should be invoked
+       */
+      bool matchesInterruptMode(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint8_t mode) const;
       
       /**
        * @brief Find free interrupt slot

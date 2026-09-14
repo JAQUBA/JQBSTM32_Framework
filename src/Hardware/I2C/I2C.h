@@ -151,6 +151,7 @@ class I2C : public IBus {
             CHECK_FREE,
             WORK,
             WAITING,
+            ABORTING,
             CLEAR,
             FINISH
         } operationState = IDLE;

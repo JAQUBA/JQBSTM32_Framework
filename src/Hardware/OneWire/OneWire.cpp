@@ -140,6 +140,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
 			}
 			case WAITING: {
 	   			if (millis() >= operationTimeout) {
+					operationProgress = OPERATION_PROGRESS_IDLE;
 					operationState = FINISH;
 				}
 				break;
@@ -165,6 +166,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
 }
 
 void OneWire::reset(uint32_t timeoutMs) {
+	if (operations.size() >= 8U) return;
 	operation operation;
 	operation.operationType = EoperationType::RESET;
 	operation.timeoutMs = timeoutMs;
@@ -176,10 +178,13 @@ void OneWire::transmit(
 	dataCallback_f callbackFn,
 	uint32_t timeoutMs
 ){
+	if (pData == nullptr || size == 0U) return;
+	if (operations.size() >= 8U) return;
 	operation operation;
 	operation.operationType = EoperationType::TRANSMIT;
 	operation.timeoutMs = timeoutMs;
 	operation.pData = (uint8_t*) malloc(size);
+	if (operation.pData == nullptr) return;
 	memcpy(operation.pData, pData, size);
 	operation.Size = size;
 	operation.free = true;
@@ -192,6 +197,8 @@ void OneWire::receive(
 	dataCallback_f callbackFn,
 	uint32_t timeoutMs
 ){
+	if (pData == nullptr || size == 0U) return;
+	if (operations.size() >= 8U) return;
 	operation operation;
 	operation.operationType = EoperationType::RECEIVE;
 	operation.timeoutMs = timeoutMs;
@@ -208,10 +215,14 @@ void OneWire::transmitThenReceive(
 	dataCallback_f callbackFn,
 	uint32_t timeoutMs
 ){
+	if (txSize > 0U && pData_tx == nullptr) return;
+	if (rxSize > 0U && pData_rx == nullptr) return;
+	if (operations.size() >= 7U) return;
 	operation operation;
 	operation.operationType = EoperationType::TRANSMIT;
 	operation.timeoutMs = timeoutMs;
 	operation.pData = (uint8_t*) malloc(txSize);
+	if (operation.pData == nullptr) return;
 	memcpy(operation.pData, pData_tx, txSize);
 	operation.Size = txSize;
 	operation.free = true;
@@ -242,17 +253,19 @@ void OneWire::transaction(
 		Size = 2;
 		if (txSize>0) Size += txSize;
 		operation.pData = (uint8_t*) malloc(Size);
+		if (operation.pData == nullptr) return;
 		*(operation.pData+0) = romCommand;
 		*(operation.pData+1) = functionCommand;
-		if (txSize>0) memcpy(operation.pData+Size, pData_tx, txSize);
+		if (txSize>0) memcpy(operation.pData + 2U, pData_tx, txSize);
 	} else {
 		Size=10;
 		if (txSize>0) Size += txSize;
 		operation.pData = (uint8_t*) malloc(Size);
+		if (operation.pData == nullptr) return;
 		*(operation.pData+0) = romCommand;
 		memcpy(operation.pData+1, address, 8);
 		*(operation.pData+9) = functionCommand;
-		if (txSize>0) memcpy(operation.pData+Size, pData_tx, txSize);
+		if (txSize>0) memcpy(operation.pData + 10U, pData_tx, txSize);
 	}
 	operation.Size = Size;
 	operation.free = true;
