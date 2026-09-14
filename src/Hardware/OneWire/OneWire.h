@@ -174,6 +174,7 @@ class OneWire : public IBus {
 
 		uint32_t operationTimeout;  ///< Operation timeout value
 		bool     is_device_presence; ///< Device presence detection flag
+		volatile bool ignoreNextTimerEvent = false; ///< Ignore one stale timer event after timeout
 
 		uint8_t  ow_byte;       ///< Current byte being processed
 		uint8_t  ow_byte_index; ///< Current byte index in buffer

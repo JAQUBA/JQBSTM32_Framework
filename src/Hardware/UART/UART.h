@@ -119,10 +119,12 @@ class UART : public IBus {
         uint8_t Received_u1;    ///< Single received byte buffer
         
         bool received = false;           ///< Reception flag
-        bool rxOverflow = false;         ///< Reception overflow flag
+        bool overflowPending = false;    ///< Buffered overflow fragment pending delivery
         unsigned long lastReceivedByte = 0; ///< Timestamp of last received byte
         uint16_t rx_data_index = 0;     ///< Current index in receive buffer
         uint8_t  rx_buffer[UART_RX_BUFFER_SIZE]; ///< Receive buffer
+        uint16_t overflowSize = 0;      ///< Size of buffered overflow fragment
+        uint8_t  overflowBuffer[UART_RX_BUFFER_SIZE]; ///< Buffered overflow fragment
 
         uint32_t operationTimeout; ///< Operation timeout value
         

@@ -49,11 +49,16 @@ UART::UART(UART_HandleTypeDef *pHandler, GPIO_TypeDef *dirPort, uint16_t dirPin)
     HAL_UART_Receive_IT(_pHandler, &Received_u1, 1);
 
     addTaskMain(taskCallback {
+        if (overflowPending) {
+            if (fpOnReceive) fpOnReceive(overflowBuffer, overflowSize);
+            overflowPending = false;
+            overflowSize = 0;
+        }
+
         if(received && millis() > lastReceivedByte + 2) {
             if(fpOnReceive) fpOnReceive(rx_buffer, rx_data_index);
             rx_data_index = 0;
             received = false;
-            rxOverflow = false;
         }
 
         switch(operationState) {
@@ -119,8 +124,13 @@ void UART::rxInterrupt() {
     if (rx_data_index < sizeof(rx_buffer)) {
 		rx_buffer[rx_data_index++] = Received_u1;
 		received = true;
-	} else {
-		rxOverflow = true;
+	} else if (!overflowPending) {
+		memcpy(overflowBuffer, rx_buffer, sizeof(rx_buffer));
+		overflowSize = rx_data_index;
+		overflowPending = true;
+		rx_data_index = 0;
+		rx_buffer[rx_data_index++] = Received_u1;
+		received = true;
 	}
 	lastReceivedByte = millis();
 	HAL_UART_Receive_IT(_pHandler, &Received_u1, 1);

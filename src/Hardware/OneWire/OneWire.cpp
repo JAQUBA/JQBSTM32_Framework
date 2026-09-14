@@ -22,13 +22,14 @@
 
 OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_Timer(timer), OW_Port(GPIO_Port), OW_Pin(GPIO_Pin) {
 	OW_Timer->attachInterrupt(Timer::PeriodElapsedCallback, voidCallback {
+		if (ignoreNextTimerEvent) {
+			ignoreNextTimerEvent = false;
+			return;
+		}
+
 		switch(operationProgress) {
 			case OPERATION_PROGRESS_IDLE: {
 				if(operationState == WAITING) operationState = FINISH;
-				break;
-			}
-			case OPERATION_PROGRESS_CANCELLED: {
-				operationProgress = OPERATION_PROGRESS_IDLE;
 				break;
 			}
 			case OPERATION_PROGRESS_RESET: {
@@ -144,7 +145,8 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
 			}
 			case WAITING: {
 	   			if (millis() >= operationTimeout) {
-					operationProgress = OPERATION_PROGRESS_CANCELLED;
+					ignoreNextTimerEvent = true;
+					operationProgress = OPERATION_PROGRESS_IDLE;
 					operationState = FINISH;
 				}
 				break;
