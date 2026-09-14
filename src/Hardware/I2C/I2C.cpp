@@ -30,6 +30,8 @@ I2C *I2C::getInstance(I2C_HandleTypeDef *pHandler) {
 }
 void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c) { if (I2C::getInstance(hi2c) != nullptr) I2C::getInstance(hi2c)->rxInterrupt(); }
 void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c) { if (I2C::getInstance(hi2c) != nullptr) I2C::getInstance(hi2c)->txInterrupt(); }
+void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c) { if (I2C::getInstance(hi2c) != nullptr) I2C::getInstance(hi2c)->rxInterrupt(); }
+void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef *hi2c) { if (I2C::getInstance(hi2c) != nullptr) I2C::getInstance(hi2c)->txInterrupt(); }
 void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) { if (I2C::getInstance(hi2c) != nullptr) I2C::getInstance(hi2c)->errorInterrupt(); }
 void I2C::txInterrupt() {if(operationState == WAITING) {operationState = FINISH;}}
 void I2C::rxInterrupt() {if(operationState == WAITING) {operationState = FINISH;}}
@@ -37,8 +39,15 @@ void I2C::errorInterrupt() {if (HAL_I2C_GetError(_pHandler) > HAL_I2C_ERROR_NONE
 
 I2C::I2C(I2C_HandleTypeDef* pHandler) {
     _pHandler = pHandler;
+	if (_pHandler == nullptr) {
+		Error_Handler();
+		return;
+	}
 	if (_I2C_instancesNum < I2C_MAX_INSTANCES) {
 		_I2C_instances[_I2C_instancesNum++] = this;
+	} else {
+		Error_Handler();
+		return;
 	}
 	addTaskMain(taskCallback {
 		switch(operationState) {
@@ -101,14 +110,21 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 			case WAITING: {
 				if(millis() >= operationTimeout) {
 					if (HAL_I2C_Master_Abort_IT(_pHandler, currentOperation.DevAddress) == HAL_OK) {
+						abortTimeout = millis() + currentOperation.timeoutMs;
 						operationState = ABORTING;
 					} else {
-						operationState = ABORTING;
+						HAL_I2C_DeInit(_pHandler);
+						HAL_I2C_Init(_pHandler);
+						operationState = FINISH;
 					}
 				} else break;
 			}
 			case ABORTING: {
 				if (HAL_I2C_GetState(_pHandler) == HAL_I2C_STATE_READY) {
+					operationState = FINISH;
+				} else if (millis() >= abortTimeout) {
+					HAL_I2C_DeInit(_pHandler);
+					HAL_I2C_Init(_pHandler);
 					operationState = FINISH;
 				}
 				break;

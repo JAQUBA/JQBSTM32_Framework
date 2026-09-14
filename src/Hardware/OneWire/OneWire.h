@@ -197,7 +197,8 @@ class OneWire : public IBus {
 			OPERATION_PROGRESS_READ_START,  ///< Starting read operation
 			OPERATION_PROGRESS_READ_BIT,    ///< Reading bit
 			OPERATION_PROGRESS_READ_WAIT,   ///< Waiting during read
-			OPERATION_PROGRESS_READ_END     ///< Ending read operation
+			OPERATION_PROGRESS_READ_END,    ///< Ending read operation
+			OPERATION_PROGRESS_CANCELLED    ///< Waiting for a stale timer event to be consumed
 		} operationProgress = OPERATION_PROGRESS_IDLE;   
 
 		/**

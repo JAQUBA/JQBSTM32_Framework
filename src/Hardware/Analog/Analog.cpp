@@ -22,6 +22,7 @@
 
 Analog* _Analog_instances[ANALOG_MAX_INSTANCES];
 uint8_t _Analog_instancesNum = 0;
+static bool _analogDispatchTaskRegistered = false;
 
 // HAL callback functions
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
@@ -53,8 +54,10 @@ Analog::Analog(ADC_HandleTypeDef *pHandler, uint16_t vref) :
     _channelCount(pHandler != nullptr ? pHandler->Init.NbrOfConversion : 0),
     _maxAdcValue(0),
     _interruptListeners(nullptr),
-    _conversionPending(false),
-    _pendingBuffer{} {
+    _pendingHead(0),
+    _pendingTail(0),
+    _pendingCount(0),
+    _pendingBuffers{} {
 
     if (_pHandler == nullptr) {
         Error_Handler();
@@ -98,24 +101,10 @@ Analog::Analog(ADC_HandleTypeDef *pHandler, uint16_t vref) :
         Error_Handler();
     }
 
-    addTaskMain(taskCallback {
-        if (!_conversionPending) return;
-        uint16_t sampleBuffer[ANALOG_MAX_CHANNELS];
-		__disable_irq();
-        for (uint8_t channel = 0U; channel < _channelCount; channel++) {
-            sampleBuffer[channel] = _pendingBuffer[channel];
-        }
-        _conversionPending = false;
-		__enable_irq();
-        InterruptListener* listener = _interruptListeners;
-        while (listener != nullptr) {
-            InterruptListener* next = listener->_next;
-            if (listener->_callback != nullptr) {
-                listener->_callback(listener, sampleBuffer);
-            }
-            listener = next;
-        }
-    });
+    if (!_analogDispatchTaskRegistered) {
+        addTaskMain(Analog::dispatchPendingConversions);
+        _analogDispatchTaskRegistered = true;
+    }
 }
 Analog::~Analog() {
     if (_pHandler != nullptr) {
@@ -143,10 +132,51 @@ void Analog::convCpltCallback() {
         return;
     }
 
-    for (uint8_t channel = 0U; channel < _channelCount; channel++) {
-        _pendingBuffer[channel] = _adcBuffer[channel];
+    uint8_t targetIndex = _pendingTail;
+    if (_pendingCount >= ANALOG_PENDING_CONVERSIONS) {
+        _pendingHead = (uint8_t)((_pendingHead + 1U) % ANALOG_PENDING_CONVERSIONS);
+        targetIndex = _pendingTail;
+    } else {
+        _pendingCount++;
     }
-    _conversionPending = true;
+
+    for (uint8_t channel = 0U; channel < _channelCount; channel++) {
+        _pendingBuffers[targetIndex][channel] = _adcBuffer[channel];
+    }
+    _pendingTail = (uint8_t)((targetIndex + 1U) % ANALOG_PENDING_CONVERSIONS);
+}
+
+void Analog::dispatchPendingConversions(taskStruct *task) {
+    (void)task;
+    for (uint8_t i = 0; i < _Analog_instancesNum; i++) {
+        if (_Analog_instances[i] != nullptr) {
+            _Analog_instances[i]->notifyPendingConversions();
+        }
+    }
+}
+
+void Analog::notifyPendingConversions() {
+    while (_pendingCount > 0U) {
+        uint16_t sampleBuffer[ANALOG_MAX_CHANNELS];
+
+		__disable_irq();
+        const uint8_t sampleIndex = _pendingHead;
+        for (uint8_t channel = 0U; channel < _channelCount; channel++) {
+            sampleBuffer[channel] = _pendingBuffers[sampleIndex][channel];
+        }
+        _pendingHead = (uint8_t)((_pendingHead + 1U) % ANALOG_PENDING_CONVERSIONS);
+        _pendingCount--;
+		__enable_irq();
+
+        InterruptListener* listener = _interruptListeners;
+        while (listener != nullptr) {
+            InterruptListener* next = listener->_next;
+            if (listener->_callback != nullptr) {
+                listener->_callback(listener, sampleBuffer);
+            }
+            listener = next;
+        }
+    }
 }
 
 bool Analog::attachInterrupt(InterruptListener* listener) {

@@ -58,14 +58,22 @@ void RegisterBank::_initialize() {
     struct Register *temp = registers, *r;
     if(registers == NULL) {
         temp = (struct Register*)malloc(sizeof(struct Register));
-        if (temp == NULL) return;
+        if (temp == NULL) {
+            free(_registers);
+            _registers = NULL;
+            return;
+        }
         temp->bank = this;
         temp->next = NULL;
         registers = temp;
     } else {
         while(temp->next != NULL) temp = temp->next;
         r = (struct Register*) malloc(sizeof(struct Register));
-        if (r == NULL) return;
+        if (r == NULL) {
+            free(_registers);
+            _registers = NULL;
+            return;
+        }
         r->bank = this;
         r->next = NULL;
         temp->next = r;

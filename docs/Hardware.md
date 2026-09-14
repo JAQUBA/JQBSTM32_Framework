@@ -367,14 +367,17 @@ uint16_t getVoltage(uint8_t channel);       // Voltage in mV (from filtered valu
 void setFilterShift(uint8_t shift);                 // Set EMA shift for all channels
 void setFilterShift(uint8_t channel, uint8_t shift); // Set EMA shift for one channel
 
-void attachInterrupt(std::function<void(uint16_t*)> callback);
-void convCpltCallback();  // Called from DMA ISR
+void attachInterrupt(std::function<void(uint16_t*)> callback); // Callback runs in main-loop context
+void convCpltCallback();  // Called from DMA ISR, queues samples for later delivery
 ```
 
 ### Filter Configuration
 
 Per-channel EMA (Exponential Moving Average) filter. Offset/multiplier calibration belongs
 to the application layer (e.g., using RegisterBank).
+
+ADC completion callbacks are deferred to the main scheduler. Each `Analog` instance buffers up to
+`ANALOG_PENDING_CONVERSIONS` completed samples before dispatching them to registered listeners.
 
 ### Usage
 

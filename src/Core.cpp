@@ -72,7 +72,6 @@ void delay(volatile uint32_t delay_ms) {
 
 // Make ulMillis volatile and atomic for thread safety
 volatile uint32_t ulMillis = 0;
-static uint8_t _millisTick = 0;
 
 uint32_t millis() {
 	return ulMillis;
@@ -86,13 +85,10 @@ Core::Core() {
 	// Initialize system start time
 	_systemStartTime = HAL_GetTick();
 	
-	// Add optimized time keeping task
+	// Add time keeping task
 	addTaskInterrupt(taskCallback {
-		if (++_millisTick >= 10U) {
-			_millisTick = 0;
-			uwTick += (uint32_t)uwTickFreq;
-			ulMillis++;
-		}
+		uwTick += (uint32_t)uwTickFreq;
+		ulMillis++;
 	}, 1);
 	
 	init();

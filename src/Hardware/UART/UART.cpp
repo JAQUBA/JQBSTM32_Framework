@@ -33,8 +33,15 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) { if (UART::getInstance(
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) { if (UART::getInstance(huart) != nullptr) UART::getInstance(huart)->errorInterrupt(); }
 UART::UART(UART_HandleTypeDef *pHandler, GPIO_TypeDef *dirPort, uint16_t dirPin) {
     _pHandler = pHandler;
+	if (_pHandler == nullptr) {
+		Error_Handler();
+		return;
+	}
 	if (_UART_instancesNum < UART_MAX_INSTANCES) {
 		_UART_instances[_UART_instancesNum++] = this;
+	} else {
+		Error_Handler();
+		return;
 	}
 	_dirPort = dirPort;
 	_dirPin = dirPin;
@@ -46,6 +53,7 @@ UART::UART(UART_HandleTypeDef *pHandler, GPIO_TypeDef *dirPort, uint16_t dirPin)
             if(fpOnReceive) fpOnReceive(rx_buffer, rx_data_index);
             rx_data_index = 0;
             received = false;
+            rxOverflow = false;
         }
 
         switch(operationState) {
@@ -112,8 +120,7 @@ void UART::rxInterrupt() {
 		rx_buffer[rx_data_index++] = Received_u1;
 		received = true;
 	} else {
-		rx_data_index = 0;
-		received = false;
+		rxOverflow = true;
 	}
 	lastReceivedByte = millis();
 	HAL_UART_Receive_IT(_pHandler, &Received_u1, 1);

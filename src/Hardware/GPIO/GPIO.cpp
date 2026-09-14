@@ -29,7 +29,7 @@ void HardwareGPIO::_interruptCallback(uint16_t GPIO_Pin) {
     
     for (uint8_t i = 0; i < MAX_GPIO_INTERRUPTS; i++) {
         if (interrupts[i].active && interrupts[i].GPIO_Pin == GPIO_Pin) {
-            if (!matchesInterruptMode(interrupts[i].GPIOx, interrupts[i].GPIO_Pin, interrupts[i].triggerMode)) {
+            if (!matchesInterruptMode(interrupts[i])) {
                 continue;
             }
 
@@ -51,6 +51,7 @@ bool HardwareGPIO::attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidC
         // Update existing interrupt
         interrupts[existingSlot].callback = callback;
         interrupts[existingSlot].triggerMode = mode;
+        interrupts[existingSlot].lastState = HAL_GPIO_ReadPin(GPIOx, GPIO_Pin);
         return true;
     }
     
@@ -65,6 +66,7 @@ bool HardwareGPIO::attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidC
     interrupts[freeSlot].GPIO_Pin = GPIO_Pin;
     interrupts[freeSlot].callback = callback;
     interrupts[freeSlot].triggerMode = mode;
+    interrupts[freeSlot].lastState = HAL_GPIO_ReadPin(GPIOx, GPIO_Pin);
     interrupts[freeSlot].active = true;
     interrupts[freeSlot].triggerCount = 0;
     interrupts[freeSlot].lastTriggerTime = millis();
@@ -80,6 +82,7 @@ bool HardwareGPIO::detachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
         interrupts[slot].GPIOx = nullptr;
         interrupts[slot].GPIO_Pin = 0;
         interrupts[slot].callback = nullptr;
+        interrupts[slot].lastState = GPIO_PIN_RESET;
         interruptCount--;
         return true;
     }
@@ -94,17 +97,19 @@ uint32_t HardwareGPIO::getInterruptCount(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
     return 0;
 }
 
-bool HardwareGPIO::matchesInterruptMode(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint8_t mode) const {
-    const GPIO_PinState currentState = HAL_GPIO_ReadPin(GPIOx, GPIO_Pin);
+bool HardwareGPIO::matchesInterruptMode(interrupt& interruptConfig) {
+    const GPIO_PinState previousState = interruptConfig.lastState;
+    const GPIO_PinState currentState = HAL_GPIO_ReadPin(interruptConfig.GPIOx, interruptConfig.GPIO_Pin);
+    interruptConfig.lastState = currentState;
 
-    switch (mode) {
+    switch (interruptConfig.triggerMode) {
         case RISING:
-            return currentState == GPIO_PIN_SET;
+            return previousState == GPIO_PIN_RESET && currentState == GPIO_PIN_SET;
         case FALLING:
-            return currentState == GPIO_PIN_RESET;
+            return previousState == GPIO_PIN_SET && currentState == GPIO_PIN_RESET;
         case CHANGE:
         default:
-            return true;
+            return previousState != currentState;
     }
 }
 
