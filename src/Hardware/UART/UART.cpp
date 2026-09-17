@@ -28,20 +28,13 @@ UART *UART::getInstance(UART_HandleTypeDef *pHandler) {
     }
     return nullptr;
 }
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) { UART *instance = UART::getInstance(huart); if (instance != nullptr) instance->rxInterrupt(); }
-void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) { UART *instance = UART::getInstance(huart); if (instance != nullptr) instance->txInterrupt(); }
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) { UART *instance = UART::getInstance(huart); if (instance != nullptr) instance->errorInterrupt(); }
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) { if (UART::getInstance(huart) != nullptr) UART::getInstance(huart)->rxInterrupt(); }
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) { if (UART::getInstance(huart) != nullptr) UART::getInstance(huart)->txInterrupt(); }
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) { if (UART::getInstance(huart) != nullptr) UART::getInstance(huart)->errorInterrupt(); }
 UART::UART(UART_HandleTypeDef *pHandler, GPIO_TypeDef *dirPort, uint16_t dirPin) {
     _pHandler = pHandler;
-	if (_pHandler == nullptr) {
-		Error_Handler();
-		return;
-	}
 	if (_UART_instancesNum < UART_MAX_INSTANCES) {
 		_UART_instances[_UART_instancesNum++] = this;
-	} else {
-		Error_Handler();
-		return;
 	}
 	_dirPort = dirPort;
 	_dirPin = dirPin;
@@ -49,30 +42,18 @@ UART::UART(UART_HandleTypeDef *pHandler, GPIO_TypeDef *dirPort, uint16_t dirPin)
     HAL_UART_Receive_IT(_pHandler, &Received_u1, 1);
 
     addTaskMain(taskCallback {
-        uint8_t overflowSnapshot[UART_RX_BUFFER_SIZE];
-        uint8_t receiveSnapshot[UART_RX_BUFFER_SIZE];
-        uint16_t overflowLength = 0U;
-        uint16_t receiveLength = 0U;
-        const uint32_t currentTime = millis();
+		uint16_t receiveLength = 0U;
 
 		__disable_irq();
-        if (overflowPending) {
-            overflowLength = overflowSize;
-            memcpy(overflowSnapshot, overflowBuffer, overflowLength);
-            overflowPending = false;
-            overflowSize = 0U;
-        }
-
-        if(received && currentTime > lastReceivedByte + 2U) {
-            receiveLength = rx_data_index;
-            memcpy(receiveSnapshot, rx_buffer, receiveLength);
-            rx_data_index = 0U;
-            received = false;
+		if(received && millis() > lastReceivedByte + 2U) {
+			receiveLength = rx_data_index;
+			memcpy(rx_snapshot, rx_buffer, receiveLength);
+			rx_data_index = 0U;
+			received = false;
         }
 		__enable_irq();
 
-        if (overflowLength > 0U && fpOnReceive) fpOnReceive(overflowSnapshot, overflowLength);
-        if (receiveLength > 0U && fpOnReceive) fpOnReceive(receiveSnapshot, receiveLength);
+		if(receiveLength > 0U && fpOnReceive) fpOnReceive(rx_snapshot, receiveLength);
 
         switch(operationState) {
 			case IDLE: {
@@ -135,18 +116,14 @@ UART::UART(UART_HandleTypeDef *pHandler, GPIO_TypeDef *dirPort, uint16_t dirPin)
 
 void UART::rxInterrupt() {
     if (rx_data_index < sizeof(rx_buffer)) {
-		rx_buffer[rx_data_index++] = Received_u1;
-		received = true;
-	} else if (!overflowPending) {
-		memcpy(overflowBuffer, rx_buffer, sizeof(rx_buffer));
-		overflowSize = rx_data_index;
-		overflowPending = true;
-		rx_data_index = 0;
-		rx_buffer[rx_data_index++] = Received_u1;
-		received = true;
-	}
-	lastReceivedByte = millis();
-	HAL_UART_Receive_IT(_pHandler, &Received_u1, 1);
+        rx_buffer[rx_data_index++] = Received_u1;
+    } else {
+        rx_data_index = 0;
+        rx_buffer[rx_data_index++] = Received_u1;
+    }
+    lastReceivedByte = millis();
+    received = true;
+    HAL_UART_Receive_IT(_pHandler, &Received_u1, 1);
 }
 
 void UART::txInterrupt() {
@@ -169,7 +146,14 @@ void UART::transmit(uint8_t *pData, uint16_t Size, dataCallback_f callbackFn, ui
 	if (operations.size() >= 8U) return;
 	operation operation;
 	operation.operationType = EoperationType::SEND;
-	operation.timeoutMs = timeoutMs;
+	uint32_t calculatedTimeoutMs = timeoutMs;
+	const uint32_t baudRate = _pHandler->Init.BaudRate;
+	if(baudRate > 0U) {
+		const uint32_t wireTimeMs = (((uint32_t)Size * 10U * 1000U) + baudRate - 1U) / baudRate;
+		const uint32_t minimumTimeoutMs = wireTimeMs + 100U;
+		if(calculatedTimeoutMs < minimumTimeoutMs) calculatedTimeoutMs = minimumTimeoutMs;
+	}
+	operation.timeoutMs = calculatedTimeoutMs;
 	operation.pData = (uint8_t*) malloc(Size);
 	if (operation.pData == nullptr) return;
 	memcpy(operation.pData, pData, Size);

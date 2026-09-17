@@ -30,10 +30,6 @@
 #define UART_RX_BUFFER_SIZE 256
 #endif
 
-#if UART_RX_BUFFER_SIZE > UINT16_MAX
-#error "UART_RX_BUFFER_SIZE must be less than or equal to UINT16_MAX"
-#endif
-
 #include "../../Interface/IBus.h"
 
 /**
@@ -119,12 +115,10 @@ class UART : public IBus {
         uint8_t Received_u1;    ///< Single received byte buffer
         
         bool received = false;           ///< Reception flag
-        bool overflowPending = false;    ///< Buffered overflow fragment pending delivery
         unsigned long lastReceivedByte = 0; ///< Timestamp of last received byte
         uint16_t rx_data_index = 0;     ///< Current index in receive buffer
         uint8_t  rx_buffer[UART_RX_BUFFER_SIZE]; ///< Receive buffer
-        uint16_t overflowSize = 0;      ///< Size of buffered overflow fragment
-        uint8_t  overflowBuffer[UART_RX_BUFFER_SIZE]; ///< Buffered overflow fragment
+        uint8_t  rx_snapshot[UART_RX_BUFFER_SIZE]; ///< Stable receive snapshot for callback delivery
 
         uint32_t operationTimeout; ///< Operation timeout value
         
