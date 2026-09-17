@@ -43,47 +43,33 @@ struct ModbusFrame {
     uint16_t address;        ///< Starting register address
     uint16_t size;           ///< Number of registers
     uint16_t registers[125]; ///< Register data array (max 125 registers)
+    uint8_t exception;       ///< Modbus exception code, zero when the request is valid
+};
+
+struct ModbusStatistics {
+    uint32_t requests;
+    uint32_t crcErrors;
+    uint32_t malformedFrames;
+    uint32_t exceptions;
+    uint32_t broadcasts;
+    uint32_t timeouts; ///< Master-only: requests that received no response in time
 };
 
 /**
  * @brief Base Modbus protocol class
- * @details Provides common Modbus functionality for both master and slave implementations
+ * @details Holds the statistics and framing helpers shared by master and slave implementations
  */
 class Modbus {
     public:
-        /**
-         * @brief Process received Modbus data
-         * @details Parses received data and calls appropriate function handler
-         * @param data Pointer to received data buffer
-         * @param length Length of received data
-         * @param functionPointer Callback function for processing parsed frame
-         */
-        void receive(uint8_t* data, uint16_t length, dataCallback_f functionPointer);
-        
-        /**
-         * @brief Bind function handler
-         * @details Associates a function code with a handler function
-         * @param function Modbus function code to bind
-         * @param functionPointer Handler function for the specified function code
-         */
-        void bind_function(ModbusFunction function, void(*functionPointer)(ModbusFrame *request));
-    protected:
-        uint8_t *_slaveID; ///< Slave ID pointer (for slave implementations)
-};
+        const ModbusStatistics& statistics() const;
+        void resetStatistics();
 
-/**
- * @brief Modbus Slave implementation
- * @details Implements Modbus slave functionality for responding to master requests
- */
-class ModbusSlave : public Modbus {
-    public:
-        /**
-         * @brief Set slave ID
-         * @details Sets the slave ID for this Modbus slave instance
-         * @param slaveID Pointer to slave ID value
-         */
-        void setID(uint8_t *slaveID);
-    private:
+        static uint16_t readU16BE(const uint8_t *p);
+        static void writeU16BE(uint8_t *p, uint16_t value);
+        static bool validateCrc(const uint8_t *data, uint16_t length);
+        static uint16_t appendCrc(uint8_t *buffer, uint16_t length);
+    protected:
+        ModbusStatistics _statistics = {};
 };
 
 #endif
