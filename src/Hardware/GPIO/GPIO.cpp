@@ -24,106 +24,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     GPIO._interruptCallback(GPIO_Pin);
 }
 
-static uint8_t getPortIndex(GPIO_TypeDef* GPIOx) {
-    if (GPIOx == nullptr) {
-        return 0xFFU;
-    }
-#ifdef GPIOA
-    if (GPIOx == GPIOA) return 0U;
-#endif
-#ifdef GPIOB
-    if (GPIOx == GPIOB) return 1U;
-#endif
-#ifdef GPIOC
-    if (GPIOx == GPIOC) return 2U;
-#endif
-#ifdef GPIOD
-    if (GPIOx == GPIOD) return 3U;
-#endif
-#ifdef GPIOE
-    if (GPIOx == GPIOE) return 4U;
-#endif
-#ifdef GPIOF
-    if (GPIOx == GPIOF) return 5U;
-#endif
-#ifdef GPIOG
-    if (GPIOx == GPIOG) return 6U;
-#endif
-#ifdef GPIOH
-    if (GPIOx == GPIOH) return 7U;
-#endif
-#ifdef GPIOI
-    if (GPIOx == GPIOI) return 8U;
-#endif
-    return 0xFFU;
-}
-
-static uint8_t getPinIndex(uint16_t GPIO_Pin) {
-    for (uint8_t i = 0U; i < 16U; i++) {
-        if (GPIO_Pin == (uint16_t)(1U << i)) {
-            return i;
-        }
-    }
-    return 0xFFU;
-}
-
-static bool matchesExtiSource(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
-    const uint8_t pinIndex = getPinIndex(GPIO_Pin);
-    const uint8_t portIndex = getPortIndex(GPIOx);
-    if (pinIndex >= 16U || portIndex == 0xFFU) {
-        return false;
-    }
-
-#if defined(SYSCFG)
-    const uint32_t extiConfig = SYSCFG->EXTICR[pinIndex / 4U];
-#elif defined(AFIO)
-    const uint32_t extiConfig = AFIO->EXTICR[pinIndex / 4U];
-#else
-    return true;
-#endif
-
-    const uint32_t configuredPort = (extiConfig >> ((pinIndex % 4U) * 4U)) & 0x0FU;
-    return configuredPort == portIndex;
-}
-
-static uint8_t getExtiTriggerMask(uint16_t GPIO_Pin) {
-    uint8_t triggerMask = 0U;
-
-#if defined(EXTI)
-    #if defined(EXTI_RTSR1_RT0)
-    const uint32_t risingTriggerRegister = EXTI->RTSR1;
-    #else
-    const uint32_t risingTriggerRegister = EXTI->RTSR;
-    #endif
-
-    #if defined(EXTI_FTSR1_FT0)
-    const uint32_t fallingTriggerRegister = EXTI->FTSR1;
-    #else
-    const uint32_t fallingTriggerRegister = EXTI->FTSR;
-    #endif
-
-    if ((risingTriggerRegister & GPIO_Pin) != 0U) {
-        triggerMask |= RISING;
-    }
-    if ((fallingTriggerRegister & GPIO_Pin) != 0U) {
-        triggerMask |= FALLING;
-    }
-#else
-    triggerMask = CHANGE;
-#endif
-
-    return triggerMask;
-}
-
 void HardwareGPIO::_interruptCallback(uint16_t GPIO_Pin) {
     uint32_t currentTime = millis();
     
     for (uint8_t i = 0; i < MAX_GPIO_INTERRUPTS; i++) {
-        if (interrupts[i].active &&
-            interrupts[i].GPIOx != nullptr &&
-            interrupts[i].GPIO_Pin == GPIO_Pin &&
-            matchesExtiSource(interrupts[i].GPIOx, interrupts[i].GPIO_Pin)) {
-            if (!matchesInterruptMode(interrupts[i])) {
+        if (interrupts[i].active && interrupts[i].GPIO_Pin == GPIO_Pin) {
+            if (!matchesInterruptMode(interrupts[i].GPIOx, interrupts[i].GPIO_Pin, interrupts[i].triggerMode)) {
                 continue;
             }
 
@@ -139,38 +45,13 @@ void HardwareGPIO::_interruptCallback(uint16_t GPIO_Pin) {
 }
 
 bool HardwareGPIO::attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidCallback_f callback, uint8_t mode) {
-    const uint8_t extiTriggerMask = getExtiTriggerMask(GPIO_Pin);
-    if (mode == RISING || mode == FALLING) {
-        if (extiTriggerMask != mode) {
-            return false;
-        }
-    } else if (extiTriggerMask == 0U) {
-        return false;
-    }
-
     // Check if interrupt already exists for this pin
     uint8_t existingSlot = findInterruptSlot(GPIOx, GPIO_Pin);
     if (existingSlot < MAX_GPIO_INTERRUPTS) {
         // Update existing interrupt
         interrupts[existingSlot].callback = callback;
         interrupts[existingSlot].triggerMode = mode;
-        interrupts[existingSlot].lastState = HAL_GPIO_ReadPin(GPIOx, GPIO_Pin);
         return true;
-    }
-
-    for (uint8_t i = 0; i < MAX_GPIO_INTERRUPTS; i++) {
-        if (interrupts[i].active && interrupts[i].GPIO_Pin == GPIO_Pin) {
-            if (matchesExtiSource(GPIOx, GPIO_Pin)) {
-                interrupts[i].GPIOx = GPIOx;
-                interrupts[i].callback = callback;
-                interrupts[i].triggerMode = mode;
-                interrupts[i].lastState = HAL_GPIO_ReadPin(GPIOx, GPIO_Pin);
-                interrupts[i].triggerCount = 0;
-                interrupts[i].lastTriggerTime = millis();
-                return true;
-            }
-            return false;
-        }
     }
     
     // Find free slot for new interrupt
@@ -184,7 +65,6 @@ bool HardwareGPIO::attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidC
     interrupts[freeSlot].GPIO_Pin = GPIO_Pin;
     interrupts[freeSlot].callback = callback;
     interrupts[freeSlot].triggerMode = mode;
-    interrupts[freeSlot].lastState = HAL_GPIO_ReadPin(GPIOx, GPIO_Pin);
     interrupts[freeSlot].active = true;
     interrupts[freeSlot].triggerCount = 0;
     interrupts[freeSlot].lastTriggerTime = millis();
@@ -200,10 +80,6 @@ bool HardwareGPIO::detachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
         interrupts[slot].GPIOx = nullptr;
         interrupts[slot].GPIO_Pin = 0;
         interrupts[slot].callback = nullptr;
-        interrupts[slot].triggerMode = CHANGE;
-        interrupts[slot].lastState = GPIO_PIN_RESET;
-        interrupts[slot].triggerCount = 0;
-        interrupts[slot].lastTriggerTime = 0;
         interruptCount--;
         return true;
     }
@@ -218,17 +94,17 @@ uint32_t HardwareGPIO::getInterruptCount(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
     return 0;
 }
 
-bool HardwareGPIO::matchesInterruptMode(interrupt& interruptConfig) {
-    const uint8_t extiTriggerMask = getExtiTriggerMask(interruptConfig.GPIO_Pin);
+bool HardwareGPIO::matchesInterruptMode(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint8_t mode) const {
+    const GPIO_PinState currentState = HAL_GPIO_ReadPin(GPIOx, GPIO_Pin);
 
-    switch (interruptConfig.triggerMode) {
+    switch (mode) {
         case RISING:
-            return extiTriggerMask == RISING;
+            return currentState == GPIO_PIN_SET;
         case FALLING:
-            return extiTriggerMask == FALLING;
+            return currentState == GPIO_PIN_RESET;
         case CHANGE:
         default:
-            return extiTriggerMask != 0U;
+            return true;
     }
 }
 

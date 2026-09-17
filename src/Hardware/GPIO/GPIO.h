@@ -46,13 +46,10 @@ enum InterruptTriggerMode {
  * @brief GPIO Pin structure for pairing port and pin
  * @details Structure containing GPIO port and pin information for easy GPIO handling
  */
-#ifndef __GPIO_PIN_STRUCT_DEFINED
-#define __GPIO_PIN_STRUCT_DEFINED
 struct GPIO_Pin {
     GPIO_TypeDef* port; ///< GPIO port pointer
     uint16_t pin;       ///< GPIO pin number
 };
-#endif
 
 /**
  * @brief Hardware GPIO abstraction class
@@ -167,12 +164,11 @@ class HardwareGPIO {
         uint16_t GPIO_Pin;       ///< GPIO pin number
         voidCallback_f callback; ///< Callback function
         uint8_t triggerMode;     ///< Trigger mode: CHANGE / RISING / FALLING
-        GPIO_PinState lastState; ///< Last observed pin state
         bool active;             ///< Interrupt active flag
         uint32_t triggerCount;   ///< Number of times triggered
         uint32_t lastTriggerTime;///< Last trigger timestamp
         
-        interrupt() : GPIOx(nullptr), GPIO_Pin(0), callback(nullptr), triggerMode(CHANGE), lastState(GPIO_PIN_RESET), active(false),
+        interrupt() : GPIOx(nullptr), GPIO_Pin(0), callback(nullptr), triggerMode(CHANGE), active(false), 
                      triggerCount(0), lastTriggerTime(0) {}
       };
       
@@ -194,7 +190,7 @@ class HardwareGPIO {
        * @param mode Trigger mode to evaluate
        * @return true if callback should be invoked
        */
-      bool matchesInterruptMode(interrupt& interruptConfig);
+      bool matchesInterruptMode(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint8_t mode) const;
       
       /**
        * @brief Find free interrupt slot
