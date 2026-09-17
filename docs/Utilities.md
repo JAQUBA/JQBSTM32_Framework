@@ -54,21 +54,34 @@ Abstract interface for any external memory device. Implemented by:
 
 ## Modbus RTU
 
-**Header**: `Util/Modbus/Modbus.h`  
-**Implementation**: `Util/Modbus/Modbus.cpp`
+**Headers**: `Util/Modbus/Modbus.h` (shared base), `Util/Modbus/ModbusSlave.h`, `Util/Modbus/ModbusMaster.h`  
+**Implementation**: `Util/Modbus/Modbus.cpp`, `Util/Modbus/ModbusSlave.cpp`, `Util/Modbus/ModbusMaster.cpp`
 
 Industrial communication protocol implementation following the official Modbus specification (www.modbus.org).
+`Modbus` holds the statistics and CRC/register-packing helpers shared by both roles; `ModbusSlave`
+answers requests addressed to this device, `ModbusMaster` polls a remote slave (Read Holding
+Registers only, one request in flight at a time).
 
 ### Classes
 
 ```cpp
 class Modbus {
-    void receive(uint8_t *data, uint16_t length, dataCallback_f functionPointer);
-    void bind_function(ModbusFunction func, void(*handler)(ModbusFrame *request));
+    const ModbusStatistics& statistics() const;
+    void resetStatistics();
 };
 
 class ModbusSlave : public Modbus {
     void setID(uint8_t *slaveID);
+    void bind_function(ModbusFunction func, void(*handler)(ModbusFrame *request));
+    void receive(uint8_t *data, uint16_t length, dataCallback_f functionPointer);
+};
+
+class ModbusMaster : public Modbus {
+    explicit ModbusMaster(UART *bus);
+    bool readHoldingRegisters(uint8_t slaveId, uint16_t address, uint16_t count,
+                               ResponseCallback callback, uint32_t timeoutMs = 200U);
+    void onReceive(uint8_t *data, uint16_t length);
+    bool isBusy() const;
 };
 ```
 
