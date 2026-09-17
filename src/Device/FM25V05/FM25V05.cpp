@@ -78,4 +78,29 @@ void FM25V05::writeToMemory(
 	_pInstance->transmit(_CSPort, _CSPin, txBuf, Size+3);
 	free(txBuf);
 }
+
+void FM25V05::writeToMemoryAsync(
+	uint32_t MemAddress,
+	uint8_t *pData,
+	uint16_t Size,
+	dataCallback_f callbackFn,
+	uint32_t timeoutMs
+) {
+	if(_pInstance == nullptr || pData == nullptr || Size == 0U) return;
+
+	uint8_t *txBuf = (uint8_t*)malloc(Size + 3U);
+	if(txBuf == nullptr) return;
+	const uint8_t header[] = {
+		CMD_WRITE,
+		(uint8_t)(MemAddress >> 8U),
+		(uint8_t)MemAddress
+	};
+	memcpy(txBuf, header, 3U);
+	memcpy(txBuf + 3U, pData, Size);
+
+	uint8_t wren = CMD_WREN;
+	_pInstance->transmit(_CSPort, _CSPin, &wren, 1U, nullptr, timeoutMs);
+	_pInstance->transmit(_CSPort, _CSPin, txBuf, Size + 3U, callbackFn, timeoutMs);
+	free(txBuf);
+}
 #endif

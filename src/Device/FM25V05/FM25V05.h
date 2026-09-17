@@ -81,6 +81,14 @@ class FM25V05 : public IExternalMemory {
             uint16_t Size
         ) override;
 
+        void writeToMemoryAsync(
+            uint32_t MemAddress,
+            uint8_t *pData,
+            uint16_t Size,
+            dataCallback_f callbackFn,
+            uint32_t timeoutMs = 0U
+        ) override;
+
         protected:
         SPI             *_pInstance;  ///< Pointer to SPI communication interface
 

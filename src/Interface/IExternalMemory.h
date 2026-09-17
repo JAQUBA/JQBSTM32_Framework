@@ -18,6 +18,8 @@
 #ifndef __IEXTERNALMEMORY_H
 #define __IEXTERNALMEMORY_H
 
+#include "../Core.h"
+
 //#include "../Interface/IBus.h"
 
 /**
@@ -61,6 +63,18 @@ class IExternalMemory {
             uint8_t *pData, 
             uint16_t Size
         ) = 0;
+
+        virtual void writeToMemoryAsync(
+            uint32_t MemAddress,
+            uint8_t *pData,
+            uint16_t Size,
+            dataCallback_f callbackFn,
+            uint32_t timeoutMs = 0U
+        ) {
+		(void)timeoutMs;
+            writeToMemory(MemAddress, pData, Size);
+            if(callbackFn != nullptr) callbackFn(pData, Size);
+        }
     protected:
         // IBus *_pInstance; ///< Bus instance pointer (commented out)
 };
