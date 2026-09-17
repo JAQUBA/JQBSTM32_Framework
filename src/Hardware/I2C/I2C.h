@@ -145,7 +145,6 @@ class I2C : public IBus {
         I2C_HandleTypeDef* _pHandler;
 
         uint32_t operationTimeout;
-        uint32_t abortTimeout;
 
         enum {
             IDLE,
