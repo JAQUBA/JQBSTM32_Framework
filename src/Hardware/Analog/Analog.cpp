@@ -53,10 +53,8 @@ Analog::Analog(ADC_HandleTypeDef *pHandler, uint16_t vref) :
     _channelCount(pHandler != nullptr ? pHandler->Init.NbrOfConversion : 0),
     _maxAdcValue(0),
     _interruptListeners(nullptr),
-    _pendingHead(0),
-    _pendingTail(0),
-    _pendingCount(0),
-    _pendingBuffers{} {
+    _conversionPending(false),
+    _pendingBuffer{} {
 
     if (_pHandler == nullptr) {
         Error_Handler();
@@ -100,7 +98,24 @@ Analog::Analog(ADC_HandleTypeDef *pHandler, uint16_t vref) :
         Error_Handler();
     }
 
-    addTaskMain(Analog::dispatchPendingConversions);
+    addTaskMain(taskCallback {
+        if (!_conversionPending) return;
+        uint16_t sampleBuffer[ANALOG_MAX_CHANNELS];
+		__disable_irq();
+        for (uint8_t channel = 0U; channel < _channelCount; channel++) {
+            sampleBuffer[channel] = _pendingBuffer[channel];
+        }
+        _conversionPending = false;
+		__enable_irq();
+        InterruptListener* listener = _interruptListeners;
+        while (listener != nullptr) {
+            InterruptListener* next = listener->_next;
+            if (listener->_callback != nullptr) {
+                listener->_callback(listener, sampleBuffer);
+            }
+            listener = next;
+        }
+    });
 }
 Analog::~Analog() {
     if (_pHandler != nullptr) {
@@ -128,61 +143,10 @@ void Analog::convCpltCallback() {
         return;
     }
 
-    const uint8_t channelCount = (_channelCount > ANALOG_MAX_CHANNELS) ? ANALOG_MAX_CHANNELS : _channelCount;
-    uint8_t targetIndex = _pendingTail;
-    if (_pendingCount >= ANALOG_PENDING_CONVERSIONS) {
-        _pendingHead = (uint8_t)((_pendingHead + 1U) % ANALOG_PENDING_CONVERSIONS);
-        targetIndex = _pendingTail;
-    } else {
-        _pendingCount++;
+    for (uint8_t channel = 0U; channel < _channelCount; channel++) {
+        _pendingBuffer[channel] = _adcBuffer[channel];
     }
-
-    for (uint8_t channel = 0U; channel < channelCount; channel++) {
-        _pendingBuffers[targetIndex][channel] = _adcBuffer[channel];
-    }
-    _pendingTail = (uint8_t)((targetIndex + 1U) % ANALOG_PENDING_CONVERSIONS);
-}
-
-void Analog::dispatchPendingConversions(taskStruct *task) {
-    (void)task;
-    for (uint8_t i = 0; i < _Analog_instancesNum; i++) {
-        if (_Analog_instances[i] != nullptr) {
-            _Analog_instances[i]->notifyPendingConversions();
-        }
-    }
-}
-
-void Analog::notifyPendingConversions() {
-    const uint8_t channelCount = (_channelCount > ANALOG_MAX_CHANNELS) ? ANALOG_MAX_CHANNELS : _channelCount;
-    while (true) {
-        uint16_t sampleBuffer[ANALOG_MAX_CHANNELS];
-
-		__disable_irq();
-        if (_pendingCount == 0U) {
-			__enable_irq();
-            break;
-        }
-        const uint8_t sampleIndex = _pendingHead;
-        for (uint8_t channel = 0U; channel < channelCount; channel++) {
-            sampleBuffer[channel] = _pendingBuffers[sampleIndex][channel];
-        }
-        _pendingHead = (uint8_t)((_pendingHead + 1U) % ANALOG_PENDING_CONVERSIONS);
-        _pendingCount--;
-		__enable_irq();
-
-        __disable_irq();
-        InterruptListener* listener = _interruptListeners;
-        __enable_irq();
-        while (listener != nullptr) {
-            __disable_irq();
-            InterruptListener* next = listener->_next;
-            __enable_irq();
-            if (listener->_callback != nullptr) {
-                listener->_callback(listener, sampleBuffer);
-            }
-            listener = next;
-        }
-    }
+    _conversionPending = true;
 }
 
 bool Analog::attachInterrupt(InterruptListener* listener) {
@@ -190,19 +154,16 @@ bool Analog::attachInterrupt(InterruptListener* listener) {
         return false;
     }
 
-    __disable_irq();
     for (InterruptListener* current = _interruptListeners;
          current != nullptr;
          current = current->_next) {
         if (current == listener) {
-            __enable_irq();
             return true;
         }
     }
 
     listener->_next = _interruptListeners;
     _interruptListeners = listener;
-    __enable_irq();
     return true;
 }
 
@@ -211,27 +172,22 @@ bool Analog::detachInterrupt(InterruptListener* listener) {
         return false;
     }
 
-    __disable_irq();
     InterruptListener** current = &_interruptListeners;
     while (*current != nullptr) {
         if (*current == listener) {
             *current = listener->_next;
             listener->_next = nullptr;
-            __enable_irq();
             return true;
         }
         current = &((*current)->_next);
     }
 
-    __enable_irq();
     return false;
 }
 
 void Analog::clearInterrupts() {
-    __disable_irq();
     InterruptListener* listener = _interruptListeners;
     _interruptListeners = nullptr;
-    __enable_irq();
 
     while (listener != nullptr) {
         InterruptListener* next = listener->_next;

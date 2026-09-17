@@ -30,10 +30,6 @@
 #define ANALOG_MAX_CHANNELS 8
 #endif
 
-#ifndef ANALOG_PENDING_CONVERSIONS
-#define ANALOG_PENDING_CONVERSIONS 4
-#endif
-
 /**
  * @brief Universal ADC input class exposing raw DMA ADC readings
  * @details Provides raw analog samples and voltage conversion.
@@ -72,19 +68,18 @@ public:
 
     void convCpltCallback();
     /**
-     * @brief Register a callback invoked from the main loop after a DMA conversion completes.
-     * @details DMA samples are copied in the ADC interrupt, then delivered later from the main
-     *          scheduler. Up to ANALOG_PENDING_CONVERSIONS samples are queued per instance.
-     * @param listener Receiver embedded in the object that processes samples.
-     * @return True if the listener was registered or was already present.
+     * @brief Register a callback invoked from the ADC conversion complete interrupt context.
+     * @note Keep the callback short and non-blocking.
+        * @param listener Receiver embedded in the object that processes samples.
+        * @return True if the listener was registered or was already present.
      */
-    bool attachInterrupt(InterruptListener* listener);
+        bool attachInterrupt(InterruptListener* listener);
 
     /**
-     * @brief Unregister a previously attached callback.
-     * @return True if the listener was removed.
+     * @brief Unregister a previously attached interrupt callback.
+        * @return True if the listener was removed.
      */
-    bool detachInterrupt(InterruptListener* listener);
+        bool detachInterrupt(InterruptListener* listener);
 
     /**
      * @brief Remove all interrupt callbacks.
@@ -106,8 +101,6 @@ public:
     uint16_t getVref() const { return _vref; }
 
 private:
-    static void dispatchPendingConversions(taskStruct *task);
-
     ADC_HandleTypeDef *_pHandler;
     uint16_t *_adcBuffer;
 
@@ -115,12 +108,8 @@ private:
     uint8_t _channelCount;
     uint32_t _maxAdcValue;
     InterruptListener* _interruptListeners;
-    volatile uint8_t _pendingHead;
-    volatile uint8_t _pendingTail;
-    volatile uint8_t _pendingCount;
-    uint16_t _pendingBuffers[ANALOG_PENDING_CONVERSIONS][ANALOG_MAX_CHANNELS];
-
-    void notifyPendingConversions();
+    volatile bool _conversionPending;
+    uint16_t _pendingBuffer[ANALOG_MAX_CHANNELS];
 };
 
 #endif // __ANALOG_H_
