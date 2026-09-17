@@ -174,7 +174,6 @@ class OneWire : public IBus {
 
 		uint32_t operationTimeout;  ///< Operation timeout value
 		bool     is_device_presence; ///< Device presence detection flag
-		volatile bool ignoreNextTimerEvent = false; ///< Ignore one stale timer event after timeout
 
 		uint8_t  ow_byte;       ///< Current byte being processed
 		uint8_t  ow_byte_index; ///< Current byte index in buffer
@@ -198,8 +197,7 @@ class OneWire : public IBus {
 			OPERATION_PROGRESS_READ_START,  ///< Starting read operation
 			OPERATION_PROGRESS_READ_BIT,    ///< Reading bit
 			OPERATION_PROGRESS_READ_WAIT,   ///< Waiting during read
-			OPERATION_PROGRESS_READ_END,    ///< Ending read operation
-			OPERATION_PROGRESS_CANCELLED    ///< Waiting for a stale timer event to be consumed
+			OPERATION_PROGRESS_READ_END     ///< Ending read operation
 		} operationProgress = OPERATION_PROGRESS_IDLE;   
 
 		/**
