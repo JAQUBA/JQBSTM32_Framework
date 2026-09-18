@@ -120,8 +120,8 @@ class RegisterBank {
          * @param instantSave If true and MemoryBlock is available, save once after writing
          * @return Number of registers actually written
          */
-        uint16_t setRegisters(const uint16_t *buffer, uint16_t fullAddress,
-            uint16_t size, bool instantSave = true);
+        uint16_t setRegisters(uint16_t fullAddress,
+            const uint16_t *buffer, uint16_t size, bool instantSave = true);
 
         /**
          * @brief Free allocated memory for register bank

@@ -123,7 +123,7 @@ bool RegisterBank::setRegister(uint16_t fullAddress, uint16_t value, bool instan
     if(instantSave) save();
     return true;
 }
-uint16_t RegisterBank::setRegisters(const uint16_t *buffer, uint16_t fullAddress,
+uint16_t RegisterBank::setRegisters(uint16_t fullAddress, const uint16_t *buffer, 
     uint16_t size, bool instantSave) {
 	if (_registers == NULL || buffer == NULL || fullAddress < _start || fullAddress >= _stop) return 0;
     uint16_t written = 0;
