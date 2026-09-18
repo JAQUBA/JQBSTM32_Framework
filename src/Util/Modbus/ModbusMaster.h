@@ -46,6 +46,7 @@ class ModbusMaster : public Modbus {
 
         bool isBusy() const;
     private:
+        static constexpr uint16_t MaxReadRegisters = 125U;
         UART *_bus;
         enum State {IDLE, WAITING} _state = IDLE;
         ResponseCallback _callback;
@@ -53,6 +54,8 @@ class ModbusMaster : public Modbus {
         uint8_t _expectedFunction = 0U;
         uint16_t _expectedCount = 0U;
         uint32_t _timeoutAt = 0U;
+        uint16_t _responseLength = 0U;
+        uint8_t _responseBuffer[(MaxReadRegisters * 2U) + 5U] = {};
 
         void _finish(bool success, uint8_t exception, uint16_t *registers, uint16_t count);
 };

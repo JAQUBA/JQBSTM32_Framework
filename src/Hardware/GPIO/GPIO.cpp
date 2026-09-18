@@ -24,6 +24,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     GPIO._interruptCallback(GPIO_Pin);
 }
 
+void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
+    GPIO._interruptCallback(GPIO_Pin);
+}
+
+void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin) {
+    GPIO._interruptCallback(GPIO_Pin);
+}
+
 void HardwareGPIO::_interruptCallback(uint16_t GPIO_Pin) {
     uint32_t currentTime = millis();
     

@@ -53,22 +53,44 @@ bool ModbusMaster::readHoldingRegisters(uint8_t slaveId, uint16_t address, uint1
     _expectedCount = count;
     _callback = callback;
     _timeoutAt = millis() + timeoutMs;
+    _responseLength = 0U;
     _state = WAITING;
 
     _bus->transmit(frame, len);
     return true;
 }
 void ModbusMaster::onReceive(uint8_t *data, uint16_t length) {
-    if (_state != WAITING || data == nullptr || length < 5U) return;
-    if (!validateCrc(data, length) || data[0] != _expectedSlaveId) return;
+    if (_state != WAITING || data == nullptr || length == 0U) return;
 
-    if (data[1] == (uint8_t)(_expectedFunction | 0x80U)) {
-        _statistics.exceptions++;
-        _finish(false, data[2], nullptr, 0U);
+    const uint16_t expectedLength = (uint16_t)(3U + (_expectedCount * 2U) + 2U);
+    if (_responseLength + length > expectedLength) {
+        _statistics.malformedFrames++;
+        _finish(false, 0U, nullptr, 0U);
         return;
     }
-    if (data[1] != _expectedFunction || data[2] != (uint8_t)(_expectedCount * 2U) ||
-        length != (uint16_t)(3U + data[2] + 2U)) {
+
+    memcpy(_responseBuffer + _responseLength, data, length);
+    _responseLength = (uint16_t)(_responseLength + length);
+    if (_responseLength < expectedLength) return;
+
+    if (_responseBuffer[0] != _expectedSlaveId) {
+        _statistics.malformedFrames++;
+        _finish(false, 0U, nullptr, 0U);
+        return;
+    }
+    if (!validateCrc(_responseBuffer, _responseLength)) {
+        _statistics.crcErrors++;
+        _finish(false, 0U, nullptr, 0U);
+        return;
+    }
+
+    if (_responseBuffer[1] == (uint8_t)(_expectedFunction | 0x80U)) {
+        _statistics.exceptions++;
+        _finish(false, _responseBuffer[2], nullptr, 0U);
+        return;
+    }
+    if (_responseBuffer[1] != _expectedFunction ||
+        _responseBuffer[2] != (uint8_t)(_expectedCount * 2U)) {
         _statistics.malformedFrames++;
         _finish(false, 0U, nullptr, 0U);
         return;
@@ -76,7 +98,7 @@ void ModbusMaster::onReceive(uint8_t *data, uint16_t length) {
 
     uint16_t registers[MODBUS_MAX_READ_REGISTERS];
     for (uint16_t index = 0U; index < _expectedCount; index++) {
-        registers[index] = readU16BE(data + 3U + index * 2U);
+        registers[index] = readU16BE(_responseBuffer + 3U + index * 2U);
     }
     _statistics.requests++;
     _finish(true, 0U, registers, _expectedCount);
