@@ -110,7 +110,18 @@ class RegisterBank {
          * @details Sets register value using global addressing with optional persistence.
          *          Operation is ignored if address doesn't belong to this bank.
          */
-        void setRegister(uint16_t fullAddress, uint16_t value, bool instantSave = true);
+        bool setRegister(uint16_t fullAddress, uint16_t value, bool instantSave = true);
+
+        /**
+         * @brief Set multiple consecutive registers using full/absolute addresses
+         * @param buffer Pointer to register values
+         * @param fullAddress Absolute address of the first register
+         * @param size Number of registers to write
+         * @param instantSave If true and MemoryBlock is available, save once after writing
+         * @return Number of registers actually written
+         */
+        uint16_t setRegisters(const uint16_t *buffer, uint16_t fullAddress,
+            uint16_t size, bool instantSave = true);
 
         /**
          * @brief Free allocated memory for register bank

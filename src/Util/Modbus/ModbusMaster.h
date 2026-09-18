@@ -32,11 +32,28 @@
 class ModbusMaster : public Modbus {
     public:
         using ResponseCallback = std::function<void(bool success, uint8_t exception, uint16_t *registers, uint16_t count)>;
+        using Uint32Callback = std::function<void(bool success, uint8_t exception, uint32_t value)>;
+        using Int32Callback = std::function<void(bool success, uint8_t exception, int32_t value)>;
+        using FloatCallback = std::function<void(bool success, uint8_t exception, float value)>;
+        using DoubleCallback = std::function<void(bool success, uint8_t exception, double value)>;
 
         explicit ModbusMaster(UART *bus);
 
         bool readHoldingRegisters(uint8_t slaveId, uint16_t address, uint16_t count,
                                    ResponseCallback callback, uint32_t timeoutMs = 200U);
+
+        /**
+         * @brief Convenience readers converting a fixed-size register block into a wider value
+         * @details wordSwap follows the same convention as Modbus::registersToUint32/Float/Double
+         */
+        bool readHoldingRegistersAsUint32(uint8_t slaveId, uint16_t address, Uint32Callback callback,
+                                           bool wordSwap = false, uint32_t timeoutMs = 200U);
+        bool readHoldingRegistersAsInt32(uint8_t slaveId, uint16_t address, Int32Callback callback,
+                                          bool wordSwap = false, uint32_t timeoutMs = 200U);
+        bool readHoldingRegistersAsFloat(uint8_t slaveId, uint16_t address, FloatCallback callback,
+                                          bool wordSwap = false, uint32_t timeoutMs = 200U);
+        bool readHoldingRegistersAsDouble(uint8_t slaveId, uint16_t address, DoubleCallback callback,
+                                           bool wordSwap = false, uint32_t timeoutMs = 200U);
 
         /**
          * @brief Feed a received frame into the pending request state machine
@@ -61,3 +78,4 @@ class ModbusMaster : public Modbus {
 };
 
 #endif
+

@@ -117,10 +117,22 @@ uint16_t *RegisterBank::getValuePtr(uint16_t regAddress) {
 	if (_registers == NULL || regAddress >= _size) return NULL;
     return _registers + regAddress;
 }
-void RegisterBank::setRegister(uint16_t fullAddress, uint16_t value, bool instantSave) {
-	if (_registers == NULL || fullAddress < _start || fullAddress >= _stop) return;
+bool RegisterBank::setRegister(uint16_t fullAddress, uint16_t value, bool instantSave) {
+	if (_registers == NULL || fullAddress < _start || fullAddress >= _stop) return false;
     _registers[fullAddress-_start] = value;
     if(instantSave) save();
+    return true;
+}
+uint16_t RegisterBank::setRegisters(const uint16_t *buffer, uint16_t fullAddress,
+    uint16_t size, bool instantSave) {
+	if (_registers == NULL || buffer == NULL || fullAddress < _start || fullAddress >= _stop) return 0;
+    uint16_t written = 0;
+    while (written < size && fullAddress + written < _stop) {
+        _registers[fullAddress + written - _start] = buffer[written];
+        written++;
+    }
+    if(instantSave && written > 0) save();
+    return written;
 }
 uint16_t RegisterBank::getRegister(uint16_t fullAddress) {
 	if (_registers == NULL || fullAddress < _start || fullAddress >= _stop) return 0;

@@ -21,6 +21,7 @@
 
 #ifndef __MODBUS_SLAVE_H_
 #define __MODBUS_SLAVE_H_
+#include <initializer_list>
 #include "Modbus.h"
 
 /**
@@ -29,9 +30,11 @@
  */
 class ModbusSlave : public Modbus {
     public:
+        static constexpr uint16_t MAX_READ_COILS = 2000U;
+        static constexpr uint16_t MAX_WRITE_COILS = 1968U;
         static constexpr uint16_t MAX_READ_REGISTERS = 125U;
         static constexpr uint16_t MAX_WRITE_REGISTERS = 123U;
-        static constexpr uint16_t MAX_RESPONSE_BYTES = 3U + MAX_READ_REGISTERS * 2U + 2U;
+        static constexpr uint16_t MAX_RESPONSE_BYTES = 3U + MAX_READ_COILS / 8U + 2U;
 
         /**
          * @brief Set slave ID
@@ -56,9 +59,16 @@ class ModbusSlave : public Modbus {
          * @param functionPointer Handler function for the specified function code
          */
         void bind_function(ModbusFunction function, void(*functionPointer)(ModbusFrame *request));
+
+        /**
+         * @brief Bind one handler to multiple function codes
+         * @param functions Modbus function codes to bind
+         * @param functionPointer Handler function for all specified function codes
+         */
+        void bind_function(std::initializer_list<ModbusFunction> functions, void(*functionPointer)(ModbusFrame *request));
     private:
         uint8_t *_slaveID = nullptr;
-        void (*_functionHandlers[4])(ModbusFrame *request) = {};
+        void (*_functionHandlers[8])(ModbusFrame *request) = {};
         ModbusFrame _frame = {};
         uint8_t _responseBuffer[MAX_RESPONSE_BYTES] = {};
 };

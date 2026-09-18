@@ -14,10 +14,19 @@ Bufory przekazywane do operacji DMA muszą żyć do callbacku. Callbacki mogą b
 Bank RAM tworzy rejestry ulotne. Bank z `MemoryBlock` ma osobne `load()`/`save()` i nie zapisuje automatycznie, chyba że `setValue/setRegister` dostanie `instantSave=true`. `find(address)` zwraca bank obejmujący adres; zakresy banków nie powinny się nakładać.
 
 ## Modbus
-`ModbusSlave::receive()` parsuje ramkę i wywołuje handler związany przez `bind_function`. Handlery są przechowywane per instancja Modbus, więc niezależne kanały nie nadpisują się wzajemnie. `ModbusFrame::registers` ma miejsce na 125 rejestrów. Handler musi poprawnie ustawić `request->size` dla odczytu. Dla funkcji zapisu interpretacja pól wynika z `Modbus.h`, nie z nazwy pola.
-Biblioteka obsługuje FC03, FC06 i FC16; broadcast jest dozwolony tylko dla
-zapisów i nie otrzymuje odpowiedzi. `Modbus::statistics()` udostępnia
-liczniki diagnostyczne bez alokacji dynamicznej.
+`ModbusSlave::receive()` parsuje ramkę i wywołuje handler związany przez `bind_function`. Handlery są przechowywane per instancja Modbus, więc niezależne kanały nie nadpisują się wzajemnie. Jeden handler można podpiąć do wielu kodów przez `bind_function({FUNC_1, FUNC_2}, handler)`, co pozwala współdzielić logikę kompatybilnych operacji.
+
+Handler odczytu powinien zachować żądany rozmiar i zgłosić wyjątek, jeśli
+`readRegisters()` zwróci mniej rejestrów. Dla zapisów znaczenie pól zależy od
+kodu funkcji: FC05 używa `request->registers[0]`, FC06 używa
+`request->size` jako wartości, a FC15/FC16 używają `request->registers` oraz
+`request->size` jako liczby rejestrów. Błąd należy zgłosić przez ustawienie
+`request->exception`.
+
+Biblioteka obsługuje FC01, FC02, FC03, FC04, FC05, FC06, FC15 i FC16;
+broadcast jest dozwolony tylko dla zapisów i nie otrzymuje odpowiedzi.
+`Modbus::statistics()` udostępnia liczniki diagnostyczne bez alokacji
+dynamicznej.
 
 ## Walidacja zmian
 Po zmianie modułu:

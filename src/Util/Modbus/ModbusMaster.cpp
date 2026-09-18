@@ -22,8 +22,6 @@
 #include "ModbusMaster.h"
 #include "../Math/CRC16.h"
 
-#define MODBUS_FUNC_READ_HOLDING 3U
-#define MODBUS_MAX_READ_REGISTERS 125U
 #define MODBUS_MASTER_POLL_MS 20U
 
 ModbusMaster::ModbusMaster(UART *bus) : _bus(bus) {
@@ -39,17 +37,17 @@ bool ModbusMaster::isBusy() const {
 }
 bool ModbusMaster::readHoldingRegisters(uint8_t slaveId, uint16_t address, uint16_t count,
                                          ResponseCallback callback, uint32_t timeoutMs) {
-    if (_state != IDLE || _bus == nullptr || count == 0U || count > MODBUS_MAX_READ_REGISTERS) return false;
+    if (_state != IDLE || _bus == nullptr || count == 0U || count > MaxReadRegisters) return false;
 
     uint8_t frame[8];
     frame[0] = slaveId;
-    frame[1] = MODBUS_FUNC_READ_HOLDING;
+    frame[1] = (uint8_t)ModbusFunction::FUNC_3;
     writeU16BE(frame + 2U, address);
     writeU16BE(frame + 4U, count);
     const uint16_t len = appendCrc(frame, 6U);
 
     _expectedSlaveId = slaveId;
-    _expectedFunction = MODBUS_FUNC_READ_HOLDING;
+    _expectedFunction = (uint8_t)ModbusFunction::FUNC_3;
     _expectedCount = count;
     _callback = callback;
     _timeoutAt = millis() + timeoutMs;
@@ -59,7 +57,36 @@ bool ModbusMaster::readHoldingRegisters(uint8_t slaveId, uint16_t address, uint1
     _bus->transmit(frame, len);
     return true;
 }
+bool ModbusMaster::readHoldingRegistersAsUint32(uint8_t slaveId, uint16_t address, Uint32Callback callback,
+                                                 bool wordSwap, uint32_t timeoutMs) {
+    return readHoldingRegisters(slaveId, address, 2U,
+        [callback, wordSwap](bool success, uint8_t exception, uint16_t *registers, uint16_t count) {
+            if (callback) callback(success, exception, success && count == 2U ? registersToUint32(registers, wordSwap) : 0U);
+        }, timeoutMs);
+}
+bool ModbusMaster::readHoldingRegistersAsInt32(uint8_t slaveId, uint16_t address, Int32Callback callback,
+                                                bool wordSwap, uint32_t timeoutMs) {
+    return readHoldingRegisters(slaveId, address, 2U,
+        [callback, wordSwap](bool success, uint8_t exception, uint16_t *registers, uint16_t count) {
+            if (callback) callback(success, exception, success && count == 2U ? registersToInt32(registers, wordSwap) : 0);
+        }, timeoutMs);
+}
+bool ModbusMaster::readHoldingRegistersAsFloat(uint8_t slaveId, uint16_t address, FloatCallback callback,
+                                                bool wordSwap, uint32_t timeoutMs) {
+    return readHoldingRegisters(slaveId, address, 2U,
+        [callback, wordSwap](bool success, uint8_t exception, uint16_t *registers, uint16_t count) {
+            if (callback) callback(success, exception, success && count == 2U ? registersToFloat(registers, wordSwap) : 0.0f);
+        }, timeoutMs);
+}
+bool ModbusMaster::readHoldingRegistersAsDouble(uint8_t slaveId, uint16_t address, DoubleCallback callback,
+                                                 bool wordSwap, uint32_t timeoutMs) {
+    return readHoldingRegisters(slaveId, address, 4U,
+        [callback, wordSwap](bool success, uint8_t exception, uint16_t *registers, uint16_t count) {
+            if (callback) callback(success, exception, success && count == 4U ? registersToDouble(registers, wordSwap) : 0.0);
+        }, timeoutMs);
+}
 void ModbusMaster::onReceive(uint8_t *data, uint16_t length) {
+
     if (_state != WAITING || data == nullptr || length == 0U) return;
 
     const uint16_t expectedLength = (uint16_t)(3U + (_expectedCount * 2U) + 2U);
@@ -96,7 +123,7 @@ void ModbusMaster::onReceive(uint8_t *data, uint16_t length) {
         return;
     }
 
-    uint16_t registers[MODBUS_MAX_READ_REGISTERS];
+    uint16_t registers[MaxReadRegisters];
     for (uint16_t index = 0U; index < _expectedCount; index++) {
         registers[index] = readU16BE(_responseBuffer + 3U + index * 2U);
     }
