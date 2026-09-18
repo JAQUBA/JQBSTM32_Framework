@@ -145,7 +145,7 @@ uint16_t *RegisterBank::getRegisterPtr(uint16_t fullAddress) {
 void RegisterBank::free_bank() {
     free(_registers);
 }
-uint16_t RegisterBank::readRegisters(uint16_t *buffer, uint16_t address, uint16_t size) {
+uint16_t RegisterBank::readRegisters(uint16_t address, uint16_t *buffer, uint16_t size) {
 	if (_registers == NULL || buffer == NULL || address < _start || address >= _stop) return 0;
     uint16_t addr = address - _start;
     uint16_t j = 0;

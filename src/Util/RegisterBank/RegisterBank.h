@@ -143,15 +143,15 @@ class RegisterBank {
 
         /**
          * @brief Read multiple consecutive registers into buffer
-         * @param buffer Pointer to buffer for storing read register values
          * @param address Starting relative address within this bank
+         * @param buffer Pointer to buffer for storing read register values
          * @param size Number of registers to read
          * @return Number of registers actually read (may be less if hitting bank boundary)
          * @details Efficiently reads block of consecutive registers into provided buffer.
          *          Reading stops at bank boundary if requested size exceeds available registers.
          * @note Buffer must have space for at least 'size' uint16_t values
          */
-        uint16_t readRegisters(uint16_t *buffer, uint16_t address, uint16_t size);
+        uint16_t readRegisters(uint16_t address, uint16_t *buffer, uint16_t size);
 
         /**
          * @brief Load register bank from persistent storage
