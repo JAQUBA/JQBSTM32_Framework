@@ -114,8 +114,8 @@ class RegisterBank {
 
         /**
          * @brief Set multiple consecutive registers using full/absolute addresses
-         * @param buffer Pointer to register values
          * @param fullAddress Absolute address of the first register
+         * @param buffer Pointer to register values
          * @param size Number of registers to write
          * @param instantSave If true and MemoryBlock is available, save once after writing
          * @return Number of registers actually written
