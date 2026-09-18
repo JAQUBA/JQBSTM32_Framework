@@ -110,7 +110,18 @@ class RegisterBank {
          * @details Sets register value using global addressing with optional persistence.
          *          Operation is ignored if address doesn't belong to this bank.
          */
-        void setRegister(uint16_t fullAddress, uint16_t value, bool instantSave = true);
+        bool setRegister(uint16_t fullAddress, uint16_t value, bool instantSave = true);
+
+        /**
+         * @brief Set multiple consecutive registers using full/absolute addresses
+         * @param fullAddress Absolute address of the first register
+         * @param buffer Pointer to register values
+         * @param size Number of registers to write
+         * @param instantSave If true and MemoryBlock is available, save once after writing
+         * @return Number of registers actually written
+         */
+        uint16_t setRegisters(uint16_t fullAddress,
+            const uint16_t *buffer, uint16_t size, bool instantSave = true);
 
         /**
          * @brief Free allocated memory for register bank
@@ -132,15 +143,15 @@ class RegisterBank {
 
         /**
          * @brief Read multiple consecutive registers into buffer
-         * @param buffer Pointer to buffer for storing read register values
          * @param address Starting relative address within this bank
+         * @param buffer Pointer to buffer for storing read register values
          * @param size Number of registers to read
          * @return Number of registers actually read (may be less if hitting bank boundary)
          * @details Efficiently reads block of consecutive registers into provided buffer.
          *          Reading stops at bank boundary if requested size exceeds available registers.
          * @note Buffer must have space for at least 'size' uint16_t values
          */
-        uint16_t readRegisters(uint16_t *buffer, uint16_t address, uint16_t size);
+        uint16_t readRegisters(uint16_t address, uint16_t *buffer, uint16_t size);
 
         /**
          * @brief Load register bank from persistent storage

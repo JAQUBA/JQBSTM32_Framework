@@ -54,21 +54,36 @@ Abstract interface for any external memory device. Implemented by:
 
 ## Modbus RTU
 
-**Header**: `Util/Modbus/Modbus.h`  
-**Implementation**: `Util/Modbus/Modbus.cpp`
+**Headers**: `Util/Modbus/Modbus.h` (shared base), `Util/Modbus/ModbusSlave.h`, `Util/Modbus/ModbusMaster.h`  
+**Implementation**: `Util/Modbus/Modbus.cpp`, `Util/Modbus/ModbusSlave.cpp`, `Util/Modbus/ModbusMaster.cpp`
 
 Industrial communication protocol implementation following the official Modbus specification (www.modbus.org).
+`Modbus` holds the statistics and CRC/register-packing helpers shared by both roles; `ModbusSlave`
+answers requests addressed to this device, `ModbusMaster` polls a remote slave (Read Holding
+Registers only, one request in flight at a time).
 
 ### Classes
 
 ```cpp
 class Modbus {
-    void receive(uint8_t *data, uint16_t length, dataCallback_f functionPointer);
-    void bind_function(ModbusFunction func, void(*handler)(ModbusFrame *request));
+    const ModbusStatistics& statistics() const;
+    void resetStatistics();
 };
 
 class ModbusSlave : public Modbus {
     void setID(uint8_t *slaveID);
+    void bind_function(ModbusFunction func, void(*handler)(ModbusFrame *request));
+    void bind_function(std::initializer_list<ModbusFunction> funcs,
+                       void(*handler)(ModbusFrame *request));
+    void receive(uint8_t *data, uint16_t length, dataCallback_f functionPointer);
+};
+
+class ModbusMaster : public Modbus {
+    explicit ModbusMaster(UART *bus);
+    bool readHoldingRegisters(uint8_t slaveId, uint16_t address, uint16_t count,
+                               ResponseCallback callback, uint32_t timeoutMs = 200U);
+    void onReceive(uint8_t *data, uint16_t length);
+    bool isBusy() const;
 };
 ```
 
@@ -76,10 +91,14 @@ class ModbusSlave : public Modbus {
 
 ```cpp
 enum ModbusFunction {
-    FUNC_3,   // 0x03 — Read Holding Registers
-    FUNC_4,   // 0x04 — Read Input Registers
-    FUNC_6,   // 0x06 — Write Single Register
-    FUNC_10   // 0x10 — Write Multiple Registers
+    FUNC_1 = 1,    // decimal 1 (0x01) — Read Coils
+    FUNC_2 = 2,    // decimal 2 (0x02) — Read Discrete Inputs
+    FUNC_3 = 3,    // decimal 3 (0x03) — Read Holding Registers
+    FUNC_4 = 4,    // decimal 4 (0x04) — Read Input Registers
+    FUNC_5 = 5,    // decimal 5 (0x05) — Write Single Coil
+    FUNC_6 = 6,    // decimal 6 (0x06) — Write Single Register
+    FUNC_15 = 15,  // decimal 15 (0x0F) — Write Multiple Coils
+    FUNC_16 = 16   // decimal 16 (0x10) — Write Multiple Registers
 };
 ```
 
@@ -90,7 +109,8 @@ struct ModbusFrame {
     ModbusFunction function;   // Function code
     uint16_t address;          // Starting register address
     uint16_t size;             // Number of registers
-    uint16_t registers[125];   // Register data (max 125 per spec)
+    uint16_t registers[2000];  // Register and coil data
+    uint8_t exception;          // Exception code, zero when request is valid
 };
 ```
 
@@ -110,19 +130,35 @@ UART rs485(&huart1, DIR_PORT, DIR_PIN);
 // Set slave ID (from register bank)
 modbus.setID((uint8_t*)opcje.getRegisterPtr(526));
 
-// Bind function handlers
-modbus.bind_function(ModbusFunction::FUNC_3, [](ModbusFrame *request) {
+// One handler may be bound to multiple compatible function codes.
+modbus.bind_function({ModbusFunction::FUNC_1, ModbusFunction::FUNC_2,
+                     ModbusFunction::FUNC_3, ModbusFunction::FUNC_4},
+[](ModbusFrame *request) {
     RegisterBank *bank = RegisterBank::find(request->address);
-    if (bank) {
-        request->size = bank->readRegisters(
-            request->registers, request->address, request->size);
+    const uint16_t requestedSize = request->size;
+    if (!bank || bank->readRegisters(request->registers, request->address,
+                                     requestedSize) != requestedSize) {
+        request->exception = 2U;
     }
 });
 
-modbus.bind_function(ModbusFunction::FUNC_6, [](ModbusFrame *request) {
+modbus.bind_function({ModbusFunction::FUNC_5, ModbusFunction::FUNC_6},
+[](ModbusFrame *request) {
     RegisterBank *bank = RegisterBank::find(request->address);
-    if (bank) {
-        bank->setRegister(request->address, request->size);
+    const uint16_t value = request->function == ModbusFunction::FUNC_5
+        ? request->registers[0]
+        : request->size;
+    if (!bank || !bank->setRegister(request->address, value, false)) {
+        request->exception = 2U;
+    }
+});
+
+modbus.bind_function({ModbusFunction::FUNC_15, ModbusFunction::FUNC_16},
+[](ModbusFrame *request) {
+    RegisterBank *bank = RegisterBank::find(request->address);
+    if (!bank || bank->setRegisters(request->registers, request->address,
+                                    request->size, false) != request->size) {
+        request->exception = 2U;
     }
 });
 

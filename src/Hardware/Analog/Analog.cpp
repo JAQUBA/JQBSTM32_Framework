@@ -52,7 +52,9 @@ Analog::Analog(ADC_HandleTypeDef *pHandler, uint16_t vref) :
     _vref(vref),
     _channelCount(pHandler != nullptr ? pHandler->Init.NbrOfConversion : 0),
     _maxAdcValue(0),
-    _interruptListeners(nullptr) {
+    _interruptListeners(nullptr),
+    _conversionPending(false),
+    _pendingBuffer{} {
 
     if (_pHandler == nullptr) {
         Error_Handler();
@@ -95,6 +97,25 @@ Analog::Analog(ADC_HandleTypeDef *pHandler, uint16_t vref) :
     if (HAL_ADC_Start_DMA(_pHandler, (uint32_t*)_adcBuffer, _channelCount) != HAL_OK) {
         Error_Handler();
     }
+
+    addTaskMain(taskCallback {
+        if (!_conversionPending) return;
+        uint16_t sampleBuffer[ANALOG_MAX_CHANNELS];
+		__disable_irq();
+        for (uint8_t channel = 0U; channel < _channelCount; channel++) {
+            sampleBuffer[channel] = _pendingBuffer[channel];
+        }
+        _conversionPending = false;
+		__enable_irq();
+        InterruptListener* listener = _interruptListeners;
+        while (listener != nullptr) {
+            InterruptListener* next = listener->_next;
+            if (listener->_callback != nullptr) {
+                listener->_callback(listener, sampleBuffer);
+            }
+            listener = next;
+        }
+    });
 }
 Analog::~Analog() {
     if (_pHandler != nullptr) {
@@ -122,14 +143,10 @@ void Analog::convCpltCallback() {
         return;
     }
 
-    InterruptListener* listener = _interruptListeners;
-    while (listener != nullptr) {
-        InterruptListener* next = listener->_next;
-        if (listener->_callback != nullptr) {
-            listener->_callback(listener, _adcBuffer);
-        }
-        listener = next;
+    for (uint8_t channel = 0U; channel < _channelCount; channel++) {
+        _pendingBuffer[channel] = _adcBuffer[channel];
     }
+    _conversionPending = true;
 }
 
 bool Analog::attachInterrupt(InterruptListener* listener) {

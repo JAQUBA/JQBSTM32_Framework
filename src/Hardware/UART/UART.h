@@ -26,6 +26,10 @@
 #define UART_MAX_INSTANCES 2
 #endif
 
+#ifndef UART_RX_BUFFER_SIZE
+#define UART_RX_BUFFER_SIZE 256
+#endif
+
 #include "../../Interface/IBus.h"
 
 /**
@@ -112,8 +116,9 @@ class UART : public IBus {
         
         bool received = false;           ///< Reception flag
         unsigned long lastReceivedByte = 0; ///< Timestamp of last received byte
-        uint8_t  rx_data_index = 0;     ///< Current index in receive buffer
-        uint8_t  rx_buffer[256];        ///< Receive buffer
+        uint16_t rx_data_index = 0;     ///< Current index in receive buffer
+        uint8_t  rx_buffer[UART_RX_BUFFER_SIZE]; ///< Receive buffer
+        uint8_t  rx_snapshot[UART_RX_BUFFER_SIZE]; ///< Stable receive snapshot for callback delivery
 
         uint32_t operationTimeout; ///< Operation timeout value
         

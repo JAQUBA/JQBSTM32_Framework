@@ -24,11 +24,23 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
     GPIO._interruptCallback(GPIO_Pin);
 }
 
+void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin) {
+    GPIO._interruptCallback(GPIO_Pin);
+}
+
+void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin) {
+    GPIO._interruptCallback(GPIO_Pin);
+}
+
 void HardwareGPIO::_interruptCallback(uint16_t GPIO_Pin) {
     uint32_t currentTime = millis();
     
     for (uint8_t i = 0; i < MAX_GPIO_INTERRUPTS; i++) {
         if (interrupts[i].active && interrupts[i].GPIO_Pin == GPIO_Pin) {
+            if (!matchesInterruptMode(interrupts[i].GPIOx, interrupts[i].GPIO_Pin, interrupts[i].triggerMode)) {
+                continue;
+            }
+
             interrupts[i].triggerCount++;
             interrupts[i].lastTriggerTime = currentTime;
             
@@ -40,12 +52,13 @@ void HardwareGPIO::_interruptCallback(uint16_t GPIO_Pin) {
     }
 }
 
-bool HardwareGPIO::attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidCallback_f callback) {
+bool HardwareGPIO::attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidCallback_f callback, uint8_t mode) {
     // Check if interrupt already exists for this pin
     uint8_t existingSlot = findInterruptSlot(GPIOx, GPIO_Pin);
     if (existingSlot < MAX_GPIO_INTERRUPTS) {
         // Update existing interrupt
         interrupts[existingSlot].callback = callback;
+        interrupts[existingSlot].triggerMode = mode;
         return true;
     }
     
@@ -59,6 +72,7 @@ bool HardwareGPIO::attachInterrupt(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, voidC
     interrupts[freeSlot].GPIOx = GPIOx;
     interrupts[freeSlot].GPIO_Pin = GPIO_Pin;
     interrupts[freeSlot].callback = callback;
+    interrupts[freeSlot].triggerMode = mode;
     interrupts[freeSlot].active = true;
     interrupts[freeSlot].triggerCount = 0;
     interrupts[freeSlot].lastTriggerTime = millis();
@@ -86,6 +100,20 @@ uint32_t HardwareGPIO::getInterruptCount(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin)
         return interrupts[slot].triggerCount;
     }
     return 0;
+}
+
+bool HardwareGPIO::matchesInterruptMode(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, uint8_t mode) const {
+    const GPIO_PinState currentState = HAL_GPIO_ReadPin(GPIOx, GPIO_Pin);
+
+    switch (mode) {
+        case RISING:
+            return currentState == GPIO_PIN_SET;
+        case FALLING:
+            return currentState == GPIO_PIN_RESET;
+        case CHANGE:
+        default:
+            return true;
+    }
 }
 
 uint8_t HardwareGPIO::findInterruptSlot(GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin) {
