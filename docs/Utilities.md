@@ -170,6 +170,50 @@ rs485.onReceiveHandler([](uint8_t *data, uint16_t size) {
 });
 ```
 
+### Modbus Master Multi-Register Values
+
+`ModbusMaster` can read 32-bit and 64-bit values stored in holding registers and convert them before invoking the callback.
+The default word order is high word first, low word second. Pass `wordSwap = true` for devices that expose the same value as low word first.
+
+```cpp
+ModbusMaster master(&rs485);
+
+master.readHoldingRegistersAsFloat(
+    1U,
+    0x0000U,
+    [](bool success, uint8_t exception, float value) {
+        if (!success) {
+            // exception is non-zero when the slave returned a Modbus exception.
+            return;
+        }
+
+        // value contains the IEEE-754 float assembled from two registers.
+    },
+    false
+);
+
+master.readHoldingRegistersAsDouble(
+    1U,
+    0x0002U,
+    [](bool success, uint8_t exception, double value) {
+        if (!success) {
+            return;
+        }
+
+        // value contains the IEEE-754 double assembled from four registers.
+    }
+);
+```
+
+The same conversion helpers are available without issuing a Modbus request:
+
+```cpp
+uint16_t registers[2] = {0x4120U, 0x0000U};
+float value = Modbus::registersToFloat(registers);
+
+Modbus::floatToRegisters(value, registers, true); // write low word first
+```
+
 ---
 
 ## RegisterBank
