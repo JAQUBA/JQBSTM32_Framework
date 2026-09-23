@@ -141,6 +141,8 @@ class I2C : public IBus {
         void errorInterrupt();
         
         uint16_t queueSize();
+
+        bool isDeviceReady(uint16_t DevAddress);
     private:
         I2C_HandleTypeDef* _pHandler;
 

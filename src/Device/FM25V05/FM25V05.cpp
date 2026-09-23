@@ -103,4 +103,7 @@ void FM25V05::writeToMemoryAsync(
 	_pInstance->transmit(_CSPort, _CSPin, txBuf, Size + 3U, callbackFn, timeoutMs);
 	free(txBuf);
 }
+bool FM25V05::isMemoryReady() {
+    return _pInstance != nullptr; // Simple check, assumes memory is ready if SPI instance is valid
+}
 #endif

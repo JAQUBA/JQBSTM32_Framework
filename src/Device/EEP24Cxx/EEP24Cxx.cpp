@@ -88,6 +88,10 @@ uint16_t EEP24Cxx::getPageRemaining(uint32_t memoryOffset) const {
     return (uint16_t)(_pageSize - inPage);
 }
 
+bool EEP24Cxx::isMemoryReady() {
+    return _pInstance->isDeviceReady(_DevAddress);
+}
+
 void EEP24Cxx::readFromMemory(
     uint32_t MemAddress,
     uint8_t *pData,

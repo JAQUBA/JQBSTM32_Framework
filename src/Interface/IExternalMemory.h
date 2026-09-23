@@ -75,6 +75,7 @@ class IExternalMemory {
             writeToMemory(MemAddress, pData, Size);
             if(callbackFn != nullptr) callbackFn(pData, Size);
         }
+        virtual bool isMemoryReady() = 0;
     protected:
         // IBus *_pInstance; ///< Bus instance pointer (commented out)
 };

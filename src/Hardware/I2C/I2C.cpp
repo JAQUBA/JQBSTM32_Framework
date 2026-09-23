@@ -191,4 +191,7 @@ void I2C::writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAd
 uint16_t I2C::queueSize() {
 	return operations.size();
 }
+bool I2C::isDeviceReady(uint16_t DevAddress) {
+    return HAL_I2C_IsDeviceReady(_pHandler, DevAddress, 2U, 20U) == HAL_OK;
+}
 #endif

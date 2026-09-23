@@ -88,6 +88,7 @@ class FM25V05 : public IExternalMemory {
             dataCallback_f callbackFn,
             uint32_t timeoutMs = 0U
         ) override;
+        bool isMemoryReady() override;
 
         protected:
         SPI             *_pInstance;  ///< Pointer to SPI communication interface

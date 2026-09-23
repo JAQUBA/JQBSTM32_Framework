@@ -81,6 +81,7 @@ class EEP24Cxx : public IExternalMemory {
             dataCallback_f callbackFn = nullptr,
             uint32_t timeoutMs = DEFAULT_TIMEOUT_MS
         ) override;
+        bool isMemoryReady() override;
 
     protected:
         I2C      *_pInstance;
