@@ -166,7 +166,6 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
 }
 
 void OneWire::reset(uint32_t timeoutMs) {
-	if (operations.size() >= 8U) return;
 	operation operation;
 	operation.operationType = EoperationType::RESET;
 	operation.timeoutMs = timeoutMs;
@@ -179,7 +178,6 @@ void OneWire::transmit(
 	uint32_t timeoutMs
 ){
 	if (pData == nullptr || size == 0U) return;
-	if (operations.size() >= 8U) return;
 	operation operation;
 	operation.operationType = EoperationType::TRANSMIT;
 	operation.timeoutMs = timeoutMs;
@@ -198,7 +196,6 @@ void OneWire::receive(
 	uint32_t timeoutMs
 ){
 	if (pData == nullptr || size == 0U) return;
-	if (operations.size() >= 8U) return;
 	operation operation;
 	operation.operationType = EoperationType::RECEIVE;
 	operation.timeoutMs = timeoutMs;
@@ -217,7 +214,6 @@ void OneWire::transmitThenReceive(
 ){
 	if (txSize > 0U && pData_tx == nullptr) return;
 	if (rxSize > 0U && pData_rx == nullptr) return;
-	if (operations.size() >= 7U) return;
 	operation operation;
 	operation.operationType = EoperationType::TRANSMIT;
 	operation.timeoutMs = timeoutMs;

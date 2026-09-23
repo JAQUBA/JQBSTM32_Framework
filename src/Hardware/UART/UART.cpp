@@ -143,7 +143,6 @@ void UART::onTransmitHandler(voidCallback_f onTransmit) {fpOnTransmit = onTransm
 
 void UART::transmit(uint8_t *pData, uint16_t Size, dataCallback_f callbackFn, uint32_t timeoutMs) {
 	if (pData == nullptr || Size == 0U) return;
-	if (operations.size() >= 8U) return;
 	operation operation;
 	operation.operationType = EoperationType::SEND;
 	uint32_t calculatedTimeoutMs = timeoutMs;

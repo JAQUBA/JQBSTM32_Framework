@@ -133,7 +133,7 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 	});
 }
 void I2C::transmit(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn, uint32_t timeoutMs) {
-	if (pData == nullptr || Size == 0U || operations.size() >= 8U) return;
+	if (pData == nullptr || Size == 0U) return;
 	operation operation;
 	operation.operationType = EoperationType::TRANSMIT;
 	operation.timeoutMs = timeoutMs;
@@ -147,7 +147,7 @@ void I2C::transmit(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallb
 	operations.push(operation);
 }
 void I2C::receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn, uint32_t timeoutMs) {
-	if (pData == nullptr || Size == 0U || operations.size() >= 8U) return;
+	if (pData == nullptr || Size == 0U) return;
     operation operation;
 	operation.operationType = EoperationType::RECEIVE;
 	operation.timeoutMs = timeoutMs;
@@ -159,7 +159,7 @@ void I2C::receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallba
 	operations.push(operation);
 }
 void I2C::readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn, uint32_t timeoutMs) {
-	if (pData == nullptr || Size == 0U || operations.size() >= 8U) return;
+	if (pData == nullptr || Size == 0U) return;
 	operation operation;
 	operation.operationType = EoperationType::MEM_READ;
 	operation.timeoutMs = timeoutMs;
@@ -211,7 +211,7 @@ bool I2C::writeToMemorySync(
 	) == HAL_OK;
 }
 void I2C::writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn, uint32_t timeoutMs) {
-	if (pData == nullptr || Size == 0U || operations.size() >= 8U) return;
+	if (pData == nullptr || Size == 0U) return;
 	operation operation;
 	operation.operationType = EoperationType::MEM_WRITE;
 	operation.timeoutMs = timeoutMs;
