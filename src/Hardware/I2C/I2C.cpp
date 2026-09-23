@@ -172,6 +172,44 @@ void I2C::readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemA
 	operation.free = false;
 	operations.push(operation);
 }
+bool I2C::readFromMemorySync(
+	uint16_t DevAddress,
+	uint16_t MemAddress,
+	uint16_t MemAddSize,
+	uint8_t *pData,
+	uint16_t Size,
+	uint32_t timeoutMs
+) {
+	if(_pHandler == nullptr || pData == nullptr || Size == 0U) return false;
+	return HAL_I2C_Mem_Read(
+		_pHandler,
+		DevAddress,
+		MemAddress,
+		MemAddSize,
+		pData,
+		Size,
+		timeoutMs
+	) == HAL_OK;
+}
+bool I2C::writeToMemorySync(
+	uint16_t DevAddress,
+	uint16_t MemAddress,
+	uint16_t MemAddSize,
+	uint8_t *pData,
+	uint16_t Size,
+	uint32_t timeoutMs
+) {
+	if(_pHandler == nullptr || pData == nullptr || Size == 0U) return false;
+	return HAL_I2C_Mem_Write(
+		_pHandler,
+		DevAddress,
+		MemAddress,
+		MemAddSize,
+		pData,
+		Size,
+		timeoutMs
+	) == HAL_OK;
+}
 void I2C::writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn, uint32_t timeoutMs) {
 	if (pData == nullptr || Size == 0U || operations.size() >= 8U) return;
 	operation operation;

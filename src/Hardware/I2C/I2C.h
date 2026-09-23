@@ -99,6 +99,22 @@ class I2C : public IBus {
             uint32_t timeoutMs = DEFAULT_TIMEOUT_MS
         );
 
+        bool readFromMemorySync(
+            uint16_t DevAddress,
+            uint16_t MemAddress,
+            uint16_t MemAddSize,
+            uint8_t *pData, uint16_t Size,
+            uint32_t timeoutMs = DEFAULT_TIMEOUT_MS
+        );
+
+        bool writeToMemorySync(
+            uint16_t DevAddress,
+            uint16_t MemAddress,
+            uint16_t MemAddSize,
+            uint8_t *pData, uint16_t Size,
+            uint32_t timeoutMs = DEFAULT_TIMEOUT_MS
+        );
+
         /**
          * @brief Writes data to the specified memory address of a device.
          * 

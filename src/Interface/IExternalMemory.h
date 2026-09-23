@@ -50,6 +50,28 @@ class IExternalMemory {
             uint8_t *pData, 
             uint16_t Size
         ) = 0;
+
+        virtual bool readFromMemorySync(
+            uint32_t MemAddress,
+            uint8_t *pData,
+            uint16_t Size
+        ) {
+            (void)MemAddress;
+            (void)pData;
+            (void)Size;
+            return false;
+        }
+
+        virtual bool writeToMemorySync(
+            uint32_t MemAddress,
+            uint8_t *pData,
+            uint16_t Size
+        ) {
+            (void)MemAddress;
+            (void)pData;
+            (void)Size;
+            return false;
+        }
         
         /**
          * @brief Write data to memory

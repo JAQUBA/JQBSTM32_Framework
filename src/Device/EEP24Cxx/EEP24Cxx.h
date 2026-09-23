@@ -68,6 +68,18 @@ class EEP24Cxx : public IExternalMemory {
             uint16_t Size
         ) override;
 
+        bool readFromMemorySync(
+            uint32_t MemAddress,
+            uint8_t *pData,
+            uint16_t Size
+        ) override;
+
+        bool writeToMemorySync(
+            uint32_t MemAddress,
+            uint8_t *pData,
+            uint16_t Size
+        ) override;
+
         void writeToMemory(
             uint32_t MemAddress,
             uint8_t *pData,
