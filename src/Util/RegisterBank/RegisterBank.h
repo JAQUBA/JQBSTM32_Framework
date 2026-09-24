@@ -66,7 +66,7 @@ class RegisterBank {
         /**
          * @brief Get pointer to a 32-bit value stored in two consecutive registers
          * @param regAddress Relative address of the low word
-         * @return Pointer to the 32-bit value, NULL if two registers are not available
+         * @return Pointer to the 32-bit value, NULL if unavailable or not suitably aligned
          */
         uint32_t *getValuePtr32(uint16_t regAddress);
 
@@ -83,7 +83,7 @@ class RegisterBank {
         /**
          * @brief Get pointer to a 32-bit value using full/absolute address
          * @param fullAddress Absolute address of the low word
-         * @return Pointer to the 32-bit value, NULL if two registers are not available
+         * @return Pointer to the 32-bit value, NULL if unavailable or not suitably aligned
          */
         uint32_t *getRegisterPtr32(uint16_t fullAddress);
 
@@ -188,7 +188,7 @@ class RegisterBank {
 
         /**
          * @brief Read multiple consecutive registers into buffer
-         * @param address Starting relative address within this bank
+         * @param address Starting absolute address within this bank
          * @param buffer Pointer to buffer for storing read register values
          * @param size Number of registers to read
          * @return Number of registers actually read (may be less if hitting bank boundary)
@@ -213,19 +213,19 @@ class RegisterBank {
          * @note Write operation duration depends on memory type (EEPROM vs FRAM)
          */
         void save();
-
-    private:
+        
+    protected:
         MemoryBlock *_memoryBlock = nullptr; ///< Pointer to the memory block.
 
         uint16_t _size;   ///< Size of the register bank.
         uint16_t _start;  ///< Start address of the register bank.
-        uint16_t _stop;   ///< Stop address of the register bank.
-        uint16_t *_registers; ///< Pointer to the array of registers.
+        uint16_t *_registers = nullptr; ///< Pointer to the array of registers.
+        RegisterBank *_next = nullptr; ///< Next bank in the global intrusive list.
 
         /**
          * @brief Initializes the register bank.
          */
-        void _initialize();
+        virtual void _initialize();
 };
 
 #endif // __REGISTERS_H_
