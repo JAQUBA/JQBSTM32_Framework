@@ -182,4 +182,11 @@ uint32_t FlashMemory::GetFlashSector(uint32_t Address) {
     }
 }
 #endif
+bool FlashMemory::isMemoryReady() {
+    // Implement a simple check to see if the flash memory is ready.
+    // This could involve checking the flash status register.
+    // For now, we assume the memory is always ready.
+    return true;
+}
+
 #endif

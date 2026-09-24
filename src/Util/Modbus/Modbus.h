@@ -28,10 +28,23 @@
  * @details Standard Modbus function codes supported by the implementation
  */
 enum ModbusFunction {
-    FUNC_3,  ///< Read Holding Registers (0x03)
-    FUNC_4,  ///< Read Input Registers (0x04)
-    FUNC_6,  ///< Write Single Register (0x06)
-    FUNC_10  ///< Write Multiple Registers (0x10)
+    FUNC_1 = 1,    ///< Read Coils (decimal 1, hex 0x01)
+    FUNC_2 = 2,    ///< Read Discrete Inputs (decimal 2, hex 0x02)
+    FUNC_3 = 3,    ///< Read Holding Registers (decimal 3, hex 0x03)
+    FUNC_4 = 4,    ///< Read Input Registers (decimal 4, hex 0x04)
+    FUNC_5 = 5,    ///< Write Single Coil (decimal 5, hex 0x05)
+    FUNC_6 = 6,    ///< Write Single Register (decimal 6, hex 0x06)
+    FUNC_15 = 15,  ///< Write Multiple Coils (decimal 15, hex 0x0F)
+    FUNC_16 = 16   ///< Write Multiple Registers (decimal 16, hex 0x10)
+};
+
+/**
+ * @brief Modbus exception codes enumeration (shared by master and slave)
+ */
+enum ModbusException {
+    EXCEPTION_ILLEGAL_FUNCTION = 1,
+    EXCEPTION_ILLEGAL_ADDRESS = 2,
+    EXCEPTION_ILLEGAL_VALUE = 3
 };
 
 /**
@@ -42,48 +55,48 @@ struct ModbusFrame {
     ModbusFunction function; ///< Modbus function code
     uint16_t address;        ///< Starting register address
     uint16_t size;           ///< Number of registers
-    uint16_t registers[125]; ///< Register data array (max 125 registers)
+    uint16_t registers[2000]; ///< Register and coil data array
+    uint8_t exception;       ///< Modbus exception code, zero when the request is valid
+};
+
+struct ModbusStatistics {
+    uint32_t requests;
+    uint32_t crcErrors;
+    uint32_t malformedFrames;
+    uint32_t exceptions;
+    uint32_t broadcasts;
+    uint32_t timeouts; ///< Master-only: requests that received no response in time
 };
 
 /**
  * @brief Base Modbus protocol class
- * @details Provides common Modbus functionality for both master and slave implementations
+ * @details Holds the statistics and framing helpers shared by master and slave implementations
  */
 class Modbus {
     public:
-        /**
-         * @brief Process received Modbus data
-         * @details Parses received data and calls appropriate function handler
-         * @param data Pointer to received data buffer
-         * @param length Length of received data
-         * @param functionPointer Callback function for processing parsed frame
-         */
-        void receive(uint8_t* data, uint16_t length, dataCallback_f functionPointer);
-        
-        /**
-         * @brief Bind function handler
-         * @details Associates a function code with a handler function
-         * @param function Modbus function code to bind
-         * @param functionPointer Handler function for the specified function code
-         */
-        void bind_function(ModbusFunction function, void(*functionPointer)(ModbusFrame *request));
-    protected:
-        uint8_t *_slaveID; ///< Slave ID pointer (for slave implementations)
-};
+        const ModbusStatistics& statistics() const;
+        void resetStatistics();
 
-/**
- * @brief Modbus Slave implementation
- * @details Implements Modbus slave functionality for responding to master requests
- */
-class ModbusSlave : public Modbus {
-    public:
+        static uint16_t readU16BE(const uint8_t *p);
+        static void writeU16BE(uint8_t *p, uint16_t value);
+        static bool validateCrc(const uint8_t *data, uint16_t length);
+        static uint16_t appendCrc(uint8_t *buffer, uint16_t length);
+
         /**
-         * @brief Set slave ID
-         * @details Sets the slave ID for this Modbus slave instance
-         * @param slaveID Pointer to slave ID value
+         * @brief Register <-> multi-word value conversion helpers
+         * @details Registers are combined big-endian (first register = most significant word),
+         * matching the byte order already used for single 16-bit values by readU16BE/writeU16BE.
+         * Pass wordSwap = true for devices that transmit the words in swapped (little-endian) order.
          */
-        void setID(uint8_t *slaveID);
-    private:
+        static uint32_t registersToUint32(const uint16_t *registers, bool wordSwap = false);
+        static int32_t registersToInt32(const uint16_t *registers, bool wordSwap = false);
+        static float registersToFloat(const uint16_t *registers, bool wordSwap = false);
+        static double registersToDouble(const uint16_t *registers, bool wordSwap = false);
+        static void uint32ToRegisters(uint32_t value, uint16_t *registers, bool wordSwap = false);
+        static void floatToRegisters(float value, uint16_t *registers, bool wordSwap = false);
+        static void doubleToRegisters(double value, uint16_t *registers, bool wordSwap = false);
+    protected:
+        ModbusStatistics _statistics = {};
 };
 
 #endif

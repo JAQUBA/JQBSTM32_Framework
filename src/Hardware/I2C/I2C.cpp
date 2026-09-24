@@ -22,22 +22,24 @@ I2C *_I2C_instances[I2C_MAX_INSTANCES];
 uint8_t _I2C_instancesNum = 0;
 
 I2C *I2C::getInstance(I2C_HandleTypeDef *pHandler) {
+	if (pHandler == nullptr) return nullptr;
     for (size_t i = 0; i < _I2C_instancesNum; i++) {
         if(_I2C_instances[i]->_pHandler->Instance == pHandler->Instance) return _I2C_instances[i];
     }
     return nullptr;
 }
-void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c) {I2C::getInstance(hi2c)->rxInterrupt();}
-void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c) {I2C::getInstance(hi2c)->txInterrupt();}
-void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {I2C::getInstance(hi2c)->errorInterrupt();}
-
+void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c) { if (I2C::getInstance(hi2c) != nullptr) I2C::getInstance(hi2c)->rxInterrupt(); }
+void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c) { if (I2C::getInstance(hi2c) != nullptr) I2C::getInstance(hi2c)->txInterrupt(); }
+void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) { if (I2C::getInstance(hi2c) != nullptr) I2C::getInstance(hi2c)->errorInterrupt(); }
 void I2C::txInterrupt() {if(operationState == WAITING) {operationState = FINISH;}}
 void I2C::rxInterrupt() {if(operationState == WAITING) {operationState = FINISH;}}
 void I2C::errorInterrupt() {if (HAL_I2C_GetError(_pHandler) > HAL_I2C_ERROR_NONE) {operationState = FINISH;}}
 
 I2C::I2C(I2C_HandleTypeDef* pHandler) {
     _pHandler = pHandler;
-	_I2C_instances[_I2C_instancesNum++] = this;
+	if (_I2C_instancesNum < I2C_MAX_INSTANCES) {
+		_I2C_instances[_I2C_instancesNum++] = this;
+	}
 	addTaskMain(taskCallback {
 		switch(operationState) {
 			case IDLE: {
@@ -98,8 +100,18 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 			}
 			case WAITING: {
 				if(millis() >= operationTimeout) {
-					operationState = FINISH;
+					if (HAL_I2C_Master_Abort_IT(_pHandler, currentOperation.DevAddress) == HAL_OK) {
+						operationState = ABORTING;
+					} else {
+						operationState = ABORTING;
+					}
 				} else break;
+			}
+			case ABORTING: {
+				if (HAL_I2C_GetState(_pHandler) == HAL_I2C_STATE_READY) {
+					operationState = FINISH;
+				}
+				break;
 			}
 			case FINISH: {
 				if(currentOperation.callback_f != nullptr){
@@ -121,11 +133,13 @@ I2C::I2C(I2C_HandleTypeDef* pHandler) {
 	});
 }
 void I2C::transmit(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn, uint32_t timeoutMs) {
+	if (pData == nullptr || Size == 0U) return;
 	operation operation;
 	operation.operationType = EoperationType::TRANSMIT;
 	operation.timeoutMs = timeoutMs;
 	operation.DevAddress = DevAddress;
 	operation.pData = (uint8_t*) malloc(Size);
+	if (operation.pData == nullptr) return;
 	operation.free = true;
 	memcpy(operation.pData, pData, Size);
 	operation.Size = Size;
@@ -133,6 +147,7 @@ void I2C::transmit(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallb
 	operations.push(operation);
 }
 void I2C::receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn, uint32_t timeoutMs) {
+	if (pData == nullptr || Size == 0U) return;
     operation operation;
 	operation.operationType = EoperationType::RECEIVE;
 	operation.timeoutMs = timeoutMs;
@@ -144,6 +159,7 @@ void I2C::receive(uint16_t DevAddress, uint8_t *pData, uint16_t Size, dataCallba
 	operations.push(operation);
 }
 void I2C::readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn, uint32_t timeoutMs) {
+	if (pData == nullptr || Size == 0U) return;
 	operation operation;
 	operation.operationType = EoperationType::MEM_READ;
 	operation.timeoutMs = timeoutMs;
@@ -156,7 +172,46 @@ void I2C::readFromMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemA
 	operation.free = false;
 	operations.push(operation);
 }
+bool I2C::readFromMemorySync(
+	uint16_t DevAddress,
+	uint16_t MemAddress,
+	uint16_t MemAddSize,
+	uint8_t *pData,
+	uint16_t Size,
+	uint32_t timeoutMs
+) {
+	if(_pHandler == nullptr || pData == nullptr || Size == 0U) return false;
+	return HAL_I2C_Mem_Read(
+		_pHandler,
+		DevAddress,
+		MemAddress,
+		MemAddSize,
+		pData,
+		Size,
+		timeoutMs
+	) == HAL_OK;
+}
+bool I2C::writeToMemorySync(
+	uint16_t DevAddress,
+	uint16_t MemAddress,
+	uint16_t MemAddSize,
+	uint8_t *pData,
+	uint16_t Size,
+	uint32_t timeoutMs
+) {
+	if(_pHandler == nullptr || pData == nullptr || Size == 0U) return false;
+	return HAL_I2C_Mem_Write(
+		_pHandler,
+		DevAddress,
+		MemAddress,
+		MemAddSize,
+		pData,
+		Size,
+		timeoutMs
+	) == HAL_OK;
+}
 void I2C::writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, dataCallback_f callbackFn, uint32_t timeoutMs) {
+	if (pData == nullptr || Size == 0U) return;
 	operation operation;
 	operation.operationType = EoperationType::MEM_WRITE;
 	operation.timeoutMs = timeoutMs;
@@ -164,6 +219,7 @@ void I2C::writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAd
 	operation.MemAddress = MemAddress;
 	operation.MemAddSize = MemAddSize;
 	operation.pData = (uint8_t*) malloc(Size);
+	if (operation.pData == nullptr) return;
 	operation.free = true;
 	memcpy(operation.pData, pData, Size);
 	operation.Size = Size;
@@ -172,5 +228,8 @@ void I2C::writeToMemory(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAd
 }
 uint16_t I2C::queueSize() {
 	return operations.size();
+}
+bool I2C::isDeviceReady(uint16_t DevAddress) {
+    return HAL_I2C_IsDeviceReady(_pHandler, DevAddress, 2U, 20U) == HAL_OK;
 }
 #endif

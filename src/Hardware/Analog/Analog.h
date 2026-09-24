@@ -108,6 +108,8 @@ private:
     uint8_t _channelCount;
     uint32_t _maxAdcValue;
     InterruptListener* _interruptListeners;
+    volatile bool _conversionPending;
+    uint16_t _pendingBuffer[ANALOG_MAX_CHANNELS];
 };
 
 #endif // __ANALOG_H_

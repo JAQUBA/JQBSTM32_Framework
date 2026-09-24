@@ -28,6 +28,7 @@ const EEP24Cxx::DeviceConfig EEP24Cxx::CONFIG_24LC64  = { 8192U,  32U, ADDRESS_S
 const EEP24Cxx::DeviceConfig EEP24Cxx::CONFIG_24LC128 = {16384U,  64U, ADDRESS_SIZE_16BIT, 0U };
 const EEP24Cxx::DeviceConfig EEP24Cxx::CONFIG_24LC256 = {32768U,  64U, ADDRESS_SIZE_16BIT, 0U };
 const EEP24Cxx::DeviceConfig EEP24Cxx::CONFIG_24LC512 = {65536U, 128U, ADDRESS_SIZE_16BIT, 0U };
+const EEP24Cxx::DeviceConfig EEP24Cxx::CONFIG_FM24W256 = {32768U,  64U, ADDRESS_SIZE_16BIT, 0U };
 
 EEP24Cxx::EEP24Cxx(
     I2C *pInstance,
@@ -87,6 +88,10 @@ uint16_t EEP24Cxx::getPageRemaining(uint32_t memoryOffset) const {
     return (uint16_t)(_pageSize - inPage);
 }
 
+bool EEP24Cxx::isMemoryReady() {
+    return _pInstance->isDeviceReady(_DevAddress);
+}
+
 void EEP24Cxx::readFromMemory(
     uint32_t MemAddress,
     uint8_t *pData,
@@ -111,6 +116,82 @@ void EEP24Cxx::readFromMemory(
         _pInstance->readFromMemory(devAddress, internalAddress, _memAddSize, &pData[transferred], chunk, nullptr, _timeoutMs);
         transferred = (uint16_t)(transferred + chunk);
     }
+}
+
+bool EEP24Cxx::readFromMemorySync(
+    uint32_t MemAddress,
+    uint8_t *pData,
+    uint16_t Size
+) {
+    if(_pInstance == nullptr || pData == nullptr || Size == 0U || _sizeBytes == 0U) {
+        return false;
+    }
+
+    uint16_t transferred = 0U;
+    while(transferred < Size) {
+        const uint32_t currentOffset = normalizeAddress(_BaseAddress + MemAddress + transferred);
+        const uint16_t devAddress = getDeviceAddressForOffset(currentOffset);
+        const uint16_t internalAddress = getInternalMemAddress(currentOffset);
+
+        const uint16_t blockRemaining = getBlockRemaining(currentOffset);
+        uint16_t chunk = (uint16_t)(Size - transferred);
+        if(chunk > blockRemaining) {
+            chunk = blockRemaining;
+        }
+
+        if(!_pInstance->readFromMemorySync(
+            devAddress,
+            internalAddress,
+            _memAddSize,
+            &pData[transferred],
+            chunk,
+            _timeoutMs
+        )) {
+            return false;
+        }
+        transferred = (uint16_t)(transferred + chunk);
+    }
+    return true;
+}
+
+bool EEP24Cxx::writeToMemorySync(
+    uint32_t MemAddress,
+    uint8_t *pData,
+    uint16_t Size
+) {
+    if(_pInstance == nullptr || pData == nullptr || Size == 0U || _sizeBytes == 0U) {
+        return false;
+    }
+
+    uint16_t transferred = 0U;
+    while(transferred < Size) {
+        const uint32_t currentOffset = normalizeAddress(_BaseAddress + MemAddress + transferred);
+        const uint16_t devAddress = getDeviceAddressForOffset(currentOffset);
+        const uint16_t internalAddress = getInternalMemAddress(currentOffset);
+
+        const uint16_t pageRemaining = getPageRemaining(currentOffset);
+        const uint16_t blockRemaining = getBlockRemaining(currentOffset);
+        uint16_t chunk = (uint16_t)(Size - transferred);
+        if(chunk > pageRemaining) {
+            chunk = pageRemaining;
+        }
+        if(chunk > blockRemaining) {
+            chunk = blockRemaining;
+        }
+
+        if(!_pInstance->writeToMemorySync(
+            devAddress,
+            internalAddress,
+            _memAddSize,
+            &pData[transferred],
+            chunk,
+            _timeoutMs
+        )) {
+            return false;
+        }
+        transferred = (uint16_t)(transferred + chunk);
+    }
+    return true;
 }
 
 void EEP24Cxx::writeToMemory(
@@ -142,6 +223,31 @@ void EEP24Cxx::writeToMemory(
         _pInstance->writeToMemory(devAddress, internalAddress, _memAddSize, &pData[transferred], chunk, nullptr, _timeoutMs);
         transferred = (uint16_t)(transferred + chunk);
     }
+}
+
+void EEP24Cxx::writeToMemoryAsync(
+    uint32_t MemAddress,
+    uint8_t *pData,
+    uint16_t Size,
+    dataCallback_f callbackFn,
+    uint32_t timeoutMs
+) {
+    if(_pInstance == nullptr || pData == nullptr || Size == 0U || _sizeBytes == 0U) return;
+
+    const uint32_t currentOffset = normalizeAddress(_BaseAddress + MemAddress);
+    const uint16_t pageRemaining = getPageRemaining(currentOffset);
+    const uint16_t blockRemaining = getBlockRemaining(currentOffset);
+    if(Size > pageRemaining || Size > blockRemaining) return;
+
+    _pInstance->writeToMemory(
+        getDeviceAddressForOffset(currentOffset),
+        getInternalMemAddress(currentOffset),
+        _memAddSize,
+        pData,
+        Size,
+        callbackFn,
+        timeoutMs
+    );
 }
 
 #endif

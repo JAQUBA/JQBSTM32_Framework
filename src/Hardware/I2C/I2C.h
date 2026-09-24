@@ -99,6 +99,22 @@ class I2C : public IBus {
             uint32_t timeoutMs = DEFAULT_TIMEOUT_MS
         );
 
+        bool readFromMemorySync(
+            uint16_t DevAddress,
+            uint16_t MemAddress,
+            uint16_t MemAddSize,
+            uint8_t *pData, uint16_t Size,
+            uint32_t timeoutMs = DEFAULT_TIMEOUT_MS
+        );
+
+        bool writeToMemorySync(
+            uint16_t DevAddress,
+            uint16_t MemAddress,
+            uint16_t MemAddSize,
+            uint8_t *pData, uint16_t Size,
+            uint32_t timeoutMs = DEFAULT_TIMEOUT_MS
+        );
+
         /**
          * @brief Writes data to the specified memory address of a device.
          * 
@@ -141,6 +157,8 @@ class I2C : public IBus {
         void errorInterrupt();
         
         uint16_t queueSize();
+
+        bool isDeviceReady(uint16_t DevAddress);
     private:
         I2C_HandleTypeDef* _pHandler;
 
@@ -151,6 +169,7 @@ class I2C : public IBus {
             CHECK_FREE,
             WORK,
             WAITING,
+            ABORTING,
             CLEAR,
             FINISH
         } operationState = IDLE;
