@@ -117,9 +117,33 @@ uint16_t *RegisterBank::getValuePtr(uint16_t regAddress) {
 	if (_registers == NULL || regAddress >= _size) return NULL;
     return _registers + regAddress;
 }
+uint32_t *RegisterBank::getValuePtr32(uint16_t regAddress) {
+    if (_registers == NULL || regAddress >= _size || _size - regAddress < 2) return NULL;
+    return reinterpret_cast<uint32_t*>(_registers + regAddress);
+}
+uint32_t RegisterBank::getValue32(uint16_t regAddress) {
+    if (_registers == NULL || regAddress >= _size || _size - regAddress < 2) return 0U;
+    return (uint32_t)_registers[regAddress] |
+        ((uint32_t)_registers[regAddress + 1U] << 16U);
+}
+void RegisterBank::setValue32(uint16_t regAddress, uint32_t value, bool instantSave) {
+	if (_registers == NULL || regAddress >= _size || _size - regAddress < 2) return;
+    _registers[regAddress] = (uint16_t)value;
+    _registers[regAddress + 1U] = (uint16_t)(value >> 16U);
+    if(instantSave) save();
+}
 bool RegisterBank::setRegister(uint16_t fullAddress, uint16_t value, bool instantSave) {
 	if (_registers == NULL || fullAddress < _start || fullAddress >= _stop) return false;
     _registers[fullAddress-_start] = value;
+    if(instantSave) save();
+    return true;
+}
+bool RegisterBank::setRegister32(uint16_t fullAddress, uint32_t value, bool instantSave) {
+	if (_registers == NULL || fullAddress < _start || fullAddress >= _stop ||
+    _stop - fullAddress < 2) return false;
+    const uint16_t regAddress = fullAddress - _start;
+    _registers[regAddress] = (uint16_t)value;
+    _registers[regAddress + 1U] = (uint16_t)(value >> 16U);
     if(instantSave) save();
     return true;
 }
@@ -141,6 +165,16 @@ uint16_t RegisterBank::getRegister(uint16_t fullAddress) {
 uint16_t *RegisterBank::getRegisterPtr(uint16_t fullAddress) {
 	if (_registers == NULL || fullAddress < _start || fullAddress >= _stop) return NULL;
     return _registers + (fullAddress-_start);
+}
+uint32_t *RegisterBank::getRegisterPtr32(uint16_t fullAddress) {
+	if (_registers == NULL || fullAddress < _start || fullAddress >= _stop ||
+    _stop - fullAddress < 2) return NULL;
+    return reinterpret_cast<uint32_t*>(_registers + (fullAddress-_start));
+}
+uint32_t RegisterBank::getRegister32(uint16_t fullAddress) {
+	if (_registers == NULL || fullAddress < _start || fullAddress >= _stop ||
+    _stop - fullAddress < 2) return 0U;
+    return getValue32(fullAddress - _start);
 }
 void RegisterBank::free_bank() {
     free(_registers);

@@ -64,6 +64,13 @@ class RegisterBank {
         uint16_t *getValuePtr(uint16_t regAddress);
 
         /**
+         * @brief Get pointer to a 32-bit value stored in two consecutive registers
+         * @param regAddress Relative address of the low word
+         * @return Pointer to the 32-bit value, NULL if two registers are not available
+         */
+        uint32_t *getValuePtr32(uint16_t regAddress);
+
+        /**
          * @brief Get pointer to register value using full/absolute address
          * @param fullAddress Absolute register address in global register space
          * @return Pointer to 16-bit register value, NULL if address is not in this bank
@@ -74,6 +81,13 @@ class RegisterBank {
         uint16_t *getRegisterPtr(uint16_t fullAddress);
 
         /**
+         * @brief Get pointer to a 32-bit value using full/absolute address
+         * @param fullAddress Absolute address of the low word
+         * @return Pointer to the 32-bit value, NULL if two registers are not available
+         */
+        uint32_t *getRegisterPtr32(uint16_t fullAddress);
+
+        /**
          * @brief Get register value using relative address
          * @param regAddress Relative address within this register bank (0-based offset)
          * @return 16-bit register value, 0 if address is out of range
@@ -81,6 +95,13 @@ class RegisterBank {
          *          Address is relative to bank start address.
          */
         uint16_t getValue(uint16_t regAddress);
+
+        /**
+         * @brief Get a 32-bit value from two consecutive registers
+         * @param regAddress Relative address of the low word
+         * @return 32-bit value, or 0 if two registers are not available
+         */
+        uint32_t getValue32(uint16_t regAddress);
 
         /**
          * @brief Set register value using relative address
@@ -94,6 +115,14 @@ class RegisterBank {
         void setValue(uint16_t regAddress, uint16_t value, bool instantSave = true);
 
         /**
+         * @brief Set a 32-bit value in two consecutive registers
+         * @param regAddress Relative address of the low word
+         * @param value 32-bit value to write
+         * @param instantSave If true and MemoryBlock is available, immediately save to persistent storage
+         */
+        void setValue32(uint16_t regAddress, uint32_t value, bool instantSave = true);
+
+        /**
          * @brief Get register value using full/absolute address
          * @param fullAddress Absolute register address in global register space
          * @return 16-bit register value, 0 if address is not in this bank
@@ -101,6 +130,13 @@ class RegisterBank {
          *          Returns 0 if address doesn't belong to this bank.
          */
         uint16_t getRegister(uint16_t fullAddress);
+
+        /**
+         * @brief Get a 32-bit value using full/absolute address
+         * @param fullAddress Absolute address of the low word
+         * @return 32-bit value, or 0 if two registers are not available
+         */
+        uint32_t getRegister32(uint16_t fullAddress);
 
         /**
          * @brief Set register value using full/absolute address
@@ -111,6 +147,15 @@ class RegisterBank {
          *          Operation is ignored if address doesn't belong to this bank.
          */
         bool setRegister(uint16_t fullAddress, uint16_t value, bool instantSave = true);
+
+        /**
+         * @brief Set a 32-bit value using full/absolute address
+         * @param fullAddress Absolute address of the low word
+         * @param value 32-bit value to write
+         * @param instantSave If true and MemoryBlock is available, immediately save to persistent storage
+         * @return true if two registers were written
+         */
+        bool setRegister32(uint16_t fullAddress, uint32_t value, bool instantSave = true);
 
         /**
          * @brief Set multiple consecutive registers using full/absolute addresses
