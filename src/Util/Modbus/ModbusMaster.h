@@ -26,12 +26,13 @@
 
 /**
  * @brief Modbus Master implementation
- * @details Polls a single Modbus RTU slave device at a time (Read Holding Registers only)
+ * @details Reads or writes holding registers of one Modbus RTU slave device at a time
  * @note Only one request may be in flight; call isBusy() before issuing a new one
  */
 class ModbusMaster : public Modbus {
     public:
         using ResponseCallback = std::function<void(bool success, uint8_t exception, uint16_t *registers, uint16_t count)>;
+        using WriteCallback = std::function<void(bool success, uint8_t exception)>;
         using Uint32Callback = std::function<void(bool success, uint8_t exception, uint32_t value)>;
         using Int32Callback = std::function<void(bool success, uint8_t exception, int32_t value)>;
         using FloatCallback = std::function<void(bool success, uint8_t exception, float value)>;
@@ -41,6 +42,12 @@ class ModbusMaster : public Modbus {
 
         bool readHoldingRegisters(uint8_t slaveId, uint16_t address, uint16_t count,
                                    ResponseCallback callback, uint32_t timeoutMs = 200U);
+        /**
+         * @brief Enqueue an FC16 write of 1..123 registers on the UART transport.
+         * @return true when started; completion is reported asynchronously through callback.
+         */
+        bool writeHoldingRegisters(uint8_t slaveId, uint16_t address, const uint16_t *registers,
+                        uint16_t count, WriteCallback callback, uint32_t timeoutMs = 200U);
 
         /**
          * @brief Convenience readers converting a fixed-size register block into a wider value
@@ -70,6 +77,7 @@ class ModbusMaster : public Modbus {
         uint8_t _expectedSlaveId = 0U;
         uint8_t _expectedFunction = 0U;
         uint16_t _expectedCount = 0U;
+        uint16_t _expectedAddress = 0U;
         uint32_t _timeoutAt = 0U;
         uint16_t _responseLength = 0U;
         uint8_t _responseBuffer[(MaxReadRegisters * 2U) + 5U] = {};

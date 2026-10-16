@@ -59,8 +59,8 @@ Abstract interface for any external memory device. Implemented by:
 
 Industrial communication protocol implementation following the official Modbus specification (www.modbus.org).
 `Modbus` holds the statistics and CRC/register-packing helpers shared by both roles; `ModbusSlave`
-answers requests addressed to this device, `ModbusMaster` polls a remote slave (Read Holding
-Registers only, one request in flight at a time).
+answers requests addressed to this device, `ModbusMaster` reads (FC03) or writes (FC16)
+holding registers of a remote slave, one request in flight at a time.
 
 ### Classes
 
@@ -82,10 +82,19 @@ class ModbusMaster : public Modbus {
     explicit ModbusMaster(UART *bus);
     bool readHoldingRegisters(uint8_t slaveId, uint16_t address, uint16_t count,
                                ResponseCallback callback, uint32_t timeoutMs = 200U);
+    bool writeHoldingRegisters(uint8_t slaveId, uint16_t address, const uint16_t *registers,
+                                uint16_t count, WriteCallback callback, uint32_t timeoutMs = 200U);
     void onReceive(uint8_t *data, uint16_t length);
     bool isBusy() const;
 };
 ```
+
+FC16 accepts `1..123` registers and a `WriteCallback(bool success, uint8_t exception)`.
+The request buffer is copied by the queued UART transport. A successful response must
+echo both the requested address and register count. CRC failures, malformed responses,
+exceptions and timeouts complete the callback with `success=false`. Five-byte exception
+responses are handled for both FC03 and FC16, including fragmented UART reception.
+Timeout comparison remains valid across `millis()` wraparound for intervals below `2^31` ms.
 
 ### Function Codes
 

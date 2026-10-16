@@ -26,7 +26,7 @@
 
 ModbusMaster::ModbusMaster(UART *bus) : _bus(bus) {
     addTaskMain(taskCallback {
-        if (_state == WAITING && millis() >= _timeoutAt) {
+        if (_state == WAITING && static_cast<int32_t>(millis() - _timeoutAt) >= 0) {
             _statistics.timeouts++;
             _finish(false, 0U, nullptr, 0U);
         }
@@ -55,6 +55,34 @@ bool ModbusMaster::readHoldingRegisters(uint8_t slaveId, uint16_t address, uint1
     _state = WAITING;
 
     _bus->transmit(frame, len);
+    return true;
+}
+bool ModbusMaster::writeHoldingRegisters(uint8_t slaveId, uint16_t address, const uint16_t *registers,
+                                         uint16_t count, WriteCallback callback, uint32_t timeoutMs) {
+    if (_state != IDLE || _bus == nullptr || slaveId == 0U || slaveId > 247U ||
+        registers == nullptr || count == 0U || count > 123U || callback == nullptr) return false;
+
+    uint8_t frame[255];
+    frame[0] = slaveId;
+    frame[1] = static_cast<uint8_t>(FUNC_16);
+    writeU16BE(frame + 2U, address);
+    writeU16BE(frame + 4U, count);
+    frame[6] = static_cast<uint8_t>(count * 2U);
+    for (uint16_t index = 0U; index < count; index++) {
+        writeU16BE(frame + 7U + index * 2U, registers[index]);
+    }
+    const uint16_t length = appendCrc(frame, static_cast<uint16_t>(7U + count * 2U));
+    _expectedSlaveId = slaveId;
+    _expectedFunction = static_cast<uint8_t>(FUNC_16);
+    _expectedAddress = address;
+    _expectedCount = count;
+    _callback = [callback](bool success, uint8_t exception, uint16_t*, uint16_t) {
+        callback(success, exception);
+    };
+    _timeoutAt = millis() + timeoutMs;
+    _responseLength = 0U;
+    _state = WAITING;
+    _bus->transmit(frame, length);
     return true;
 }
 bool ModbusMaster::readHoldingRegistersAsUint32(uint8_t slaveId, uint16_t address, Uint32Callback callback,
@@ -89,8 +117,7 @@ void ModbusMaster::onReceive(uint8_t *data, uint16_t length) {
 
     if (_state != WAITING || data == nullptr || length == 0U) return;
 
-    const uint16_t expectedLength = (uint16_t)(3U + (_expectedCount * 2U) + 2U);
-    if (_responseLength + length > expectedLength) {
+    if (length > sizeof(_responseBuffer) - _responseLength) {
         _statistics.malformedFrames++;
         _finish(false, 0U, nullptr, 0U);
         return;
@@ -98,7 +125,16 @@ void ModbusMaster::onReceive(uint8_t *data, uint16_t length) {
 
     memcpy(_responseBuffer + _responseLength, data, length);
     _responseLength = (uint16_t)(_responseLength + length);
+    if (_responseLength < 2U) return;
+    const bool exceptionResponse = _responseBuffer[1] == static_cast<uint8_t>(_expectedFunction | 0x80U);
+    const uint16_t expectedLength = exceptionResponse ? 5U :
+        (_expectedFunction == FUNC_16 ? 8U : static_cast<uint16_t>(5U + _expectedCount * 2U));
     if (_responseLength < expectedLength) return;
+    if (_responseLength != expectedLength) {
+        _statistics.malformedFrames++;
+        _finish(false, 0U, nullptr, 0U);
+        return;
+    }
 
     if (_responseBuffer[0] != _expectedSlaveId) {
         _statistics.malformedFrames++;
@@ -111,13 +147,28 @@ void ModbusMaster::onReceive(uint8_t *data, uint16_t length) {
         return;
     }
 
-    if (_responseBuffer[1] == (uint8_t)(_expectedFunction | 0x80U)) {
+    if (exceptionResponse) {
         _statistics.exceptions++;
         _finish(false, _responseBuffer[2], nullptr, 0U);
         return;
     }
-    if (_responseBuffer[1] != _expectedFunction ||
-        _responseBuffer[2] != (uint8_t)(_expectedCount * 2U)) {
+    if (_responseBuffer[1] != _expectedFunction) {
+        _statistics.malformedFrames++;
+        _finish(false, 0U, nullptr, 0U);
+        return;
+    }
+    if (_expectedFunction == FUNC_16) {
+        if (readU16BE(_responseBuffer + 2U) != _expectedAddress ||
+            readU16BE(_responseBuffer + 4U) != _expectedCount) {
+            _statistics.malformedFrames++;
+            _finish(false, 0U, nullptr, 0U);
+            return;
+        }
+        _statistics.requests++;
+        _finish(true, 0U, nullptr, 0U);
+        return;
+    }
+    if (_responseBuffer[2] != (uint8_t)(_expectedCount * 2U)) {
         _statistics.malformedFrames++;
         _finish(false, 0U, nullptr, 0U);
         return;
