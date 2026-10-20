@@ -21,18 +21,27 @@
 FDCAN *_FDCAN_instances[FDCAN_MAX_INSTANCES];
 uint8_t _FDCAN_instancesNum;
 FDCAN *FDCAN::getInstance(FDCAN_HandleTypeDef *_instance) {
+    if (_instance == nullptr) return nullptr;
     for (size_t i = 0; i < _FDCAN_instancesNum; i++) {
         if(_FDCAN_instances[i]->_pInstance->Instance == _instance->Instance) return _FDCAN_instances[i];
     }
     return nullptr;
 }
 void HAL_FDCAN_RxFifo0Callback(FDCAN_HandleTypeDef *pHandler, uint32_t RxFifo0ITs) {
-    if((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) FDCAN::getInstance(pHandler)->rxInterrupt();
+    if ((RxFifo0ITs & FDCAN_IT_RX_FIFO0_NEW_MESSAGE) != RESET) {
+        FDCAN *instance = FDCAN::getInstance(pHandler);
+        if (instance != nullptr) instance->rxInterrupt();
+    }
 }
 
 FDCAN::FDCAN(FDCAN_HandleTypeDef *pHandler) {
     _pInstance = pHandler;
-    _FDCAN_instances[_FDCAN_instancesNum++] = this;
+    if (_FDCAN_instancesNum < FDCAN_MAX_INSTANCES) {
+        _FDCAN_instances[_FDCAN_instancesNum++] = this;
+    } else {
+        Error_Handler();
+        return;
+    }
 
     sFilterConfig.IdType = FDCAN_EXTENDED_ID;
 	sFilterConfig.FilterType = FDCAN_FILTER_MASK;

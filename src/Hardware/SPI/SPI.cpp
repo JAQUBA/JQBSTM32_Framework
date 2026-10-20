@@ -22,15 +22,25 @@ SPI *_SPI_instances[SPI_MAX_INSTANCES];
 uint8_t _SPI_instancesNum = 0;
 
 SPI *SPI::getInstance(SPI_HandleTypeDef *pHandler) {
+	if (pHandler == nullptr) return nullptr;
     for (size_t i = 0; i < _SPI_instancesNum; i++) {
         if(_SPI_instances[i]->_pHandler->Instance == pHandler->Instance) return _SPI_instances[i];
     }
     return nullptr;
 }
 
-void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {SPI::getInstance(hspi)->txInterrupt();}
-void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi) {SPI::getInstance(hspi)->rxInterrupt();}
-void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi) {SPI::getInstance(hspi)->errorInterrupt();}
+void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
+	SPI *instance = SPI::getInstance(hspi);
+	if (instance != nullptr) instance->txInterrupt();
+}
+void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi) {
+	SPI *instance = SPI::getInstance(hspi);
+	if (instance != nullptr) instance->rxInterrupt();
+}
+void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi) {
+	SPI *instance = SPI::getInstance(hspi);
+	if (instance != nullptr) instance->errorInterrupt();
+}
 
 void SPI::txInterrupt() {if(operationState == WAITING) { operationState = FINISH; }}
 void SPI::rxInterrupt() {if(operationState == WAITING) { operationState = FINISH; } }
@@ -38,7 +48,12 @@ void SPI::errorInterrupt() {if(HAL_SPI_GetError(_pHandler) > HAL_SPI_ERROR_NONE)
 
 SPI::SPI(SPI_HandleTypeDef *pHandler) {
      _pHandler = pHandler;
-	_SPI_instances[_SPI_instancesNum++] = this;
+	if (_SPI_instancesNum < SPI_MAX_INSTANCES) {
+		_SPI_instances[_SPI_instancesNum++] = this;
+	} else {
+		Error_Handler();
+		return;
+	}
 	addTaskMain(taskCallback {
 		switch(operationState) {
 			case IDLE: {

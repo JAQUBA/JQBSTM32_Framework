@@ -21,19 +21,34 @@
 CAN *_CAN_instances[CAN_MAX_INSTANCES];
 uint8_t _CAN_instancesNum;
 CAN *CAN::getInstance(CAN_HandleTypeDef *_instance) {
+    if (_instance == nullptr) return nullptr;
     for (size_t i = 0; i < _CAN_instancesNum; i++) {
         if(_CAN_instances[i]->_pInstance->Instance == _instance->Instance) return _CAN_instances[i];
     }
     return nullptr;
 }
 
-void HAL_CAN_TxCpltCallback(CAN_HandleTypeDef* pHandler) {CAN::getInstance(pHandler)->txInterrupt();}
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *pHandler) {CAN::getInstance(pHandler)->rxInterrupt();}
-void HAL_CAN_ErrorCallback(CAN_HandleTypeDef *pHandler) {CAN::getInstance(pHandler)->errorInterrupt();}
+void HAL_CAN_TxCpltCallback(CAN_HandleTypeDef* pHandler) {
+    CAN *instance = CAN::getInstance(pHandler);
+    if (instance != nullptr) instance->txInterrupt();
+}
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *pHandler) {
+    CAN *instance = CAN::getInstance(pHandler);
+    if (instance != nullptr) instance->rxInterrupt();
+}
+void HAL_CAN_ErrorCallback(CAN_HandleTypeDef *pHandler) {
+    CAN *instance = CAN::getInstance(pHandler);
+    if (instance != nullptr) instance->errorInterrupt();
+}
 
 CAN::CAN(CAN_HandleTypeDef *pHandler) {
     _pInstance = pHandler;
-    _CAN_instances[_CAN_instancesNum++] = this;
+    if (_CAN_instancesNum < CAN_MAX_INSTANCES) {
+        _CAN_instances[_CAN_instancesNum++] = this;
+    } else {
+        Error_Handler();
+        return;
+    }
 
     sFilterConfig.FilterBank = 0;
     sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;
