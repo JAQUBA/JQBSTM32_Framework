@@ -79,6 +79,8 @@ class PCF8583 : public IExternalMemory {
             uint8_t *pData, 
             uint16_t Size
         ) override;
+
+        bool isMemoryReady() override;
         
     protected:
         I2C             *_pInstance;    ///< Pointer to I2C communication interface

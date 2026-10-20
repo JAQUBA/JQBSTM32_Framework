@@ -40,6 +40,7 @@ void Scheduler::execute() {
             it->delay = it->_delay;
             if (it->_single) {
                 it = tasks.erase(it);
+                continue;
             }
         }
         ++it;

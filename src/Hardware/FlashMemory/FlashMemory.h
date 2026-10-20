@@ -63,6 +63,8 @@ class FlashMemory : public IExternalMemory{
          * @param Data 64-bit data value to write
          */
         void write(uint32_t MemAddress, uint64_t Data);
+
+        bool isMemoryReady();
         
     private:
         /**

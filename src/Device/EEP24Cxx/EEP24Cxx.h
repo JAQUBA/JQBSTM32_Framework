@@ -42,6 +42,7 @@ class EEP24Cxx : public IExternalMemory {
         static const DeviceConfig CONFIG_24LC128;
         static const DeviceConfig CONFIG_24LC256;
         static const DeviceConfig CONFIG_24LC512;
+        static const DeviceConfig CONFIG_FM24W256;
 
         static constexpr uint32_t DEFAULT_TIMEOUT_MS = 10U;
 
@@ -67,11 +68,32 @@ class EEP24Cxx : public IExternalMemory {
             uint16_t Size
         ) override;
 
+        bool readFromMemorySync(
+            uint32_t MemAddress,
+            uint8_t *pData,
+            uint16_t Size
+        ) override;
+
+        bool writeToMemorySync(
+            uint32_t MemAddress,
+            uint8_t *pData,
+            uint16_t Size
+        ) override;
+
         void writeToMemory(
             uint32_t MemAddress,
             uint8_t *pData,
             uint16_t Size
         ) override;
+
+        void writeToMemoryAsync(
+            uint32_t MemAddress,
+            uint8_t *pData,
+            uint16_t Size,
+            dataCallback_f callbackFn = nullptr,
+            uint32_t timeoutMs = DEFAULT_TIMEOUT_MS
+        ) override;
+        bool isMemoryReady() override;
 
     protected:
         I2C      *_pInstance;

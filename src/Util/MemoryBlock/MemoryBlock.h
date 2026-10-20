@@ -51,7 +51,7 @@ class MemoryBlock {
          * @note Buffer must be large enough to hold the requested data size
          * @note Reading beyond device capacity may cause undefined behavior
          */
-        void loadBlock(
+        virtual void loadBlock(
             uint8_t *pData, 
             uint16_t Size
         );
@@ -65,10 +65,14 @@ class MemoryBlock {
          * @note Writing may take time depending on memory type (EEPROM vs FRAM)
          * @note Writing beyond device capacity may cause undefined behavior
          */
-        void saveBlock(
+        virtual void saveBlock(
             uint8_t *pData, 
             uint16_t Size
         );
+        void setDevice(IExternalMemory *device);
+        IExternalMemory* getDevice();
+        uint32_t getStartingAddress();
+        void setStartingAddress(uint32_t startingAddress);
         
     private:
         IExternalMemory *_extMemory;     ///< Pointer to external memory device interface

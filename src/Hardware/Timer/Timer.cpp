@@ -29,7 +29,12 @@ Timer *Timer::getInstance(TIM_HandleTypeDef *pHandler) {
 }
 
 Timer::Timer(TIM_HandleTypeDef *pHandler): _pHandler(pHandler) {
-    _Timer_instances[_Timer_instancesNum++] = this;
+    if (_Timer_instancesNum < TIMER_MAX_INSTANCES) {
+        _Timer_instances[_Timer_instancesNum++] = this;
+    } else {
+        Error_Handler();
+        return;
+    }
     HAL_TIM_Base_Start_IT(_pHandler);
 }
 

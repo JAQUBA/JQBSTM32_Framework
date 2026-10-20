@@ -29,15 +29,6 @@
 #include "fl_bit.h"
 #include "Scheduler.hpp"
 
-/**
- * @brief GPIO Pin structure for pairing port and pin
- * @details Structure containing GPIO port and pin information for easy GPIO handling
- */
-struct GPIO_Pin {
-    GPIO_TypeDef* port; ///< GPIO port pointer
-    uint16_t pin;       ///< GPIO pin number
-};
-
 #ifndef __weak
 #define __weak __attribute__((weak))
 #endif

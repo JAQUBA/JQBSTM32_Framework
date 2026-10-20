@@ -26,6 +26,7 @@ Scheduler interruptTasks;
 static uint32_t _systemStartTime = 0;
 static uint32_t _taskOverruns = 0;
 static uint32_t _maxExecutionTime = 0;
+static volatile uint32_t _mainTaskTicks = 0;
 
 taskStruct addTaskInterrupt(taskCallback_f functionPointer, uint32_t delay, bool single, Scheduler::taskTime time) {
     return interruptTasks.addTask(functionPointer, delay, single, time);
@@ -71,6 +72,7 @@ void delay(volatile uint32_t delay_ms) {
 
 // Make ulMillis volatile and atomic for thread safety
 volatile uint32_t ulMillis = 0;
+static uint8_t _millisTick = 0;
 
 uint32_t millis() {
 	return ulMillis;
@@ -86,8 +88,11 @@ Core::Core() {
 	
 	// Add optimized time keeping task
 	addTaskInterrupt(taskCallback {
-		uwTick += (uint32_t)uwTickFreq;
-		ulMillis++;
+		if (++_millisTick >= 10U) {
+			_millisTick = 0;
+			uwTick += (uint32_t)uwTickFreq;
+			ulMillis++;
+		}
 	}, 1);
 	
 	init();
@@ -103,6 +108,15 @@ int main() {
 	
 	while (1) {
 		uint32_t currentTime = millis();
+		uint32_t pendingTicks;
+
+		__disable_irq();
+		pendingTicks = _mainTaskTicks;
+		_mainTaskTicks = 0;
+		__enable_irq();
+		while (pendingTicks-- > 0U) {
+			mainTasks.poll();
+		}
 		
 		// Monitor execution time for performance analysis
 		uint32_t executionStart = currentTime;
@@ -125,7 +139,7 @@ void HAL_IncTick(void) {
 	// Optimize interrupt handler - do minimal work
 	interruptTasks.poll();
 	interruptTasks.execute();
-	mainTasks.poll();
+	_mainTaskTicks++;
 }
 
 // Enhanced map function with bounds checking and overflow protection

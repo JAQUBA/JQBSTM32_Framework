@@ -17,9 +17,10 @@
  */
 #include "MemoryBlock.h"
 
-MemoryBlock::MemoryBlock(IExternalMemory *device, uint32_t startingAddress) {
-    _extMemory = device;
-    _startingAddress = startingAddress;
+MemoryBlock::MemoryBlock(IExternalMemory *device, uint32_t startingAddress):
+    _extMemory(device),
+    _startingAddress(startingAddress)
+{
 }
 void MemoryBlock::loadBlock(
     uint8_t *pData, 
@@ -32,4 +33,16 @@ void MemoryBlock::saveBlock(
     uint16_t Size
 ) {
     _extMemory->writeToMemory(_startingAddress, pData, Size);
+}
+void MemoryBlock::setDevice(IExternalMemory *device) {
+    _extMemory = device;
+}
+IExternalMemory* MemoryBlock::getDevice() {
+    return _extMemory;
+}
+uint32_t MemoryBlock::getStartingAddress() {
+    return _startingAddress;
+}
+void MemoryBlock::setStartingAddress(uint32_t startingAddress) {
+    _startingAddress = startingAddress;
 }

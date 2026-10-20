@@ -42,4 +42,7 @@ void PCF8583::writeToMemory(
 ) {
 	_pInstance->writeToMemory(_DevAddress, _BaseAddress + MemAddress, _MemAddSize, pData, Size);
 }
+bool PCF8583::isMemoryReady() {
+    return _pInstance->isDeviceReady(_DevAddress);
+}
 #endif
