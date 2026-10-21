@@ -126,6 +126,33 @@ UART::UART(UART_HandleTypeDef *pHandler, GPIO_TypeDef *dirPort, uint16_t dirPin)
 }
 
 
+void UART::set_baudrate(uint32_t baudrate) {
+    if (baudrate == 0U || __get_IPSR() != 0U ||
+        operationState != IDLE || !operations.empty() ||
+        _pHandler->gState != HAL_UART_STATE_READY) {
+        Error_Handler();
+        return;
+    }
+
+    const uint32_t primask = __get_PRIMASK();
+    __disable_irq();
+    const HAL_StatusTypeDef status = HAL_UART_AbortReceive(_pHandler);
+    rx_data_index = 0U;
+    received = false;
+    lastReceivedByte = 0U;
+    __set_PRIMASK(primask);
+    if (status != HAL_OK) {
+        Error_Handler();
+        return;
+    }
+
+    _pHandler->Init.BaudRate = baudrate;
+    if (HAL_UART_Init(_pHandler) != HAL_OK ||
+        HAL_UART_Receive_IT(_pHandler, &Received_u1, 1U) != HAL_OK) {
+        Error_Handler();
+    }
+}
+
 void UART::rxInterrupt() {
     if (rx_data_index < sizeof(rx_buffer)) {
         rx_buffer[rx_data_index++] = Received_u1;

@@ -126,6 +126,9 @@ UART(UART_HandleTypeDef *pHandler,
 ```cpp
 static UART *getInstance(UART_HandleTypeDef *pHandler);
 
+// Configure baudrate in main context, with an idle TX and empty queue
+void set_baudrate(uint32_t baudrate);
+
 // Transmit data asynchronously
 void transmit(uint8_t *pData, uint16_t Size,
               dataCallback_f callback = nullptr,
@@ -140,6 +143,13 @@ void onTransmitHandler(voidCallback_f onTransmit);
 // Get bytes available in receive buffer
 uint16_t available();
 ```
+
+`set_baudrate()` is intended for startup configuration (for example in `setup()`).
+It aborts interrupt reception, discards any partial RX frame, updates the HAL
+baudrate and restarts reception. Other UART settings and callbacks are preserved.
+Call it only with a nonzero baudrate supported by the peripheral clock, outside
+interrupt context and without pending transmissions. Invalid state, zero baudrate
+or HAL failures call `Error_Handler()`. It does not queue a runtime baudrate change.
 
 ### RS485 Direction Control
 

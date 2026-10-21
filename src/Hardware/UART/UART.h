@@ -49,6 +49,14 @@ class UART : public IBus {
          * @param dirPin GPIO pin for direction control (0 for RS232, default: 0)
          */
         UART(UART_HandleTypeDef *pHandler, GPIO_TypeDef *dirPort = NULL, uint16_t dirPin = 0);
+
+        /**
+         * @brief Set baudrate in main context with no pending transmissions.
+         * @details Restarts interrupt reception and discards any partial frame.
+         *          Invalid arguments, busy TX and HAL failures call Error_Handler.
+         * @param baudrate Nonzero baudrate supported by the peripheral clock.
+         */
+        void set_baudrate(uint32_t baudrate);
         
         /**
          * @brief Get UART instance
