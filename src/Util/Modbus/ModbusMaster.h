@@ -51,7 +51,7 @@ class ModbusMaster : public Modbus {
 
         /**
          * @brief Convenience readers converting a fixed-size register block into a wider value
-         * @details wordSwap follows the same convention as Modbus::registersToUint32/Float/Double
+         * @details wordSwap follows the same convention as ModbusUtils::registersToUint32/Float/Double
          */
         bool readHoldingRegistersAsUint32(uint8_t slaveId, uint16_t address, Uint32Callback callback,
                                            bool wordSwap = false, uint32_t timeoutMs = 200U);
@@ -86,4 +86,3 @@ class ModbusMaster : public Modbus {
 };
 
 #endif
-

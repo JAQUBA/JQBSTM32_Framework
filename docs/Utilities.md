@@ -214,13 +214,18 @@ master.readHoldingRegistersAsDouble(
 );
 ```
 
-The same conversion helpers are available without issuing a Modbus request:
+The same conversion helpers are available through `ModbusUtils` without issuing a Modbus request:
 
 ```cpp
-uint16_t registers[2] = {0x4120U, 0x0000U};
-float value = Modbus::registersToFloat(registers);
+#include "Util/Modbus/Utils.h"
 
-Modbus::floatToRegisters(value, registers, true); // write low word first
+uint16_t registers[2] = {0x4120U, 0x0000U};
+float value = ModbusUtils::registersToFloat(registers);
+
+ModbusUtils::floatToRegisters(value, registers, true); // write low word first
+
+uint16_t packed[2] = {};
+ModbusUtils::writeBits(packed, 4U, 10U, 0x2A5U);
 ```
 
 ---

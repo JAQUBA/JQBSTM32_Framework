@@ -82,19 +82,6 @@ class Modbus {
         static bool validateCrc(const uint8_t *data, uint16_t length);
         static uint16_t appendCrc(uint8_t *buffer, uint16_t length);
 
-        /**
-         * @brief Register <-> multi-word value conversion helpers
-         * @details Registers are combined big-endian (first register = most significant word),
-         * matching the byte order already used for single 16-bit values by readU16BE/writeU16BE.
-         * Pass wordSwap = true for devices that transmit the words in swapped (little-endian) order.
-         */
-        static uint32_t registersToUint32(const uint16_t *registers, bool wordSwap = false);
-        static int32_t registersToInt32(const uint16_t *registers, bool wordSwap = false);
-        static float registersToFloat(const uint16_t *registers, bool wordSwap = false);
-        static double registersToDouble(const uint16_t *registers, bool wordSwap = false);
-        static void uint32ToRegisters(uint32_t value, uint16_t *registers, bool wordSwap = false);
-        static void floatToRegisters(float value, uint16_t *registers, bool wordSwap = false);
-        static void doubleToRegisters(double value, uint16_t *registers, bool wordSwap = false);
     protected:
         ModbusStatistics _statistics = {};
 };

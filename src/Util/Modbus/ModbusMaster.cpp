@@ -20,6 +20,7 @@
  */
 
 #include "ModbusMaster.h"
+#include "Utils.h"
 #include "../Math/CRC16.h"
 
 #define MODBUS_MASTER_POLL_MS 20U
@@ -89,28 +90,28 @@ bool ModbusMaster::readHoldingRegistersAsUint32(uint8_t slaveId, uint16_t addres
                                                  bool wordSwap, uint32_t timeoutMs) {
     return readHoldingRegisters(slaveId, address, 2U,
         [callback, wordSwap](bool success, uint8_t exception, uint16_t *registers, uint16_t count) {
-            if (callback) callback(success, exception, success && count == 2U ? registersToUint32(registers, wordSwap) : 0U);
+            if (callback) callback(success, exception, success && count == 2U ? ModbusUtils::registersToUint32(registers, wordSwap) : 0U);
         }, timeoutMs);
 }
 bool ModbusMaster::readHoldingRegistersAsInt32(uint8_t slaveId, uint16_t address, Int32Callback callback,
                                                 bool wordSwap, uint32_t timeoutMs) {
     return readHoldingRegisters(slaveId, address, 2U,
         [callback, wordSwap](bool success, uint8_t exception, uint16_t *registers, uint16_t count) {
-            if (callback) callback(success, exception, success && count == 2U ? registersToInt32(registers, wordSwap) : 0);
+            if (callback) callback(success, exception, success && count == 2U ? ModbusUtils::registersToInt32(registers, wordSwap) : 0);
         }, timeoutMs);
 }
 bool ModbusMaster::readHoldingRegistersAsFloat(uint8_t slaveId, uint16_t address, FloatCallback callback,
                                                 bool wordSwap, uint32_t timeoutMs) {
     return readHoldingRegisters(slaveId, address, 2U,
         [callback, wordSwap](bool success, uint8_t exception, uint16_t *registers, uint16_t count) {
-            if (callback) callback(success, exception, success && count == 2U ? registersToFloat(registers, wordSwap) : 0.0f);
+            if (callback) callback(success, exception, success && count == 2U ? ModbusUtils::registersToFloat(registers, wordSwap) : 0.0f);
         }, timeoutMs);
 }
 bool ModbusMaster::readHoldingRegistersAsDouble(uint8_t slaveId, uint16_t address, DoubleCallback callback,
                                                  bool wordSwap, uint32_t timeoutMs) {
     return readHoldingRegisters(slaveId, address, 4U,
         [callback, wordSwap](bool success, uint8_t exception, uint16_t *registers, uint16_t count) {
-            if (callback) callback(success, exception, success && count == 4U ? registersToDouble(registers, wordSwap) : 0.0);
+            if (callback) callback(success, exception, success && count == 4U ? ModbusUtils::registersToDouble(registers, wordSwap) : 0.0);
         }, timeoutMs);
 }
 void ModbusMaster::onReceive(uint8_t *data, uint16_t length) {
