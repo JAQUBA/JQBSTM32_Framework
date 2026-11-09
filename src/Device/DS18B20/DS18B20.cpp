@@ -57,43 +57,54 @@ void DS18B20::readTemperature(uint64_t deviceAddress, const std::function<void(f
 
     ow->reset();
 
-    // Start temperature conversion
-    uint8_t cmd_buf[10];
-    cmd_buf[0] = 0x55; // MATCH_ROM
-    for(int i = 0; i < 8; ++i) cmd_buf[1 + i] = b_rom[i];
-    cmd_buf[9] = 0x44; // CMD_CONVERT_T
-    ow->transmit(cmd_buf, 10, [=](uint8_t *data, uint16_t size) {
-        // Schedule temperature reading after conversion time (750ms)
-        addTaskMain([=](taskStruct *task) {
-            // Allocate scratchpad buffer for this operation
-            uint8_t *scratchpad = (uint8_t*)malloc(9);
-            if(!scratchpad) {
-                free(b_rom);
-                return; // Failed to allocate memory
-            }
+    // Set 11-bit resolution; the configuration register is volatile.
+    uint8_t config_buf[13];
+    config_buf[0] = 0x55; // MATCH_ROM
+    for(int i = 0; i < 8; ++i) config_buf[1 + i] = b_rom[i];
+    config_buf[9] = 0x4E; // CMD_WRITE_SCRATCHPAD
+    config_buf[10] = 0x4B; // TH register
+    config_buf[11] = 0x46; // TL register
+    config_buf[12] = 0x5F; // 11-bit resolution
+    ow->transmit(config_buf, sizeof(config_buf), [=](uint8_t *data, uint16_t size) {
+        ow->reset();
 
-            ow->reset();
-            
-            // Combine all commands into a single buffer for efficiency
-            uint8_t cmd_buf2[10];
-            cmd_buf2[0] = 0x55; // MATCH_ROM
-            for(int i = 0; i < 8; ++i) cmd_buf2[1 + i] = b_rom[i];
-            cmd_buf2[9] = 0xBE; // CMD_READ_SCRATCHPAD
-            ow->transmitThenReceive(cmd_buf2, 10, scratchpad, 9, [=](uint8_t *data, uint16_t size) {
-                // Calculate temperature from scratchpad data
-                int16_t rawTemperature = (data[1] << 8) | data[0];
-                float temperature = rawTemperature / 16.0f;
-                
-                // Call the user callback with the result
-                if(callbackFn) {
-                    callbackFn(temperature);
+        uint8_t convert_buf[10];
+        convert_buf[0] = 0x55; // MATCH_ROM
+        for(int i = 0; i < 8; ++i) convert_buf[1 + i] = b_rom[i];
+        convert_buf[9] = 0x44; // CMD_CONVERT_T
+        ow->transmit(convert_buf, sizeof(convert_buf), [=](uint8_t *data, uint16_t size) {
+            // Schedule temperature reading after 11-bit conversion time (375ms)
+            addTaskMain([=](taskStruct *task) {
+                // Allocate scratchpad buffer for this operation
+                uint8_t *scratchpad = (uint8_t*)malloc(9);
+                if(!scratchpad) {
+                    free(b_rom);
+                    return; // Failed to allocate memory
                 }
+
+                ow->reset();
                 
-                // Free allocated memory
-                free(scratchpad);
-                free(b_rom);
-            });
-        }, 750, true); // Execute once after 750ms delay
+                // Combine all commands into a single buffer for efficiency
+                uint8_t cmd_buf2[10];
+                cmd_buf2[0] = 0x55; // MATCH_ROM
+                for(int i = 0; i < 8; ++i) cmd_buf2[1 + i] = b_rom[i];
+                cmd_buf2[9] = 0xBE; // CMD_READ_SCRATCHPAD
+                ow->transmitThenReceive(cmd_buf2, 10, scratchpad, 9, [=](uint8_t *data, uint16_t size) {
+                    // Calculate temperature from scratchpad data
+                    int16_t rawTemperature = (data[1] << 8) | data[0];
+                    float temperature = rawTemperature / 16.0f;
+                    
+                    // Call the user callback with the result
+                    if(callbackFn) {
+                        callbackFn(temperature);
+                    }
+                    
+                    // Free allocated memory
+                    free(scratchpad);
+                    free(b_rom);
+                });
+            }, 375, true);
+        });
     });
 }
 
