@@ -91,8 +91,8 @@ Core::Core() {
 		if (++_millisTick >= 10U) {
 			_millisTick = 0;
 			uwTick += (uint32_t)uwTickFreq;
-			ulMillis++;
 		}
+		ulMillis++;
 	}, 1);
 	
 	init();
