@@ -43,6 +43,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
 				is_device_presence = HAL_GPIO_ReadPin(OW_Port, OW_Pin);
 				OW_Timer->setPeriod(410);
 				operationProgress=OPERATION_PROGRESS_IDLE;
+				lastOperationSucceeded = true;
 				break;
 			}
 
@@ -68,6 +69,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
 						break;
 					}
 					operationProgress = OPERATION_PROGRESS_IDLE;
+					lastOperationSucceeded = true;
 				}
 				break;
 			}
@@ -101,6 +103,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
 						break;
 					}
 					operationProgress = OPERATION_PROGRESS_IDLE;
+					lastOperationSucceeded = true;
 				}
 				break;
 			}
@@ -124,6 +127,7 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
 			}
 			case WORK: {
 				operationTimeout = millis() + currentOperation.timeoutMs;
+				lastOperationSucceeded = false;
 				if(currentOperation.operationType == EoperationType::RESET) {
 					is_device_presence = false;
 					operationProgress = OPERATION_PROGRESS_RESET;
@@ -139,7 +143,9 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
 				break;
 			}
 			case WAITING: {
-	   			if (millis() >= operationTimeout) {
+				if (operationProgress == OPERATION_PROGRESS_IDLE) {
+					operationState = FINISH;
+				} else if (millis() >= operationTimeout) {
 					operationProgress = OPERATION_PROGRESS_IDLE;
 					operationState = FINISH;
 				}
@@ -165,37 +171,39 @@ OneWire::OneWire(Timer* timer, GPIO_TypeDef* GPIO_Port, uint16_t GPIO_Pin) : OW_
 	});
 }
 
-void OneWire::reset(uint32_t timeoutMs) {
+bool OneWire::reset(uint32_t timeoutMs) {
 	operation operation;
 	operation.operationType = EoperationType::RESET;
 	operation.timeoutMs = timeoutMs;
 	operation.free = false;
 	operations.push(operation);
+	return true;
 }
-void OneWire::transmit(
+bool OneWire::transmit(
 	const uint8_t* pData, uint16_t size,
 	dataCallback_f callbackFn,
 	uint32_t timeoutMs
 ){
-	if (pData == nullptr || size == 0U) return;
+	if (pData == nullptr || size == 0U) return false;
 	operation operation;
 	operation.operationType = EoperationType::TRANSMIT;
 	operation.timeoutMs = timeoutMs;
 	operation.pData = (uint8_t*) malloc(size);
-	if (operation.pData == nullptr) return;
+	if (operation.pData == nullptr) return false;
 	memcpy(operation.pData, pData, size);
 	operation.Size = size;
 	operation.free = true;
 	operation.callback_f = callbackFn;
 	operations.push(operation);
+	return true;
 }
 
-void OneWire::receive(
+bool OneWire::receive(
 	uint8_t* pData, uint16_t size,
 	dataCallback_f callbackFn,
 	uint32_t timeoutMs
 ){
-	if (pData == nullptr || size == 0U) return;
+	if (pData == nullptr || size == 0U) return false;
 	operation operation;
 	operation.operationType = EoperationType::RECEIVE;
 	operation.timeoutMs = timeoutMs;
@@ -204,26 +212,21 @@ void OneWire::receive(
 	operation.free = false;
 	operation.callback_f = callbackFn;
 	operations.push(operation);
+	return true;
 }
 
-void OneWire::transmitThenReceive(
+bool OneWire::transmitThenReceive(
 	const uint8_t* pData_tx, uint16_t txSize,
 	uint8_t* pData_rx, uint16_t rxSize,
 	dataCallback_f callbackFn,
 	uint32_t timeoutMs
 ){
-	if (txSize > 0U && pData_tx == nullptr) return;
-	if (rxSize > 0U && pData_rx == nullptr) return;
-	operation operation;
-	operation.operationType = EoperationType::TRANSMIT;
-	operation.timeoutMs = timeoutMs;
-	operation.pData = (uint8_t*) malloc(txSize);
-	if (operation.pData == nullptr) return;
-	memcpy(operation.pData, pData_tx, txSize);
-	operation.Size = txSize;
-	operation.free = true;
-	operations.push(operation);//transmit
-	receive(pData_rx, rxSize, callbackFn, timeoutMs);
+	if (txSize == 0U && rxSize == 0U) return false;
+	if (txSize > 0U && pData_tx == nullptr) return false;
+	if (rxSize > 0U && pData_rx == nullptr) return false;
+	if (txSize > 0U && !transmit(pData_tx, txSize, nullptr, timeoutMs)) return false;
+	if (rxSize > 0U && !receive(pData_rx, rxSize, callbackFn, timeoutMs)) return false;
+	return true;
 }
 
 void OneWire::transaction(
@@ -281,6 +284,10 @@ bool OneWire::isDevicePresent() {
 
 bool OneWire::isBusy() {
 	return operationState != IDLE || operationProgress != OPERATION_PROGRESS_IDLE;
+}
+
+bool OneWire::wasLastOperationSuccessful() const {
+	return lastOperationSucceeded;
 }
 
 void OneWire::clearQueue() {

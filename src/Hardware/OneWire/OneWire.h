@@ -47,8 +47,9 @@ class OneWire : public IBus {
 		 * @brief Reset OneWire bus
 		 * @details Performs bus reset sequence and checks for device presence
 		 * @param timeoutMs Maximum duration of this operation after it starts (default: 40 ms)
+		 * @return bool True if the reset operation was queued
 		 */
-		void reset(uint32_t timeoutMs = DEFAULT_TIMEOUT_MS);
+		bool reset(uint32_t timeoutMs = DEFAULT_TIMEOUT_MS);
 
 		/**
 		 * @brief Transmit data via OneWire
@@ -57,8 +58,9 @@ class OneWire : public IBus {
 		 * @param size Number of bytes to transmit
 		 * @param callbackFn Optional callback function called after transmission (default: nullptr)
 		 * @param timeoutMs Maximum duration of this operation after it starts (default: 40 ms)
+		 * @return bool True if the operation was queued
 		 */
-		void transmit(
+		bool transmit(
 			const uint8_t* pData, uint16_t size,
 			dataCallback_f callbackFn = nullptr,
 			uint32_t timeoutMs = DEFAULT_TIMEOUT_MS
@@ -71,8 +73,9 @@ class OneWire : public IBus {
 		 * @param size Number of bytes to receive
 		 * @param callbackFn Optional callback function called after reception (default: nullptr)
 		 * @param timeoutMs Maximum duration of this operation after it starts (default: 40 ms)
+		 * @return bool True if the operation was queued
 		 */
-		void receive(
+		bool receive(
 			uint8_t* pData, uint16_t size,
 			dataCallback_f callbackFn = nullptr,
 			uint32_t timeoutMs = DEFAULT_TIMEOUT_MS
@@ -87,8 +90,9 @@ class OneWire : public IBus {
 		 * @param rxSize Number of bytes to receive
 		 * @param callbackFn Optional callback function called after operation (default: nullptr)
 		 * @param timeoutMs Maximum duration of each queued operation after it starts (default: 40 ms)
+		 * @return bool True if the requested operations were queued
 		 */
-		void transmitThenReceive(
+		bool transmitThenReceive(
 			const uint8_t* pData_tx, uint16_t txSize,
 			uint8_t* pData_rx, uint16_t rxSize,
 			dataCallback_f callbackFn = nullptr,
@@ -143,6 +147,12 @@ class OneWire : public IBus {
 		bool isBusy();
 
 		/**
+		 * @brief Check whether the most recently completed operation finished before timeout
+		 * @return bool True if the operation completed normally
+		 */
+		bool wasLastOperationSuccessful() const;
+
+		/**
 		 * @brief Clear all pending operations
 		 * @details Removes all operations from the queue
 		 */
@@ -173,7 +183,8 @@ class OneWire : public IBus {
 		uint16_t OW_Pin;      ///< GPIO pin for OneWire data line
 
 		uint32_t operationTimeout;  ///< Operation timeout value
-		bool     is_device_presence; ///< Device presence detection flag
+		volatile bool is_device_presence; ///< Device presence detection flag
+		volatile bool lastOperationSucceeded = false; ///< Completion status of the current/last operation
 
 		uint8_t  ow_byte;       ///< Current byte being processed
 		uint8_t  ow_byte_index; ///< Current byte index in buffer
