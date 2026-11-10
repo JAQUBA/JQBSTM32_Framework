@@ -20,16 +20,15 @@
 
 #include "DS18B20.h"
 #include "../../Core.h"
-#include <cstdlib>
+#include <cstring>
+#include <new>
 
 #ifdef __DS18B20_H_
 
-DS18B20::DS18B20(OneWire *oneWire) : ow(oneWire) {
-    // Constructor - no array initialization needed
+DS18B20::DS18B20(OneWire *oneWire, Resolution resolution) : ow(oneWire), resolution(resolution) {
 }
 
 void DS18B20::unpackRom(uint64_t romAddress, uint8_t *result) {
-    // Optimized version using loop (little-endian order for DS18B20)
     for(int i = 7; i >= 0; i--) {
         result[i] = romAddress & 0xFF;
         romAddress >>= 8;
@@ -45,94 +44,183 @@ uint64_t DS18B20::packRom(uint8_t *buffer) {
 }    
 
 void DS18B20::readTemperature(uint64_t deviceAddress, const std::function<void(float temperature)> &callbackFn) {
-    // Safety check
-    if(!ow) return;
-    
-    // Allocate local ROM buffer
-    uint8_t *b_rom = (uint8_t*)malloc(8);
-    if(!b_rom) return; // Failed to allocate memory
-    
-    // Convert ROM address to byte array
-    unpackRom(deviceAddress, b_rom);
-
-    ow->reset();
-
-    // Set 11-bit resolution; the configuration register is volatile.
-    uint8_t config_buf[13];
-    config_buf[0] = 0x55; // MATCH_ROM
-    for(int i = 0; i < 8; ++i) config_buf[1 + i] = b_rom[i];
-    config_buf[9] = 0x4E; // CMD_WRITE_SCRATCHPAD
-    config_buf[10] = 0x4B; // TH register
-    config_buf[11] = 0x46; // TL register
-    config_buf[12] = 0x5F; // 11-bit resolution
-    ow->transmit(config_buf, sizeof(config_buf), [=](uint8_t *data, uint16_t size) {
-        ow->reset();
-
-        uint8_t convert_buf[10];
-        convert_buf[0] = 0x55; // MATCH_ROM
-        for(int i = 0; i < 8; ++i) convert_buf[1 + i] = b_rom[i];
-        convert_buf[9] = 0x44; // CMD_CONVERT_T
-        ow->transmit(convert_buf, sizeof(convert_buf), [=](uint8_t *data, uint16_t size) {
-            // Schedule temperature reading after 11-bit conversion time (375ms)
-            addTaskMain([=](taskStruct *task) {
-                // Allocate scratchpad buffer for this operation
-                uint8_t *scratchpad = (uint8_t*)malloc(9);
-                if(!scratchpad) {
-                    free(b_rom);
-                    return; // Failed to allocate memory
-                }
-
-                ow->reset();
-                
-                // Combine all commands into a single buffer for efficiency
-                uint8_t cmd_buf2[10];
-                cmd_buf2[0] = 0x55; // MATCH_ROM
-                for(int i = 0; i < 8; ++i) cmd_buf2[1 + i] = b_rom[i];
-                cmd_buf2[9] = 0xBE; // CMD_READ_SCRATCHPAD
-                ow->transmitThenReceive(cmd_buf2, 10, scratchpad, 9, [=](uint8_t *data, uint16_t size) {
-                    // Calculate temperature from scratchpad data
-                    int16_t rawTemperature = (data[1] << 8) | data[0];
-                    float temperature = rawTemperature / 16.0f;
-                    
-                    // Call the user callback with the result
-                    if(callbackFn) {
-                        callbackFn(temperature);
-                    }
-                    
-                    // Free allocated memory
-                    free(scratchpad);
-                    free(b_rom);
-                });
-            }, 375, true);
-        });
+    readTemperatureWithStatus(deviceAddress, [callbackFn](bool success, float temperature) {
+        if(success && callbackFn) callbackFn(temperature);
     });
 }
 
+void DS18B20::readTemperatureWithStatus(uint64_t deviceAddress, const std::function<void(bool, float)> &callbackFn) {
+    Request *request = new (std::nothrow) Request;
+    if(request == nullptr) {
+        if(callbackFn) callbackFn(false, 0.0f);
+        return;
+    }
+
+    request->type = RequestType::TEMPERATURE;
+    request->temperatureStatusCallback = callbackFn;
+    unpackRom(deviceAddress, request->rom);
+    enqueueRequest(request);
+}
+
+void DS18B20::enqueueRequest(Request *request) {
+    if(activeRequest == nullptr && !dispatchingCallback && requests.empty()) {
+        activeRequest = request;
+        startActiveRequest();
+        return;
+    }
+    requests.push(request);
+}
+
+void DS18B20::startNextRequest() {
+    if(activeRequest != nullptr || requests.empty()) return;
+    activeRequest = requests.front();
+    requests.pop();
+    startActiveRequest();
+}
+
+void DS18B20::startActiveRequest() {
+    if(ow == nullptr) {
+        finishActiveRequest(false);
+    } else if(activeRequest->type == RequestType::TEMPERATURE) {
+        uint8_t resolutionBits = static_cast<uint8_t>(resolution);
+        if(resolutionBits < 9 || resolutionBits > 12 ||
+            activeRequest->rom[0] != 0x28 ||
+            OneWire::calculateCRC8(activeRequest->rom, 7) != activeRequest->rom[7]) {
+            finishActiveRequest(false);
+            return;
+        }
+        startTemperatureRequest();
+    } else {
+        startRomRequest();
+    }
+}
+
+void DS18B20::startTemperatureRequest() {
+    uint8_t resolutionConfig = static_cast<uint8_t>(
+        0x1F | ((static_cast<uint8_t>(resolution) - 9U) << 5)
+    );
+    uint8_t configBuffer[13] = {
+        0x55,
+        activeRequest->rom[0], activeRequest->rom[1], activeRequest->rom[2], activeRequest->rom[3],
+        activeRequest->rom[4], activeRequest->rom[5], activeRequest->rom[6], activeRequest->rom[7],
+        0x4E, 0x4B, 0x46, resolutionConfig
+    };
+
+    if(!ow->reset() || !ow->transmit(configBuffer, sizeof(configBuffer), [this](uint8_t *, uint16_t) {
+        if(!ow->wasLastOperationSuccessful() || !ow->isDevicePresent()) {
+            finishActiveRequest(false);
+            return;
+        }
+
+        uint8_t convertBuffer[10] = {
+            0x55,
+            activeRequest->rom[0], activeRequest->rom[1], activeRequest->rom[2], activeRequest->rom[3],
+            activeRequest->rom[4], activeRequest->rom[5], activeRequest->rom[6], activeRequest->rom[7],
+            0x44
+        };
+        if(!ow->reset() || !ow->transmit(convertBuffer, sizeof(convertBuffer), [this](uint8_t *, uint16_t) {
+            if(!ow->wasLastOperationSuccessful() || !ow->isDevicePresent()) {
+                finishActiveRequest(false);
+                return;
+            }
+            addTaskMain([this](taskStruct *) {
+                readTemperatureScratchpad();
+            }, conversionTimeMs(), true);
+        })) {
+            finishActiveRequest(false);
+        }
+    })) {
+        finishActiveRequest(false);
+    }
+}
+
+void DS18B20::readTemperatureScratchpad() {
+    if(activeRequest == nullptr || activeRequest->type != RequestType::TEMPERATURE) return;
+
+    uint8_t commandBuffer[10] = {
+        0x55,
+        activeRequest->rom[0], activeRequest->rom[1], activeRequest->rom[2], activeRequest->rom[3],
+        activeRequest->rom[4], activeRequest->rom[5], activeRequest->rom[6], activeRequest->rom[7],
+        0xBE
+    };
+    memset(activeRequest->scratchpad, 0xFF, sizeof(activeRequest->scratchpad));
+
+    if(!ow->reset() || !ow->transmitThenReceive(commandBuffer, sizeof(commandBuffer), activeRequest->scratchpad, sizeof(activeRequest->scratchpad),
+        [this](uint8_t *data, uint16_t size) {
+            bool valid = ow->wasLastOperationSuccessful() && ow->isDevicePresent() &&
+                size == sizeof(activeRequest->scratchpad) &&
+                OneWire::calculateCRC8(data, 8) == data[8] &&
+                (data[4] & 0x60) ==
+                    ((static_cast<uint8_t>(resolution) - 9U) << 5);
+            if(!valid) {
+                finishActiveRequest(false);
+                return;
+            }
+
+            int16_t rawTemperature = static_cast<int16_t>((static_cast<uint16_t>(data[1]) << 8) | data[0]);
+            if(rawTemperature < -880 || rawTemperature > 2000) {
+                finishActiveRequest(false);
+                return;
+            }
+            finishActiveRequest(true, rawTemperature / 16.0f);
+        })) {
+        finishActiveRequest(false);
+    }
+}
+
+uint32_t DS18B20::conversionTimeMs() const {
+    switch(resolution) {
+        case Resolution::BITS_9: return 94;
+        case Resolution::BITS_10: return 188;
+        case Resolution::BITS_11: return 375;
+        case Resolution::BITS_12: return 750;
+    }
+    return 750;
+}
+
+void DS18B20::startRomRequest() {
+    uint8_t readRomCommand = 0x33;
+    memset(activeRequest->rom, 0xFF, sizeof(activeRequest->rom));
+    if(!ow->reset() || !ow->transmitThenReceive(&readRomCommand, 1, activeRequest->rom, sizeof(activeRequest->rom),
+        [this](uint8_t *data, uint16_t size) {
+            bool valid = ow->wasLastOperationSuccessful() && ow->isDevicePresent() &&
+                size == sizeof(activeRequest->rom) && data[0] == 0x28 &&
+                OneWire::calculateCRC8(data, 7) == data[7];
+            finishActiveRequest(valid);
+        })) {
+        finishActiveRequest(false);
+    }
+}
+
+void DS18B20::finishActiveRequest(bool success, float temperature) {
+    Request *completedRequest = activeRequest;
+    if(completedRequest == nullptr) return;
+    activeRequest = nullptr;
+    dispatchingCallback = true;
+
+    if(completedRequest->type == RequestType::TEMPERATURE) {
+        if(completedRequest->temperatureStatusCallback) {
+            completedRequest->temperatureStatusCallback(success, temperature);
+        }
+    } else if(completedRequest->romCallback) {
+        uint64_t deviceAddress = success ? packRom(completedRequest->rom) : 0;
+        completedRequest->romCallback(deviceAddress, success);
+    }
+
+    delete completedRequest;
+    dispatchingCallback = false;
+    startNextRequest();
+}
+
 void DS18B20::readSingleDeviceROM(const std::function<void(uint64_t, bool)> &callbackFn) {
-    // Safety check
-    if(!ow) return;
-    
-    // Allocate local ROM buffer
-    uint8_t *b_rom = (uint8_t*)malloc(8);
-    if(!b_rom) return; // Failed to allocate memory
-    
-    ow->reset();
-    uint8_t READ_ROM = 0x33;
-    
-    ow->transmitThenReceive(&READ_ROM, 1, b_rom, 8, [=](uint8_t *data, uint16_t size) {
-        // Copy ROM data to local buffer
-        for(int i = 0; i < 8; i++) {
-            b_rom[i] = data[i];
-        }
-        uint64_t deviceAddress = packRom(b_rom);
-        bool found = (deviceAddress != 0);
-        if(callbackFn) {
-            callbackFn(deviceAddress, found);
-        }
-        
-        // Free allocated memory
-        free(b_rom);
-    });
+    Request *request = new (std::nothrow) Request;
+    if(request == nullptr) {
+        if(callbackFn) callbackFn(0, false);
+        return;
+    }
+    request->type = RequestType::ROM;
+    request->romCallback = callbackFn;
+    enqueueRequest(request);
 }
 
 #endif // __DS18B20_H__
